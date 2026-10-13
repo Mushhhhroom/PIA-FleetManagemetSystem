@@ -89,13 +89,26 @@ class TripRequestModel extends Model
     }
 
     /**
-     * Generate unique VRS sequential tracking number (e.g. VRS-2026-0005)
+     * Generate the next VRS sequential tracking number (e.g. VRS-2026-0013).
+     *
+     * MAX-based (not COUNT-based) so deletions can never re-issue an existing
+     * number, with an explicit uniqueness loop as a final guard.
      */
     public function generateVrsNumber(): string
     {
-        $year = date('Y');
-        $count = $this->where("request_number LIKE 'VRS-{$year}-%'")->countAllResults();
-        $next = $count + 1;
-        return sprintf("VRS-%s-%04d", $year, $next);
+        $year   = date('Y');
+        $prefix = "VRS-{$year}-";
+        $row    = $this->db->table('trip_requests')
+            ->select("MAX(CAST(SUBSTRING_INDEX(request_number, '-', -1) AS UNSIGNED)) AS max_no")
+            ->like('request_number', $prefix, 'after')
+            ->get()
+            ->getRow();
+
+        $next = (int) ($row->max_no ?? 0) + 1;
+        do {
+            $number = sprintf('%s%04d', $prefix, $next++);
+        } while ($this->db->table('trip_requests')->where('request_number', $number)->countAllResults() > 0);
+
+        return $number;
     }
 }

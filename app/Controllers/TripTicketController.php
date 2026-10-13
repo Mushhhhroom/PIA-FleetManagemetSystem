@@ -272,7 +272,7 @@ class TripTicketController extends BaseController
         if ($notified) {
             $notificationModel = new \App\Models\NotificationModel();
             $userModel = new \App\Models\UserModel();
-            foreach ($userModel->whereIn('role', ['dispatcher', 'admin'])->findAll() as $disp) {
+            foreach ($userModel->whereIn('role', ['dispatcher', 'admin'])->where('status', 'active')->findAll() as $disp) {
                 $notificationModel->insert([
                     'user_id'    => $disp['id'],
                     'title'      => "PASSENGER DELAY (FR-4.2): {$ticket['ticket_serial_no']}",

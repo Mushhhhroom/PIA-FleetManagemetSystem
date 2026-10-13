@@ -377,7 +377,7 @@ class ApprovalController extends BaseController
 
         // Notify dispatchers to assign immediately
         $userModel = new UserModel();
-        foreach ($userModel->where('role', 'dispatcher')->findAll() as $disp) {
+        foreach ($userModel->where('role', 'dispatcher')->where('status', 'active')->findAll() as $disp) {
             $this->notificationModel->insert([
                 'user_id'    => $disp['id'],
                 'title'      => "EMERGENCY DISPATCH QUEUE: {$request['request_number']}",

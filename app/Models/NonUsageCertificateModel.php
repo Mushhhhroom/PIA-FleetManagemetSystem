@@ -18,10 +18,25 @@ class NonUsageCertificateModel extends Model
         'odometer_start', 'odometer_end', 'generated_by', 'created_at',
     ];
 
+    /**
+     * MAX-based per period (CNU-YYYYMM-####) so deleted certificates can
+     * never re-issue an existing number.
+     */
     public function generateCertificateNo(): string
     {
-        $count = $this->countAllResults();
-        return sprintf('CNU-%s-%04d', date('Ym'), $count + 1);
+        $prefix = 'CNU-' . date('Ym') . '-';
+        $row    = $this->db->table('non_usage_certificates')
+            ->select("MAX(CAST(SUBSTRING_INDEX(certificate_no, '-', -1) AS UNSIGNED)) AS max_no")
+            ->like('certificate_no', $prefix, 'after')
+            ->get()
+            ->getRow();
+
+        $next = (int) ($row->max_no ?? 0) + 1;
+        do {
+            $number = sprintf('%s%04d', $prefix, $next++);
+        } while ($this->db->table('non_usage_certificates')->where('certificate_no', $number)->countAllResults() > 0);
+
+        return $number;
     }
 
     public function getWithVehicle(?string $periodMonth = null)

@@ -153,7 +153,7 @@ class PirController extends BaseController
 
                 // Notify dispatchers that the vehicle is back in service
                 $userModel = new \App\Models\UserModel();
-                foreach ($userModel->whereIn('role', ['dispatcher', 'admin'])->findAll() as $disp) {
+                foreach ($userModel->whereIn('role', ['dispatcher', 'admin'])->where('status', 'active')->findAll() as $disp) {
                     $this->notificationModel->insert([
                         'user_id'    => $disp['id'],
                         'title'      => "Vehicle Released: {$pir['pir_number']}",

@@ -93,11 +93,26 @@ class TripTicketModel extends Model
                     ->first();
     }
 
+    /**
+     * Generate the next e-DTT serial number (e.g. DTT-2026-0008).
+     *
+     * MAX-based so deleted tickets can never cause a duplicate serial.
+     */
     public function generateSerialNo(): string
     {
-        $year = date('Y');
-        $count = $this->where("ticket_serial_no LIKE 'DTT-{$year}-%'")->countAllResults();
-        $next = $count + 1;
-        return sprintf("DTT-%s-%04d", $year, $next);
+        $year   = date('Y');
+        $prefix = "DTT-{$year}-";
+        $row    = $this->db->table('trip_tickets')
+            ->select("MAX(CAST(SUBSTRING_INDEX(ticket_serial_no, '-', -1) AS UNSIGNED)) AS max_no")
+            ->like('ticket_serial_no', $prefix, 'after')
+            ->get()
+            ->getRow();
+
+        $next = (int) ($row->max_no ?? 0) + 1;
+        do {
+            $serial = sprintf('%s%04d', $prefix, $next++);
+        } while ($this->db->table('trip_tickets')->where('ticket_serial_no', $serial)->countAllResults() > 0);
+
+        return $serial;
     }
 }

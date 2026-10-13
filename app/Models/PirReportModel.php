@@ -27,11 +27,25 @@ class PirReportModel extends Model
         'mechanic_id', 'reported_by', 'released_at', 'created_at', 'updated_at',
     ];
 
+    /**
+     * MAX-based so deleted reports can never re-issue an existing number.
+     */
     public function generatePirNumber(): string
     {
-        $year  = date('Y');
-        $count = $this->where("pir_number LIKE 'PIR-{$year}-%'")->countAllResults();
-        return sprintf('PIR-%s-%04d', $year, $count + 1);
+        $year   = date('Y');
+        $prefix = "PIR-{$year}-";
+        $row    = $this->db->table('pir_reports')
+            ->select("MAX(CAST(SUBSTRING_INDEX(pir_number, '-', -1) AS UNSIGNED)) AS max_no")
+            ->like('pir_number', $prefix, 'after')
+            ->get()
+            ->getRow();
+
+        $next = (int) ($row->max_no ?? 0) + 1;
+        do {
+            $number = sprintf('%s%04d', $prefix, $next++);
+        } while ($this->db->table('pir_reports')->where('pir_number', $number)->countAllResults() > 0);
+
+        return $number;
     }
 
     public function getQueue(?string $status = null)

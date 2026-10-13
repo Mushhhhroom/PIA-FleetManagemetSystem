@@ -2,6 +2,7 @@
 
 namespace App\Database\Seeds;
 
+use App\Services\SecurityQrService;
 use CodeIgniter\Database\Seeder;
 
 class PiaFleetSeeder extends Seeder
@@ -476,8 +477,12 @@ class PiaFleetSeeder extends Seeder
             $req1Id = $this->db->insertID();
 
             // Create corresponding Driver's Trip Ticket (ADMIN-F-001 rev1)
-            $tokenPayload = "DTT-2026-0001|{$hiace->plate_number}|DRV-101|{$depTime}";
-            $cryptToken   = hash_hmac('sha256', $tokenPayload, 'PIA_GOV_FMS_SECRET_KEY_2026');
+            $cryptToken = (new SecurityQrService())->generateToken(
+                'DTT-2026-0001',
+                $hiace->plate_number,
+                $driverSantos ? $driverSantos->driver_code : 'DRV-101',
+                $depTime
+            );
 
             $this->db->table('trip_tickets')->insert([
                 'ticket_serial_no'          => 'DTT-2026-0001',
@@ -570,13 +575,13 @@ class PiaFleetSeeder extends Seeder
         }
 
         // Sample Request 4: Fully Completed historical trip with full Fuel Balance & Dual Certifications
-        $existingReq4 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0000')->get()->getRow();
+        $existingReq4 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0004')->get()->getRow();
         if (!$existingReq4 && $reqUser && $oicUser && $admUser && $guardUser) {
             $pastDep = date('Y-m-d 07:00:00', strtotime('-3 days'));
             $pastRet = date('Y-m-d 19:30:00', strtotime('-3 days'));
 
             $this->db->table('trip_requests')->insert([
-                'request_number'         => 'VRS-2026-0000',
+                'request_number'         => 'VRS-2026-0004',
                 'requestor_id'           => $reqUser->id,
                 'requestor_name'         => $reqUser->name,
                 'office_id'              => $newsOffice ? $newsOffice->id : 1,
@@ -602,14 +607,19 @@ class PiaFleetSeeder extends Seeder
             ]);
             $req4Id = $this->db->insertID();
 
-            $token4 = hash_hmac('sha256', "DTT-2026-0000|{$hiace->plate_number}|{$pastDep}", 'PIA_GOV_FMS_SECRET_KEY_2026');
+            $token4 = (new SecurityQrService())->generateToken(
+                'DTT-2026-0002',
+                $hiace->plate_number,
+                $driverSantos ? $driverSantos->driver_code : 'DRV-101',
+                $pastDep
+            );
             $startOdo = 34040.00;
             $endOdo   = 34250.00;
             $distKm   = 210.00;
             $usedFuel = 21.00; // 10 km/L
 
             $this->db->table('trip_tickets')->insert([
-                'ticket_serial_no'          => 'DTT-2026-0000',
+                'ticket_serial_no'          => 'DTT-2026-0002',
                 'request_id'                => $req4Id,
                 'vehicle_id'                => $hiace->id,
                 'driver_id'                 => $driverSantos ? $driverSantos->id : 1,
