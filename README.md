@@ -12,31 +12,42 @@ external MySQL instance is required.
 
 ### 1. Provision MySQL and load the data
 
-Any MySQL 8-compatible host works (PlanetScale, TiDB Serverless, Railway, an
-existing PIA server, …). Then create the schema:
+Vercel has **no bundled MySQL**, so an external MySQL 8-compatible host is
+required (TiDB Serverless works well — free tier, TLS required, and the
+bundled importer handles the encrypted handshake).
+
+For the demo dataset, import the bundled schema + seed from this machine:
 
 ```bash
-# all migrations, including the sessions table used for serverless login state
+php database/import_db.php <host> <port> <user> <password> fleet_db
+```
+
+Alternatively, run all migrations against the empty instance (includes the
+`sessions` table used for serverless login state):
+
+```bash
 php spark migrate --all
 ```
 
-For the demo dataset, import a dump of `fleet_db` (schema + seeded rows) into the
-new instance instead of / on top of the migrations.
-
 ### 2. Create the Vercel project and set environment variables
+
+> **Note:** Vercel rejects dotted variable names, so the cloud config uses
+> SCREAMING_SNAKE names. `api/index.php` re-publishes them under the dotted
+> keys CodeIgniter expects before the framework boots.
 
 ```bash
 vercel link            # select your account/scope once
-vercel env add CI_ENVIRONMENT          # -> production
-vercel env add app.baseURL             # -> https://<project>.vercel.app/
-vercel env add database.default.hostname
-vercel env add database.default.database
-vercel env add database.default.username
-vercel env add database.default.password
-vercel env add database.default.port
-vercel env add session.driver          # -> CodeIgniter\Session\Handlers\DatabaseHandler
-vercel env add session.savePath        # -> sessions
-vercel env add encryption.key          # stable 32-byte base64 key
+vercel env add CI_ENVIRONMENT               # -> production
+vercel env add APP_BASEURL                  # -> https://<project>.vercel.app/
+vercel env add DB_HOST
+vercel env add DB_DATABASE                  # -> fleet_db
+vercel env add DB_USERNAME
+vercel env add DB_PASSWORD
+vercel env add DB_PORT                      # -> 4000 for TiDB Cloud
+vercel env add DB_ENCRYPT                   # -> true (TLS for cloud MySQL)
+vercel env add SESSION_DRIVER               # -> CodeIgniter\Session\Handlers\DatabaseHandler
+vercel env add SESSION_SAVEPATH             # -> sessions
+vercel env add ENCRYPTION_KEY               # stable 32-byte base64 key
 ```
 
 See [`.env.example`](.env.example) for the complete reference list (SMTP, Maps key,

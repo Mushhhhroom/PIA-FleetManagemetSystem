@@ -25,6 +25,45 @@ if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
     exit(1);
 }
 
+/*
+ * Environment-variable aliases.
+ *
+ * Vercel rejects dotted names ("app.baseURL") in `vercel env add` — only
+ * letters, digits and underscores are allowed. The cloud configuration
+ * therefore uses conventional SCREAMING_SNAKE names, which this block
+ * re-publishes under the dotted keys CodeIgniter reads, before any Config
+ * class is instantiated.
+ */
+$envAliases = [
+    'APP_BASEURL'                   => 'app.baseURL',
+    'APP_FORCEGLOBALSECUREREQUESTS' => 'app.forceGlobalSecureRequests',
+    'APP_CSPENABLED'                => 'app.CSPEnabled',
+    'APP_TIMEZONE'                  => 'app.timezone',
+    'SESSION_DRIVER'                => 'session.driver',
+    'SESSION_SAVEPATH'              => 'session.savePath',
+    'SESSION_LIFETIME'              => 'session.sessionLifetime',
+    'ENCRYPTION_KEY'                => 'encryption.key',
+    'DB_HOST'                       => 'database.default.hostname',
+    'DB_PORT'                       => 'database.default.port',
+    'DB_DATABASE'                   => 'database.default.database',
+    'DB_USERNAME'                   => 'database.default.username',
+    'DB_PASSWORD'                   => 'database.default.password',
+    'DB_DRIVER'                     => 'database.default.DBDriver',
+    'DB_ENCRYPT'                    => 'database.default.encrypt',
+];
+foreach ($envAliases as $alias => $ciKey) {
+    $value = getenv($alias);
+    if ($value === false || $value === '') {
+        continue;                               // not configured — leave default
+    }
+    if (isset($_ENV[$ciKey]) || isset($_SERVER[$ciKey])) {
+        continue;                               // an explicit dotted value wins
+    }
+    $_ENV[$ciKey]    = $value;
+    $_SERVER[$ciKey] = $value;
+    putenv($ciKey . '=' . $value);
+}
+
 $projectRoot = dirname(__DIR__);
 
 // Path to the front controller (this file) + the public directory
