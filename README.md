@@ -1,5 +1,65 @@
 # CodeIgniter 4 Application Starter
 
+> **PIA-AFMS — Philippine Information Agency Automated Fleet Management System**
+> Production deployment target: **Vercel** (see below) · Local dev: `php spark serve`
+
+## Deploying to Vercel
+
+The app ships with a Vercel entrypoint (`api/index.php`) that boots CodeIgniter 4
+through the [`vercel-php`](https://github.com/vercel-community/php) runtime, plus a
+`vercel.json` that rewrites every path to it. Vercel has **no bundled MySQL**, so an
+external MySQL instance is required.
+
+### 1. Provision MySQL and load the data
+
+Any MySQL 8-compatible host works (PlanetScale, TiDB Serverless, Railway, an
+existing PIA server, …). Then create the schema:
+
+```bash
+# all migrations, including the sessions table used for serverless login state
+php spark migrate --all
+```
+
+For the demo dataset, import a dump of `fleet_db` (schema + seeded rows) into the
+new instance instead of / on top of the migrations.
+
+### 2. Create the Vercel project and set environment variables
+
+```bash
+vercel link            # select your account/scope once
+vercel env add CI_ENVIRONMENT          # -> production
+vercel env add app.baseURL             # -> https://<project>.vercel.app/
+vercel env add database.default.hostname
+vercel env add database.default.database
+vercel env add database.default.username
+vercel env add database.default.password
+vercel env add database.default.port
+vercel env add session.driver          # -> CodeIgniter\Session\Handlers\DatabaseHandler
+vercel env add session.savePath        # -> sessions
+vercel env add encryption.key          # stable 32-byte base64 key
+```
+
+See [`.env.example`](.env.example) for the complete reference list (SMTP, Maps key,
+etc.). CodeIgniter reads these straight from the process environment — no `.env`
+file is deployed.
+
+### 3. Deploy
+
+```bash
+vercel deploy --prod
+```
+
+### Serverless notes
+
+- **Sessions live in MySQL** (`sessions` table) because the function filesystem is
+  read-only and resets on every cold start; file sessions would log users out at
+  random.
+- `writable/` is redirected to the function's temp directory (`api/index.php`);
+  logs/cache/debugbar work but are per-instance and non-persistent.
+- **Uploaded files are ephemeral** on Vercel — persist them to Vercel Blob or an
+  external store if you need durability.
+- `CI_ENVIRONMENT=production` disables debug pages and the debug toolbar.
+
 ## What is CodeIgniter?
 
 CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
