@@ -194,6 +194,17 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('mfa/enable', 'AuthController::mfaEnable');
     $routes->post('mfa/disable', 'AuthController::mfaDisable');
 
+    // User Account Administration — SUPER ADMIN ONLY (provisions accounts
+    // for every RBAC role). Double-locked: role filter + controller guard.
+    $routes->group('users', ['filter' => 'role:admin'], static function ($routes) {
+        $routes->get('', 'UserController::index');
+        $routes->get('new', 'UserController::create');
+        $routes->post('', 'UserController::store');
+        $routes->get('(:num)/edit', 'UserController::edit/$1');
+        $routes->post('(:num)', 'UserController::update/$1');
+        $routes->post('(:num)/toggle', 'UserController::toggle/$1');
+    });
+
     // In-app notification center (every BRD flow mirrors here)
     $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->get('notifications', 'NotificationController::index');

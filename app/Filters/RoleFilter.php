@@ -40,7 +40,8 @@ class RoleFilter implements FilterInterface
             }
         }
         if ($userRole === 'guard') {
-            if (!str_contains($uri, 'gate') && !str_contains($uri, 'logout') && !str_contains($uri, 'api') && !str_contains($uri, 'mfa') && !str_contains($uri, 'notif')) {
+            // 'tickets' = e-DTT verification at the checkpoint (route group includes guard)
+            if (!str_contains($uri, 'gate') && !str_contains($uri, 'tickets') && !str_contains($uri, 'logout') && !str_contains($uri, 'api') && !str_contains($uri, 'mfa') && !str_contains($uri, 'notif')) {
                 return redirect()->to('/gate')->with('error', 'Access restricted: Security officers are directed to the Gate Security Checkpoint.');
             }
         }

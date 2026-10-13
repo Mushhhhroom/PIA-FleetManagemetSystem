@@ -10,7 +10,7 @@ class SmsSender
     public function __construct()
     {
         $this->apiKey = env('SEMAPHORE_KEY', null);
-        $this->senderName = env('SEMAPHORE_SENDER', 'FleetPulse');
+        $this->senderName = env('SEMAPHORE_SENDER', 'PIA-Motorpool');
     }
 
     /**

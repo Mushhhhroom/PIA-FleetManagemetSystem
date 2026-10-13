@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'FleetPulse FMS') ?> &mdash; Enterprise Logistics</title>
+    <title><?= esc($title ?? 'PIA Motorpool FMS') ?> &mdash; PIA-AFMS</title>
 
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +22,7 @@
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
 
-            --sidebar-w: 250px;
+            --sidebar-w: 268px;
             --bg-canvas: #f8fafc;
             --bg-surface: #ffffff;
             --border-subtle: #e2e8f0;
@@ -37,6 +37,28 @@
             --sidebar-bg: #0b1324;
             --sidebar-item-hover: rgba(255, 255, 255, 0.05);
             --sidebar-item-active: rgba(37, 99, 235, 0.15);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-gutter: stable; /* no layout shift between pages */
+        }
+
+        ::selection {
+            background: rgba(37, 99, 235, 0.18);
+            color: var(--text-heading);
+        }
+
+        /* Consistent keyboard accessibility ring across all interactive elements */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        [data-bs-toggle]:focus-visible {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
         body {
@@ -61,7 +83,7 @@
         #sidebar {
             width: var(--sidebar-w);
             background: var(--sidebar-bg);
-            min-height: 100vh;
+            height: 100vh;            /* fixed viewport panel — nav scrolls independently */
             position: fixed;
             top: 0;
             left: 0;
@@ -73,8 +95,9 @@
         }
 
         .sidebar-brand {
-            padding: 24px 20px 20px;
+            padding: 16px 18px 14px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
         }
 
         .brand-logo {
@@ -115,14 +138,15 @@
 
         /* User Role Pill inside Sidebar */
         .sidebar-user-role {
-            margin: 14px 16px 8px;
-            padding: 8px 12px;
+            margin: 10px 12px 4px;
+            padding: 6px 10px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .sidebar-user-role .role-label {
@@ -143,34 +167,101 @@
         }
 
         /* Nav links */
+        /* Nav links — the scrollable menu region (all items always reachable) */
         .sidebar-nav {
-            padding: 12px 10px;
+            padding: 8px 10px 18px;
             flex: 1;
+            min-height: 0;            /* required so flex child actually scrolls */
             overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;    /* Firefox: slim scrollbar */
+            scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
         }
 
+        /* Chrome/Edge/Safari: slim scrollbar that fits the dark sidebar */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 999px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Static section labels (single-link sections) */
         .nav-section-title {
             font-size: 0.65rem;
             font-family: var(--font-mono);
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: #64748b;
-            padding: 16px 12px 6px;
+            padding: 14px 12px 6px;
             font-weight: 600;
+        }
+
+        /* Collapsible section headers */
+        .nav-section-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 0;
+            padding: 12px 12px 6px;
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: color 0.15s ease;
+        }
+
+        .nav-section-toggle:hover {
+            color: #94a3b8;
+        }
+
+        .nav-section-toggle .chevron {
+            font-size: 0.55rem;
+            transition: transform 0.2s ease;
+            margin-left: auto;
+        }
+
+        .nav-section-toggle[aria-expanded="false"] .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .nav-group {
+            overflow: hidden;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-group.collapsed {
+            display: none;
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 9px 12px;
+            gap: 11px;
+            padding: 8px 12px;
             color: #94a3b8;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
             text-decoration: none;
             border-radius: 7px;
             transition: all 0.15s ease;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .sidebar-link i {
@@ -201,13 +292,14 @@
         }
 
         .sidebar-footer {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #64748b;
+            flex-shrink: 0;
         }
 
         /* -------------------------------------------------------------
@@ -257,13 +349,17 @@
         }
 
         .top-header {
-            height: 60px;
+            min-height: 60px;      /* grows instead of clipping wrapped items */
+            height: auto;
             background: #ffffff;
             border-bottom: 1px solid var(--border-subtle);
-            padding: 0 32px;
+            padding: 8px 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            row-gap: 8px;
+            column-gap: 16px;
             position: sticky;
             top: 0;
             z-index: 900;
@@ -298,30 +394,86 @@
         }
 
         .content-canvas {
-            padding: 28px 32px 48px;
+            padding: 32px 36px 56px;
             flex: 1;
+            max-width: 1680px;   /* comfortable line lengths on wide monitors */
+            width: 100%;
+        }
+
+        /* Consistent page heading (used across all module views) */
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.025em;
+            line-height: 1.2;
         }
 
         /* -------------------------------------------------------------
-           Corporate Minimalism Components
+           Smooth Page Transitions — subtle, non-blocking entrance that
+           runs on every full-page navigation without JS.
+        ------------------------------------------------------------- */
+        .content-canvas {
+            animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section headers settle in just after the page canvas */
+        .nav-section-toggle,
+        .nav-section-title {
+            animation: sectionEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes sectionEnter {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .content-canvas,
+            .nav-section-title,
+            .nav-section-toggle {
+                animation: none;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           Minimalist Components — hairline borders, no drop shadows,
+           generous whitespace, restrained color.
         ------------------------------------------------------------- */
         /* Clean Flat Cards */
         .card-panel {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            box-shadow: none;
             overflow: hidden;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .card-panel-header {
-            padding: 16px 20px;
+            padding: 18px 22px;
             border-bottom: 1px solid var(--border-subtle);
-            background: #ffffff;
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .card-panel-header h5,
@@ -334,23 +486,23 @@
         }
 
         .card-panel-body {
-            padding: 20px;
+            padding: 22px;
         }
 
         /* KPI Metric Blocks */
         .kpi-tile {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 18px 20px;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-            transition: border-color 0.2s ease, transform 0.2s ease;
+            box-shadow: none;
+            transition: border-color 0.2s ease;
             position: relative;
+            height: 100%;
         }
 
         .kpi-tile:hover {
             border-color: var(--border-strong);
-            transform: translateY(-1px);
         }
 
         .kpi-tile .kpi-label {
@@ -376,17 +528,18 @@
             margin-top: 6px;
         }
 
-        /* Minimalist Status Badges */
+        /* Minimalist Status Badges — soft pills */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.72rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
             font-weight: 600;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.03em;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .status-active, .status-available, .status-completed {
@@ -455,14 +608,25 @@
             background-color: #f8fafc;
         }
 
-        /* Clean action buttons */
+        /* Subtle zebra striping for long ledgers */
+        .table-minimal tbody tr:nth-child(even) td {
+            background-color: #fbfdff;
+        }
+
+        .table-minimal tbody tr:nth-child(even):hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Clean action buttons — one height, hairline borders, no shadows */
         .btn-corp {
             font-size: 0.82rem;
             font-weight: 600;
             letter-spacing: -0.01em;
-            padding: 7px 14px;
-            border-radius: 7px;
-            transition: all 0.15s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: none !important;
+            white-space: nowrap;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
         .btn-corp-primary {
@@ -473,19 +637,53 @@
 
         .btn-corp-primary:hover {
             background: #1e293b;
+            border-color: #1e293b;
             color: #ffffff;
         }
 
         .btn-corp-secondary {
             background: #ffffff;
             color: var(--text-body);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border-strong);
         }
 
         .btn-corp-secondary:hover {
             background: #f8fafc;
-            border-color: var(--border-strong);
+            border-color: var(--text-heading);
             color: var(--text-heading);
+        }
+
+        /* -------------------------------------------------------------
+           Print — content only, no application chrome
+        ------------------------------------------------------------- */
+        @media print {
+            #sidebar,
+            #sidebarBackdrop,
+            .top-header,
+            .btn,
+            button,
+            #systemGuideModal {
+                display: none !important;
+            }
+
+            #main-wrapper {
+                margin-left: 0 !important;
+            }
+
+            .content-canvas {
+                padding: 0 !important;
+                animation: none;
+            }
+
+            .card-panel,
+            .kpi-tile {
+                box-shadow: none;
+                break-inside: avoid;
+            }
+
+            body {
+                background: #ffffff;
+            }
         }
     </style>
     <!-- Leaflet JS & Chart.js -->
@@ -521,13 +719,45 @@
             'maintenance'    => ['label' => 'Safety & PMS Tech', 'color' => '#ea580c', 'bg' => 'rgba(234, 88, 12, 0.15)'],
         ];
         $currentBadge = $roleBadges[$userRole] ?? ['label' => ucfirst($userRole), 'color' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.15)'];
+
+        // Breadcrumb: which sidebar section the current page belongs to
+        $sectionMap = [
+            'requests' => 'Official Travel Workflow', 'approvals' => 'Official Travel Workflow',
+            'dispatch' => 'Official Travel Workflow', 'tickets' => 'Official Travel Workflow',
+            'gate'     => 'Official Travel Workflow',
+            'safety'   => 'Safety & Preventive Ops',  'pir'      => 'Safety & Preventive Ops',
+            'rfid'     => 'Safety & Preventive Ops',
+            'vehicles' => 'Fleet Assets', 'drivers' => 'Fleet Assets',
+            'tracking' => 'Fleet Assets', 'fuel'    => 'Fleet Assets', 'maintenance' => 'Fleet Assets',
+            'audit'    => 'COA & Compliance', 'compliance' => 'COA & Compliance',
+            'users'    => 'Administration', 'dashboard' => 'Overview',
+        ];
+        $currentUri   = uri_string();
+        $crumbSection = 'Overview';
+        foreach ($sectionMap as $prefix => $section) {
+            if ($currentUri === $prefix || str_starts_with($currentUri, $prefix . '/')) {
+                $crumbSection = $section;
+                break;
+            }
+        }
+
+        // Brand logo points at this role's actual landing page so it never
+        // bounces non-ops roles with an "Access Restricted" flash.
+        $homeRoute = match ($userRole) {
+            'requestor'                     => 'requests',
+            'approver_oic', 'approver_admin' => 'approvals',
+            'auditor'                       => 'audit',
+            'guard'                         => 'gate',
+            'driver'                        => 'driver/trips',
+            default                         => '',
+        };
     ?>
 
     <!-- Sidebar Navigation -->
     <aside id="sidebar">
         <!-- Brand Header -->
         <div class="sidebar-brand">
-            <a href="<?= base_url('/') ?>" class="brand-logo">
+            <a href="<?= base_url($homeRoute) ?>" class="brand-logo">
                 <div class="brand-icon" style="background: linear-gradient(135deg, #0A2540, #1e3a8a);">
                     <i class="fa-solid fa-landmark"></i>
                 </div>
@@ -548,99 +778,156 @@
 
         <!-- Dynamic Role-Tailored Navigation (Eliminates Redundancy) -->
         <nav class="sidebar-nav">
-            <!-- 1. OFFICIAL TRAVEL WORKFLOW (BRD & SDD) -->
-            <div class="nav-section-title">Official Travel Workflow</div>
 
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_oic', 'approver_admin', 'auditor'])): ?>
-                <a href="<?= base_url('requests') ?>" class="sidebar-link <?= strpos(uri_string(), 'requests') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-file-signature"></i> Vehicle Requests (VRS)
-                </a>
-            <?php endif; ?>
-
-            <?php if (in_array($userRole, ['admin', 'approver_oic', 'approver_admin', 'dispatcher'])): ?>
-                <a href="<?= base_url('approvals') ?>" class="sidebar-link <?= strpos(uri_string(), 'approvals') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-stamp"></i> Approvals & 4h Escalation
-                </a>
-            <?php endif; ?>
-
-            <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
-                <a href="<?= base_url('dispatch') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch') === 0 && strpos(uri_string(), 'calendar') === false ? 'active' : '' ?>">
-                    <i class="fa-solid fa-truck-fast"></i> Dispatch Console
-                </a>
-                <a href="<?= base_url('dispatch/calendar') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch/calendar') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-calendar-days"></i> Allocation Calendar
-                </a>
-            <?php endif; ?>
-
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor'])): ?>
-                <a href="<?= base_url('tickets') ?>" class="sidebar-link <?= strpos(uri_string(), 'tickets') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-ticket"></i> Driver's Trip Tickets (e-DTT)
-                </a>
-            <?php endif; ?>
-
-            <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher'])): ?>
-                <a href="<?= base_url('gate') ?>" class="sidebar-link <?= strpos(uri_string(), 'gate') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-shield-halved"></i> Gate QR Checkpoint
-                </a>
-            <?php endif; ?>
-
-            <!-- Module 5 — Pre-Trip Safety (BLOWBAGETS) & Mechanic PIR -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor'])): ?>
-                <a href="<?= base_url('safety') ?>" class="sidebar-link <?= strpos(uri_string(), 'safety') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-clipboard-check"></i> BLOWBAGETS Safety Checks
-                </a>
-            <?php endif; ?>
-
+            <!-- ============================================================
+                 1 · OVERVIEW
+            ============================================================ -->
             <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
-                <a href="<?= base_url('pir') ?>" class="sidebar-link <?= strpos(uri_string(), 'pir') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-screwdriver-wrench"></i> Mechanic PIR Queue
+                <div class="nav-section-title">Overview</div>
+                <a href="<?= base_url('dashboard') ?>" class="sidebar-link <?= uri_string() === '' || uri_string() === 'dashboard' ? 'active' : '' ?>">
+                    <i class="fa-solid fa-chart-line"></i> Command Center
                 </a>
             <?php endif; ?>
 
-            <!-- Module 6 — Tollway RFID -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor'])): ?>
-                <a href="<?= base_url('rfid') ?>" class="sidebar-link <?= strpos(uri_string(), 'rfid') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-credit-card"></i> Tollway RFID Cards
-                </a>
+            <!-- ============================================================
+                 2 · OFFICIAL TRAVEL WORKFLOW (BRD Modules 1–3, 5)
+            ============================================================ -->
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_oic', 'approver_admin', 'auditor', 'guard', 'driver'])): ?>
+                <button type="button" class="nav-section-toggle" data-nav-group="workflow" aria-expanded="true">
+                    Official Travel Workflow <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="nav-group" data-nav-group-body="workflow">
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_oic', 'approver_admin', 'auditor'])): ?>
+                    <a href="<?= base_url('requests') ?>" class="sidebar-link <?= strpos(uri_string(), 'requests') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-file-signature"></i> Vehicle Requests (VRS)
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'approver_oic', 'approver_admin', 'dispatcher'])): ?>
+                    <a href="<?= base_url('approvals') ?>" class="sidebar-link <?= strpos(uri_string(), 'approvals') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-stamp"></i> Approvals &amp; 4h Escalation
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                    <a href="<?= base_url('dispatch') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch') === 0 && strpos(uri_string(), 'calendar') === false ? 'active' : '' ?>">
+                        <i class="fa-solid fa-truck-fast"></i> Dispatch Console
+                    </a>
+                    <a href="<?= base_url('dispatch/calendar') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch/calendar') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-calendar-days"></i> Allocation Calendar
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor'])): ?>
+                    <a href="<?= base_url('tickets') ?>" class="sidebar-link <?= strpos(uri_string(), 'tickets') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-ticket"></i> Driver's Trip Tickets (e-DTT)
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher'])): ?>
+                    <a href="<?= base_url('gate') ?>" class="sidebar-link <?= strpos(uri_string(), 'gate') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-shield-halved"></i> Gate QR Checkpoint
+                    </a>
+                <?php endif; ?>
+                </div><!-- /nav-group workflow -->
             <?php endif; ?>
 
+            <!-- ============================================================
+                 3 · SAFETY & PREVENTIVE OPERATIONS (BRD Modules 5–6)
+            ============================================================ -->
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'maintenance'])): ?>
+                <button type="button" class="nav-section-toggle" data-nav-group="safety" aria-expanded="true">
+                    Safety &amp; Preventive Ops <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="nav-group" data-nav-group-body="safety">
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor'])): ?>
+                    <a href="<?= base_url('safety') ?>" class="sidebar-link <?= strpos(uri_string(), 'safety') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-clipboard-check"></i> BLOWBAGETS Safety Checks
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
+                    <a href="<?= base_url('pir') ?>" class="sidebar-link <?= strpos(uri_string(), 'pir') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Mechanic PIR Queue
+                    </a>
+                <?php endif; ?>
+
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor'])): ?>
+                    <a href="<?= base_url('rfid') ?>" class="sidebar-link <?= strpos(uri_string(), 'rfid') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-credit-card"></i> Tollway RFID Cards
+                    </a>
+                <?php endif; ?>
+                </div><!-- /nav-group safety -->
+            <?php endif; ?>
+
+            <!-- ============================================================
+                 4 · FLEET ASSETS & INFRASTRUCTURE
+            ============================================================ -->
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
+                <button type="button" class="nav-section-toggle" data-nav-group="assets" aria-expanded="true">
+                    Fleet Assets &amp; Infrastructure <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="nav-group" data-nav-group-body="assets">
+                <a href="<?= base_url('vehicles') ?>" class="sidebar-link <?= strpos(uri_string(), 'vehicles') === 0 ? 'active' : '' ?>">
+                    <i class="fa-solid fa-truck"></i> Vehicle Fleet (5K PMS)
+                </a>
+                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                    <a href="<?= base_url('drivers') ?>" class="sidebar-link <?= strpos(uri_string(), 'drivers') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-id-card"></i> Driver Personnel
+                    </a>
+                <?php endif; ?>
+                <a href="<?= base_url('tracking') ?>" class="sidebar-link <?= uri_string() === 'tracking' ? 'active' : '' ?>">
+                    <i class="fa-solid fa-satellite-dish"></i> Live GPS Radar
+                </a>
+                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                    <a href="<?= base_url('fuel') ?>" class="sidebar-link <?= strpos(uri_string(), 'fuel') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-gas-pump"></i> Fuel Records
+                    </a>
+                <?php endif; ?>
+                <?php if (in_array($userRole, ['admin', 'maintenance'])): ?>
+                    <a href="<?= base_url('maintenance') ?>" class="sidebar-link <?= strpos(uri_string(), 'maintenance') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-wrench"></i> Service Orders &amp; PMS
+                    </a>
+                <?php endif; ?>
+                </div><!-- /nav-group assets -->
+            <?php endif; ?>
+
+            <!-- ============================================================
+                 5 · COA & REGULATORY COMPLIANCE (BRD Module 7, NFR-3)
+            ============================================================ -->
             <?php if (in_array($userRole, ['admin', 'auditor'])): ?>
+                <button type="button" class="nav-section-toggle" data-nav-group="compliance" aria-expanded="true">
+                    COA &amp; Regulatory Compliance <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="nav-group" data-nav-group-body="compliance">
                 <a href="<?= base_url('audit') ?>" class="sidebar-link <?= uri_string() === 'audit' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-scale-balanced"></i> COA Compliance & Audits
+                    <i class="fa-solid fa-scale-balanced"></i> COA Compliance &amp; Audits
                 </a>
-                <!-- Module 7 — COA & Government Compliance Portal -->
                 <a href="<?= base_url('compliance') ?>" class="sidebar-link <?= strpos(uri_string(), 'compliance') === 0 ? 'active' : '' ?>">
                     <i class="fa-solid fa-file-shield"></i> Compliance Portal (Form B)
                 </a>
                 <a href="<?= base_url('audit/logs') ?>" class="sidebar-link <?= strpos(uri_string(), 'audit/logs') === 0 ? 'active' : '' ?>">
                     <i class="fa-solid fa-clock-rotate-left"></i> System Audit Trail
                 </a>
+                </div><!-- /nav-group compliance -->
             <?php endif; ?>
 
-            <!-- 2. FLEET ASSETS & TELEMETRY -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
-                <div class="nav-section-title">Fleet Assets & Infrastructure</div>
-                <a href="<?= base_url('dashboard') ?>" class="sidebar-link <?= uri_string() === '' || uri_string() === 'dashboard' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-chart-line"></i> Command Center
-                </a>
-                <a href="<?= base_url('vehicles') ?>" class="sidebar-link <?= strpos(uri_string(), 'vehicles') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-truck"></i> Vehicle Fleet (5K PMS)
-                </a>
-                <a href="<?= base_url('drivers') ?>" class="sidebar-link <?= strpos(uri_string(), 'drivers') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-id-card"></i> Driver Personnel
-                </a>
-                <a href="<?= base_url('tracking') ?>" class="sidebar-link <?= uri_string() === 'tracking' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-satellite-dish"></i> Live GPS Radar
-                </a>
-                <a href="<?= base_url('fuel') ?>" class="sidebar-link <?= strpos(uri_string(), 'fuel') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-gas-pump"></i> Fuel Records
-                </a>
-                <a href="<?= base_url('maintenance') ?>" class="sidebar-link <?= strpos(uri_string(), 'maintenance') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-wrench"></i> Service Orders & PMS
+            <!-- ============================================================
+                 6 · ADMINISTRATION (account governance)
+            ============================================================ -->
+            <?php if ($userRole === 'admin'): ?>
+                <div class="nav-section-title">Administration</div>
+                <a href="<?= base_url('users') ?>" class="sidebar-link <?= strpos(uri_string(), 'users') === 0 ? 'active' : '' ?>" title="Provision and manage user accounts for every role">
+                    <i class="fa-solid fa-users-gear"></i> User Accounts
+                    <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; letter-spacing: 0.06em;">SUPER ADMIN</span>
                 </a>
             <?php endif; ?>
 
-            <!-- 3. MOBILE PWA FOR DRIVER -->
+            <!-- ============================================================
+                 7 · MOBILE OPERATIONS
+            ============================================================ -->
             <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver'])): ?>
                 <div class="nav-section-title">Mobile Operations</div>
                 <a href="<?= base_url('driver/trips') ?>" target="_blank" class="sidebar-link">
@@ -652,7 +939,7 @@
         <!-- Sidebar Footer -->
         <div class="sidebar-footer">
             <span class="mono"><i class="fa-solid fa-shield-halved text-success me-1"></i> GovTech Secured</span>
-            <span class="mono">v2.0</span>
+            <span class="mono">PIA-AFMS v2.1</span>
         </div>
     </aside>
     <div id="sidebarBackdrop"></div>
@@ -661,42 +948,50 @@
     <div id="main-wrapper">
         <!-- Top Header Bar -->
         <header class="top-header">
-            <div class="d-flex align-items-center gap-2 gap-md-3">
+            <div class="d-flex align-items-center gap-2 gap-md-3 flex-wrap">
                 <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none px-2 py-1" id="sidebarToggle" aria-label="Toggle Sidebar Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="telemetry-pulse">
+                <div class="telemetry-pulse d-none d-md-inline-flex">
                     <div class="pulse-dot"></div>
                     <span>Telematics Online</span>
                 </div>
-                <span class="text-muted small d-none d-md-inline">|</span>
-                <span class="badge bg-white text-dark border d-none d-lg-inline-flex align-items-center gap-1 shadow-sm" style="font-size: 0.72rem; padding: 4px 8px;" title="Active Security: CSRF Enabled, Secure Headers (SAMEORIGIN, nosniff), Rate-Limited Auth, RBAC Enforced">
-                    <i class="fa-solid fa-shield-halved text-success"></i> Secured System (CSRF &bull; RBAC &bull; Rate-Limit)
+                <span class="badge bg-white text-dark border d-none d-xl-inline-flex align-items-center gap-1" style="font-size: 0.72rem; padding: 4px 8px;" title="Active Security: CSRF Enabled, Secure Headers (SAMEORIGIN, nosniff), Rate-Limited Auth, RBAC Enforced">
+                    <i class="fa-solid fa-shield-halved text-success"></i> Secured (CSRF &bull; RBAC &bull; Rate-Limit)
                 </span>
+
+                <!-- Contextual breadcrumb: current sidebar section / page -->
+                <nav aria-label="breadcrumb" class="d-none d-lg-flex align-items-center gap-2 ms-1">
+                    <span class="text-muted" style="font-size: 0.74rem;">
+                        <i class="fa-solid fa-house me-1" style="font-size: 0.62rem;"></i><?= esc($crumbSection) ?>
+                    </span>
+                    <span class="text-secondary" style="font-size: 0.6rem;">/</span>
+                    <span class="fw-semibold text-dark text-truncate" style="font-size: 0.76rem; max-width: 260px;"><?= esc($title ?? 'Dashboard') ?></span>
+                </nav>
             </div>
 
             <!-- Profile & Actions Dropdown -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- In-App Notification Bell -->
-                <a href="<?= base_url('notifications') ?>" class="btn btn-corp-secondary position-relative d-flex align-items-center gap-2 py-1 px-3 shadow-sm" title="My Notifications">
+                <a href="<?= base_url('notifications') ?>" class="btn btn-corp btn-corp-secondary position-relative d-flex align-items-center gap-2" title="My Notifications">
                     <i class="fa-solid fa-bell text-primary"></i>
                     <span class="small fw-semibold d-none d-sm-inline">Alerts</span>
                     <?php if ($notifUnread > 0): ?>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.58rem;">
+                        <span class="position-absolute badge rounded-pill bg-danger d-flex align-items-center justify-content-center" style="font-size: 0.56rem; min-width: 16px; height: 16px; top: 1px; right: 1px; padding: 0;">
                             <?= $notifUnread > 99 ? '99+' : $notifUnread ?>
                         </span>
                     <?php endif; ?>
                 </a>
 
                 <!-- System Guide & User Manual Trigger -->
-                <button type="button" class="btn btn-corp-secondary d-flex align-items-center gap-2 py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#systemGuideModal" title="Open Complete System Operations & Security Guide">
+                <button type="button" class="btn btn-corp btn-corp-secondary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#systemGuideModal" title="Open Complete System Operations & Security Guide">
                     <i class="fa-solid fa-book-open text-primary"></i>
                     <span class="small fw-semibold d-none d-sm-inline">System Manual</span>
                 </button>
 
                 <div class="dropdown">
-                    <button class="btn btn-corp-secondary d-flex align-items-center gap-2 py-1 px-3" type="button" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-circle-user text-primary-accent" style="color: #2563eb;"></i>
+                    <button class="btn btn-corp btn-corp-secondary d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-circle-user" style="color: #2563eb;"></i>
                         <span class="small fw-semibold"><?= esc($userName) ?></span>
                         <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
                     </button>
@@ -737,7 +1032,7 @@
         <!-- Flash Notifications (Global) -->
         <div class="px-4 pt-3 pb-0">
             <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success alert-dismissible fade show p-3 rounded-2 border-0 shadow-sm d-flex align-items-center" role="alert" style="background: #f0fdf4; color: #166534; border-left: 4px solid #16a34a !important;">
+                <div class="alert alert-success alert-dismissible fade show p-3 rounded-3 border d-flex align-items-center" role="alert" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0 !important;">
                     <i class="fa-solid fa-circle-check me-2 fs-5"></i>
                     <div><?= session()->getFlashdata('success') ?></div>
                     <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
@@ -745,7 +1040,7 @@
             <?php endif; ?>
 
             <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger alert-dismissible fade show p-3 rounded-2 border-0 shadow-sm d-flex align-items-center" role="alert" style="background: #fef2f2; color: #991b1b; border-left: 4px solid #dc2626 !important;">
+                <div class="alert alert-danger alert-dismissible fade show p-3 rounded-3 border d-flex align-items-center" role="alert" style="background: #fef2f2; color: #991b1b; border-color: #fecaca !important;">
                     <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i>
                     <div><?= session()->getFlashdata('error') ?></div>
                     <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
@@ -770,7 +1065,7 @@
                             <i class="fa-solid fa-book-open-reader"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold text-dark mb-0" id="systemGuideModalLabel">FleetPulse Operations & Security Manual</h5>
+                            <h5 class="modal-title fw-bold text-dark mb-0" id="systemGuideModalLabel">PIA Motorpool Operations & Security Manual</h5>
                             <span class="small text-muted font-monospace">Architecture, Operational Workflows & Active Security Protocols</span>
                         </div>
                     </div>
@@ -816,7 +1111,7 @@
                         <div class="tab-pane fade show active" id="tab-workflows" role="tabpanel">
                             <div class="alert alert-primary border-0 rounded-2 py-2 px-3 mb-4 d-flex align-items-center gap-2">
                                 <i class="fa-solid fa-circle-info fs-5"></i>
-                                <span>FleetPulse orchestrates commercial freight through a closed-loop verified workflow from asset allocation to trip arrival.</span>
+                                <span>The PIA Motorpool Automated Fleet Management System orchestrates official government travel through a closed-loop verified workflow — from vehicle request to trip completion and COA compliance.</span>
                             </div>
 
                             <div class="row g-3">
@@ -1030,18 +1325,18 @@
 
                         <!-- TAB 5: REST & IoT APIs -->
                         <div class="tab-pane fade" id="tab-api" role="tabpanel">
-                            <p class="text-muted small mb-3">External GPS transponders, mobile tracking devices, and third-party enterprise tools can query the FleetPulse REST API:</p>
+                            <p class="text-muted small mb-3">External GPS transponders, mobile tracking devices, and third-party enterprise tools can query the PIA Motorpool REST API (relative to the deployed base URL):</p>
 
                             <div class="bg-dark text-light p-3 rounded font-monospace small mb-2" style="font-size:0.75rem;">
                                 <div class="text-info mb-1"># 1. Fetch Real-Time Fleet Map with GeoJSON Collection:</div>
-                                <div>GET http://localhost:8090/api/v1/tracking</div>
+                                <div>GET /api/v1/tracking</div>
 
                                 <div class="text-info mt-3 mb-1"># 2. Ingest GPS Transponder Coordinate:</div>
-                                <div>POST http://localhost:8090/api/v1/gps/ping</div>
+                                <div>POST /api/v1/gps/ping</div>
                                 <div class="text-muted">{ "vehicle_id": 1, "latitude": 14.5995, "longitude": 120.9842, "speed_kmh": 65.0, "fuel_level": 88.0 }</div>
 
                                 <div class="text-info mt-3 mb-1"># 3. Calculate Road Route Corridor:</div>
-                                <div>GET http://localhost:8090/api/v1/route?origin_lat=14.58&origin_lng=120.96&dest_lat=15.18&dest_lng=120.54</div>
+                                <div>GET /api/v1/route?origin_lat=14.58&origin_lng=120.96&dest_lat=15.18&dest_lng=120.54</div>
                             </div>
                         </div>
 
@@ -1061,8 +1356,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggle  = document.getElementById('sidebarToggle');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        // --- Mobile sidebar open / close -------------------------------
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', function () {
                 document.body.classList.toggle('sidebar-open');
@@ -1072,6 +1369,50 @@
             sidebarBackdrop.addEventListener('click', function () {
                 document.body.classList.remove('sidebar-open');
             });
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { document.body.classList.remove('sidebar-open'); }
+        });
+        // Tapping a menu link on small screens should return to the content
+        document.querySelectorAll('#sidebar .sidebar-link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                document.body.classList.remove('sidebar-open');
+            });
+        });
+
+        // --- Collapsible menu groups (state remembered per browser) ----
+        var storageKey = 'pia-nav-groups';
+        var collapsed  = {};
+        try { collapsed = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch (e) { collapsed = {}; }
+
+        document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
+            var group = document.querySelector('[data-nav-group-body="' + toggle.dataset.navGroup + '"]');
+            if (!group) { return; }
+
+            if (collapsed[toggle.dataset.navGroup]) {
+                group.classList.add('collapsed');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+
+            toggle.addEventListener('click', function () {
+                var isCollapsed = group.classList.toggle('collapsed');
+                toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+                collapsed[toggle.dataset.navGroup] = isCollapsed;
+                try { localStorage.setItem(storageKey, JSON.stringify(collapsed)); } catch (e) { /* private mode */ }
+            });
+        });
+
+        // --- Keep the active page visible in the menu ------------------
+        var activeLink = document.querySelector('#sidebar .sidebar-link.active');
+        if (activeLink) {
+            // Expand the group that contains the active link
+            var parentGroup = activeLink.closest('.nav-group');
+            if (parentGroup && parentGroup.classList.contains('collapsed')) {
+                parentGroup.classList.remove('collapsed');
+                var ownerToggle = document.querySelector('.nav-section-toggle[data-nav-group="' + parentGroup.dataset.navGroupBody + '"]');
+                if (ownerToggle) { ownerToggle.setAttribute('aria-expanded', 'true'); }
+            }
+            activeLink.scrollIntoView({ block: 'nearest' });
         }
     });
     </script>

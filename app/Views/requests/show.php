@@ -146,6 +146,15 @@
                         <div class="text-muted small"><?= esc($request['office_code'] ?? 'CO') ?> &bull; <?= esc($request['office_address'] ?? 'Diliman, Quezon City') ?></div>
                     </div>
                     <div class="col-md-6">
+                        <label class="text-muted small d-block">Department Information</label>
+                        <?php if (!empty($request['department_name'])): ?>
+                            <div class="fw-bold text-dark"><?= esc($request['department_name']) ?></div>
+                            <div class="text-muted small"><?= esc($request['department_code'] ?? '') ?><?php if (!empty($request['department_head'])): ?> &bull; Head: <?= esc($request['department_head']) ?><?php endif; ?></div>
+                        <?php else: ?>
+                            <div class="text-muted small fst-italic">Not specified</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
                         <label class="text-muted small d-block">Filing Officer / Requestor</label>
                         <div class="fw-bold text-dark"><?= esc($request['requestor_full_name'] ?? $request['requestor_name']) ?></div>
                         <div class="text-muted small"><?= esc($request['requestor_designation'] ?? 'PIA Personnel') ?> (<?= esc($request['requestor_email'] ?? '') ?>)</div>

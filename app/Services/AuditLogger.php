@@ -32,6 +32,9 @@ class AuditLogger
     public const RFID_RELOAD        = 'rfid_reload';
     public const USER_MFA_CHANGE    = 'mfa_setting_changed';
     public const REPORT_EXPORT      = 'report_export';
+    public const USER_ACCOUNT_CREATED  = 'user_account_created';
+    public const USER_ACCOUNT_UPDATED  = 'user_account_updated';
+    public const USER_ACCOUNT_TOGGLED  = 'user_account_status_changed';
 
     /**
      * Write an immutable audit entry. Returns true when persisted.

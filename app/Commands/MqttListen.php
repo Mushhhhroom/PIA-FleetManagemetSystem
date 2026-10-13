@@ -16,7 +16,7 @@ class MqttListen extends BaseCommand
 
     public function run(array $params)
     {
-        CLI::write('FleetPulse MQTT Telemetry Subscriber started...', 'green');
+        CLI::write('PIA Motorpool MQTT Telemetry Subscriber started...', 'green');
         CLI::write('Listening for incoming 4G/GPS device telemetry packets...', 'yellow');
 
         $pingModel = new GpsPingModel();

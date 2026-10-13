@@ -182,6 +182,20 @@
             </td>
         </tr>
         <tr>
+            <th>Department Information</th>
+            <td>
+                <?php if (!empty($request['department_name'])): ?>
+                    <strong><?= esc($request['department_name']) ?></strong>
+                    <span class="mono" style="font-size: 8.5pt;">(<?= esc($request['department_code'] ?? '') ?>)</span>
+                    <?php if (!empty($request['department_head'])): ?>
+                        &bull; Head: <?= esc($request['department_head']) ?>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <span style="color: #777;">Not specified</span>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
             <th>Requesting Official / Staff</th>
             <td>
                 <?= esc($request['requestor_full_name'] ?? $request['requestor_name']) ?>

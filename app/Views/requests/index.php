@@ -101,6 +101,11 @@
                             </td>
                             <td>
                                 <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
+                                <?php if (!empty($r['department_name'])): ?>
+                                    <div class="text-primary" style="font-size: 0.72rem;">
+                                        <i class="fa-solid fa-building-user me-1"></i><?= esc($r['department_name']) ?>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="text-muted" style="font-size: 0.72rem;">Filed by: <?= esc($r['requestor_name']) ?></div>
                             </td>
                             <td>

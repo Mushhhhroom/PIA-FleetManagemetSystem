@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#080e1a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FleetPulse Driver">
+    <meta name="apple-mobile-web-app-title" content="PIA Motorpool Driver">
     <title><?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?> | Driver Mobile Portal</title>
 
     <!-- Google Fonts: Inter & JetBrains Mono -->

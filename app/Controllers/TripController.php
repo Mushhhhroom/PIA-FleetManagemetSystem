@@ -126,7 +126,7 @@ class TripController extends BaseController
             $smsSender = new SmsSender();
             $smsSender->send(
                 $driver['phone'],
-                "FleetPulse Dispatch: Trip {$tripNumber} assigned. Route: {$data['origin_address']} to {$data['destination_address']} ({$distanceKm} km). Review details in your PWA."
+                "PIA Motorpool Dispatch: Trip {$tripNumber} assigned. Route: {$data['origin_address']} to {$data['destination_address']} ({$distanceKm} km). Review details in your PWA."
             );
         }
 
@@ -232,7 +232,7 @@ class TripController extends BaseController
                     $smsSender = new SmsSender();
                     $smsSender->send(
                         '+63 919 555 0300',
-                        "FleetPulse Maintenance Alert: Vehicle {$vehicle['vehicle_code']} reached {$endOdo} km (Threshold: {$vehicle['next_service_km']} km). Work order {$maintRef} generated."
+                        "PIA Motorpool Maintenance Alert: Vehicle {$vehicle['vehicle_code']} reached {$endOdo} km (Threshold: {$vehicle['next_service_km']} km). Work order {$maintRef} generated."
                     );
                 }
             }

@@ -22,7 +22,7 @@ class RouteService
 
         try {
             $url = $this->osrmUrl . "{$originLng},{$originLat};{$destLng},{$destLat}?overview=simplified&geometries=geojson";
-            $response = $client->get($url, ['headers' => ['User-Agent' => 'FleetPulse/1.1']]);
+            $response = $client->get($url, ['headers' => ['User-Agent' => 'PIA-AFMS/2.1']]);
 
             if ($response->getStatusCode() === 200) {
                 $data = json_decode($response->getBody(), true);

@@ -23,7 +23,7 @@ class FleetTest extends BaseCommand
     public function run(array $params)
     {
         CLI::write("==================================================================", 'yellow');
-        CLI::write(" FleetPulse FMS - End-to-End SDD Process Integration Suite       ", 'green');
+        CLI::write(" PIA Motorpool FMS - End-to-End SDD Process Integration Suite       ", 'green');
         CLI::write("==================================================================", 'yellow');
 
         $passed = 0;

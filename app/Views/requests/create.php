@@ -45,16 +45,16 @@
                     </div>
                 </div>
 
-                <!-- 1. Office & Geographical Scope -->
+                <!-- 1. Office, Department & Geographical Scope -->
                 <div class="row g-3 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label small fw-semibold text-dark">Office / Division Scope <span class="text-danger">*</span></label>
                         <select name="office_scope" id="office_scope" class="form-select form-select-sm" required>
                             <option value="central" selected>Central Office (Quezon City)</option>
                             <option value="regional">Regional Office (Field / Satellite)</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <label class="form-label small fw-semibold text-dark">Originating Division / Office <span class="text-danger">*</span></label>
                         <select name="office_id" id="office_id" class="form-select form-select-sm" required>
                             <?php foreach ($offices as $off): ?>
@@ -63,6 +63,19 @@
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-dark">Department Information <span class="text-danger">*</span></label>
+                        <select name="department_id" id="department_id" class="form-select form-select-sm" required>
+                            <option value="" disabled selected>-- Select Department / Unit --</option>
+                            <?php foreach ($departments as $dep): ?>
+                                <option value="<?= $dep['id'] ?>">
+                                    [<?= esc($dep['department_code']) ?>] <?= esc($dep['department_name']) ?>
+                                    <?php if (!empty($dep['head_name'])): ?> &mdash; Head: <?= esc($dep['head_name']) ?><?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text" style="font-size: 0.72rem;">Department / unit requesting the vehicle. Used for trip-cost allocation and departmental reporting.</div>
                     </div>
                 </div>
 

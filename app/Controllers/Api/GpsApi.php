@@ -171,7 +171,7 @@ class GpsApi extends BaseController
                 $smsSender = new SmsSender();
                 $smsSender->send(
                     '+63 919 555 0300',
-                    "FleetPulse Telematics Alert: Engine fault {$engineCode} reported on {$vehicle['vehicle_code']} at {$geofenceName}. WO {$refNo} scheduled."
+                    "PIA Motorpool Telematics Alert: Engine fault {$engineCode} reported on {$vehicle['vehicle_code']} at {$geofenceName}. WO {$refNo} scheduled."
                 );
             }
         }

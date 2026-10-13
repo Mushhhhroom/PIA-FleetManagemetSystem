@@ -56,7 +56,7 @@ class MaintenanceDue extends BaseCommand
                     $smsSender = new \App\Libraries\SmsSender();
                     $smsSender->send(
                         '+63 919 555 0300',
-                        "FleetPulse Maintenance Alert: Vehicle {$v['vehicle_code']} exceeded PMS service threshold ({$odo} km / {$nextDue} km). Work order {$refNo} auto-generated."
+                        "PIA Motorpool Maintenance Alert: Vehicle {$v['vehicle_code']} exceeded PMS service threshold ({$odo} km / {$nextDue} km). Work order {$refNo} auto-generated."
                     );
                 }
             }

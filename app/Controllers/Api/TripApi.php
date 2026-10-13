@@ -130,7 +130,7 @@ class TripApi extends BaseController
                 $smsSender = new \App\Libraries\SmsSender();
                 $smsSender->send(
                     '+63 919 555 0300',
-                    "FleetPulse Maintenance Alert: Vehicle {$vehicle['vehicle_code']} reached {$endOdo} km. Work order {$maintRef} generated."
+                    "PIA Motorpool Maintenance Alert: Vehicle {$vehicle['vehicle_code']} reached {$endOdo} km. Work order {$maintRef} generated."
                 );
             }
         }

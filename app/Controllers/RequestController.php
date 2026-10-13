@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\TripRequestModel;
 use App\Models\OfficeModel;
+use App\Models\DepartmentModel;
 use App\Models\DriverModel;
 use App\Models\NotificationModel;
 use App\Models\UserModel;
@@ -14,6 +15,7 @@ class RequestController extends BaseController
 {
     protected TripRequestModel $requestModel;
     protected OfficeModel $officeModel;
+    protected DepartmentModel $departmentModel;
     protected DriverModel $driverModel;
     protected NotificationModel $notificationModel;
 
@@ -21,6 +23,7 @@ class RequestController extends BaseController
     {
         $this->requestModel      = new TripRequestModel();
         $this->officeModel       = new OfficeModel();
+        $this->departmentModel   = new DepartmentModel();
         $this->driverModel       = new DriverModel();
         $this->notificationModel = new NotificationModel();
     }
@@ -66,13 +69,15 @@ class RequestController extends BaseController
 
     public function create()
     {
-        $offices = $this->officeModel->orderBy('office_type', 'ASC')->orderBy('office_name', 'ASC')->findAll();
-        $drivers = $this->driverModel->where('status !=', 'suspended')->findAll();
+        $offices     = $this->officeModel->orderBy('office_type', 'ASC')->orderBy('office_name', 'ASC')->findAll();
+        $departments = $this->departmentModel->where('status', 'active')->orderBy('department_name', 'ASC')->findAll();
+        $drivers     = $this->driverModel->where('status !=', 'suspended')->findAll();
 
         $data = [
-            'title'   => 'New Vehicle Request Slip (ADMIN-F-018 rev2)',
-            'offices' => $offices,
-            'drivers' => $drivers,
+            'title'       => 'New Vehicle Request Slip (ADMIN-F-018 rev2)',
+            'offices'     => $offices,
+            'departments' => $departments,
+            'drivers'     => $drivers,
         ];
 
         return view('requests/create', $data);
@@ -128,6 +133,15 @@ class RequestController extends BaseController
         // FR-1.4: 4-Hour Approval Escalation Deadline (escalates to Admin Division Chief)
         $slaDeadline = date('Y-m-d H:i:s', strtotime('+' . SlaService::ESCALATION_HOURS . ' hours'));
 
+        // Resolve Department Information (required dropdown selection)
+        $departmentId = (int)$this->request->getPost('department_id');
+        if ($departmentId <= 0) {
+            return redirect()->back()->withInput()->with('error', 'Please select a Department Information for this vehicle request.');
+        }
+        if (!$this->departmentModel->find($departmentId)) {
+            return redirect()->back()->withInput()->with('error', 'The selected department does not exist. Please choose a valid department.');
+        }
+
         // Resolve OIC Approver based on office
         $officeId = (int)$this->request->getPost('office_id');
         $userModel = new UserModel();
@@ -142,6 +156,7 @@ class RequestController extends BaseController
             'requestor_id'           => $userId,
             'requestor_name'         => $userName,
             'office_id'              => $officeId,
+            'department_id'          => $departmentId,
             'office_scope'           => $this->request->getPost('office_scope') ?? 'central',
             'destination'            => trim((string)$this->request->getPost('destination')),
             'purpose'                => trim((string)$this->request->getPost('purpose')),

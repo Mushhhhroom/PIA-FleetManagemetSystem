@@ -4,7 +4,10 @@
 <!-- Page Header -->
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
-        <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">Operations Command Center</h3>
+        <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
+            Overview &bull; Real-Time Fleet Intelligence
+        </div>
+        <h1 class="page-title mb-1">Operations Command Center</h1>
         <p class="text-muted small mb-0">High-level telemetry overview, active dispatches, and fleet health.</p>
     </div>
     <div class="d-flex align-items-center gap-2">

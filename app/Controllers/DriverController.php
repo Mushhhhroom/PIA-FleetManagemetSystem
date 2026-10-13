@@ -386,7 +386,7 @@ class DriverController extends BaseController
         $smsSender = new \App\Libraries\SmsSender();
         $smsSender->send(
             '+63 918 555 0200',
-            "FleetPulse Dispatch Alert: Incident {$incNo} reported by driver ({$type} - {$severity}). Location: {$location}."
+            "PIA Motorpool Dispatch Alert: Incident {$incNo} reported by driver ({$type} - {$severity}). Location: {$location}."
             . ($pirNumber ? " PIR {$pirNumber} auto-generated; vehicle Disabled." : '')
         );
 

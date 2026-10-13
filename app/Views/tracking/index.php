@@ -210,7 +210,7 @@
 
                 <div class="p-2 rounded bg-light border text-muted small" style="font-size: 0.72rem;">
                     <i class="fa-solid fa-shield-halved text-success me-1"></i>
-                    <strong>Resilience Guarantee:</strong> If the Google API key fails validation or runs out of quota, FleetPulse automatically fails over to the Google Maps high-resolution tile display so dispatchers never experience downtime.
+                    <strong>Resilience Guarantee:</strong> If the Google API key fails validation or runs out of quota, the system automatically fails over to the Google Maps high-resolution tile display so dispatchers never experience downtime.
                 </div>
             </div>
             <div class="modal-footer pt-2 border-top">
