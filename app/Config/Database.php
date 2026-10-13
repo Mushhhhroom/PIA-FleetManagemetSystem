@@ -200,5 +200,36 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }
+
+        /*
+         * Translate TLS settings that arrive through the environment.
+         *
+         * BaseConfig maps env values onto scalar defaults, but `encrypt`
+         * defaults to `false`, so an env value would land as a raw string —
+         * which the MySQLi driver silently ignores (it only honours arrays).
+         * Supported forms for `database.default.encrypt`:
+         *
+         *   true
+         *       → TLS handshake, no client-side CA pinning
+         *       (required by cloud MySQL such as TiDB Cloud)
+         *   {"ssl_ca":"/path/ca.pem","ssl_verify":true}   (JSON)
+         *       → full TLS configuration with CA verification
+         */
+        $encrypt = $this->default['encrypt'] ?? false;
+        if (is_string($encrypt)) {
+            $encrypt = trim($encrypt);
+            if ($encrypt === '' || strtolower($encrypt) === 'false') {
+                $this->default['encrypt'] = false;
+            } else {
+                $decoded = json_decode($encrypt, true);
+                if (is_array($decoded)) {
+                    $this->default['encrypt'] = $decoded;
+                } elseif (strtolower($encrypt) === 'true') {
+                    $this->default['encrypt'] = ['ssl_verify' => false];
+                } else {
+                    $this->default['encrypt'] = false;
+                }
+            }
+        }
     }
 }
