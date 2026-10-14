@@ -134,8 +134,8 @@ class ComplianceController extends BaseController
         $mailer   = new MailerService();
         $userModel = new UserModel();
         $heads = array_merge(
-            $userModel->where('role', 'admin')->findAll(),
-            $userModel->where('role', 'dispatcher')->findAll()
+            $userModel->where('role', 'admin')->where('status', 'active')->findAll(),
+            $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll()
         );
 
         $issued  = 0;

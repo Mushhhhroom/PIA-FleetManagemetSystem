@@ -149,8 +149,8 @@ class RfidController extends BaseController
         $userModel = new UserModel();
         $mailer    = new MailerService();
         $heads = array_merge(
-            $userModel->where('role', 'dispatcher')->findAll(),
-            $userModel->where('role', 'admin')->findAll()
+            $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll(),
+            $userModel->where('role', 'admin')->where('status', 'active')->findAll()
         );
 
         $title = "RFID LOW BALANCE ALERT (FR-6.3): {$card['card_number']}";

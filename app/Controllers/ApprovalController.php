@@ -228,7 +228,7 @@ class ApprovalController extends BaseController
 
                 // Notify Dispatchers
                 $userModel = new UserModel();
-                $dispatchers = $userModel->where('role', 'dispatcher')->findAll();
+                $dispatchers = $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll();
                 foreach ($dispatchers as $disp) {
                     $this->notificationModel->insert([
                         'user_id'    => $disp['id'],

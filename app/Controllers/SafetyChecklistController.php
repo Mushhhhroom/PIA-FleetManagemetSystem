@@ -155,9 +155,9 @@ class SafetyChecklistController extends BaseController
         // 4. Notify mechanics + dispatchers
         $userModel = new UserModel();
         $recipients = array_merge(
-            $userModel->where('role', 'maintenance')->findAll(),
-            $userModel->where('role', 'dispatcher')->findAll(),
-            $userModel->where('role', 'admin')->findAll()
+            $userModel->where('role', 'maintenance')->where('status', 'active')->findAll(),
+            $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll(),
+            $userModel->where('role', 'admin')->where('status', 'active')->findAll()
         );
         foreach ($recipients as $recip) {
             $this->notificationModel->insert([

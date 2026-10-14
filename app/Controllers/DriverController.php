@@ -356,9 +356,9 @@ class DriverController extends BaseController
             // Route to the mechanic queue + notify dispatch (FR-4.3)
             $userModel = new \App\Models\UserModel();
             $recipients = array_merge(
-                $userModel->where('role', 'maintenance')->findAll(),
-                $userModel->where('role', 'dispatcher')->findAll(),
-                $userModel->where('role', 'admin')->findAll()
+                $userModel->where('role', 'maintenance')->where('status', 'active')->findAll(),
+                $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll(),
+                $userModel->where('role', 'admin')->where('status', 'active')->findAll()
             );
             $notificationModel = new \App\Models\NotificationModel();
             foreach ($recipients as $recip) {
