@@ -327,7 +327,7 @@
                 <button type="button" class="quick-role-btn py-1" onclick="setCreds('oic.news@pia.gov.ph', 'Oic_News2026!')">
                     <div class="d-flex align-items-center gap-2">
                         <i class="fa-solid fa-user-check text-warning" style="font-size: 0.8rem; width: 14px;"></i>
-                        <span class="fw-semibold small">Tier 1 Approver (OIC)</span>
+                        <span class="fw-semibold small">Tier 1 Oversight (OIC)</span>
                         <span class="text-muted small" style="font-size: 0.7rem;">&bull; oic.news@pia.gov.ph</span>
                     </div>
                     <span class="role-chip" style="font-size: 0.65rem;">OIC</span>
@@ -345,7 +345,7 @@
                 <button type="button" class="quick-role-btn py-1" onclick="setCreds('dispatcher@pia.gov.ph', 'Dispatch_2026!')">
                     <div class="d-flex align-items-center gap-2">
                         <i class="fa-solid fa-truck-fast text-success" style="font-size: 0.8rem; width: 14px;"></i>
-                        <span class="fw-semibold small">Motorpool Dispatcher</span>
+                        <span class="fw-semibold small">Motorpool Dispatcher (Tier 1 Approver)</span>
                         <span class="text-muted small" style="font-size: 0.7rem;">&bull; dispatcher@pia.gov.ph</span>
                     </div>
                     <span class="role-chip" style="font-size: 0.65rem;">Dispatch</span>

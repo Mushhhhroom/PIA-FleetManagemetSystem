@@ -255,8 +255,8 @@
         <div class="sig-box">
             <div class="sig-label">Recommending Approval (Tier 1):</div>
             <div>
-                <div class="sig-name"><?= esc($request['oic_approver_name'] ?? 'Division Chief / Regional Director') ?></div>
-                <div class="sig-title"><?= esc($request['oic_approver_designation'] ?? 'Staff Director / OIC') ?></div>
+                <div class="sig-name"><?= esc($request['oic_approver_name'] ?? 'Motorpool Dispatcher') ?></div>
+                <div class="sig-title"><?= esc($request['oic_approver_designation'] ?? 'Motorpool Dispatcher (Tier 1 Approver)') ?></div>
                 <div class="mono" style="font-size: 7.5pt; text-align: center; margin-top: 2px;">
                     Date Signed: <?= $request['oic_action_at'] ? date('M d, Y h:i A', strtotime($request['oic_action_at'])) : '____________________' ?>
                 </div>

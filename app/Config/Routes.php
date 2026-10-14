@@ -114,8 +114,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->get('requests/(:num)/print', 'RequestController::printVrs/$1');
     });
 
-    // 2. Multi-Tier Approval Portal & SLA Watcher (OIC & Admin Division Head)
-    $routes->group('', ['filter' => 'role:admin,approver_oic,approver_admin'], static function ($routes) {
+    // 2. Multi-Tier Approval Portal & SLA Watcher (Motorpool Dispatcher = Tier 1, Admin Division Head = Tier 2)
+    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin'], static function ($routes) {
         $routes->post('approvals/(:num)/action', 'ApprovalController::action/$1');
     });
 
@@ -204,6 +204,9 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('(:num)', 'UserController::update/$1');
         $routes->post('(:num)/toggle', 'UserController::toggle/$1');
     });
+
+    // Flowchart and System Visualizer — Super Admin Only
+    $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin']);
 
     // In-app notification center (every BRD flow mirrors here)
     $routes->group('', ['filter' => 'auth'], static function ($routes) {

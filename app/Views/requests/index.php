@@ -43,7 +43,7 @@
         All Requests
     </a>
     <a href="<?= base_url('requests?status=pending_oic') ?>" class="btn btn-sm <?= $activeFilter === 'pending_oic' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
-        <i class="fa-solid fa-user-clock me-1"></i> Pending OIC (Tier 1)
+        <i class="fa-solid fa-user-clock me-1"></i> Pending Dispatcher (Tier 1)
     </a>
     <a href="<?= base_url('requests?status=pending_admin') ?>" class="btn btn-sm <?= $activeFilter === 'pending_admin' ? 'btn-info text-white' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
         <i class="fa-solid fa-stamp me-1"></i> Pending Admin Head (Tier 2)
@@ -147,7 +147,7 @@
                             <td>
                                 <?php
                                     $statusPills = [
-                                        'pending_oic'   => ['label' => 'Pending OIC', 'class' => 'bg-warning text-dark'],
+                                        'pending_oic'   => ['label' => 'Pending Dispatcher', 'class' => 'bg-warning text-dark'],
                                         'pending_admin' => ['label' => 'Pending Admin Head', 'class' => 'bg-info text-white'],
                                         'approved'      => ['label' => 'Authorized', 'class' => 'bg-success text-white'],
                                         'dispatched'    => ['label' => 'Dispatched', 'class' => 'bg-primary text-white'],

@@ -710,9 +710,9 @@
         $roleBadges = [
             'admin'          => ['label' => 'Super Admin / Director', 'color' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.15)'],
             'requestor'      => ['label' => 'Staff / Requestor', 'color' => '#8b5cf6', 'bg' => 'rgba(139, 92, 246, 0.15)'],
-            'approver_oic'   => ['label' => 'Tier 1 Approver (OIC)', 'color' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.15)'],
+            'approver_oic'   => ['label' => 'Tier 1 Oversight (OIC)', 'color' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.15)'],
             'approver_admin' => ['label' => 'Tier 2 Approver (Admin Head)', 'color' => '#06b6d4', 'bg' => 'rgba(6, 182, 212, 0.15)'],
-            'dispatcher'     => ['label' => 'Motorpool Dispatcher', 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
+            'dispatcher'     => ['label' => 'Motorpool Dispatcher (Tier 1 Approver)', 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
             'guard'          => ['label' => 'Gate Security Officer', 'color' => '#64748b', 'bg' => 'rgba(100, 116, 139, 0.15)'],
             'auditor'        => ['label' => 'COA Resident Auditor', 'color' => '#d97706', 'bg' => 'rgba(217, 119, 6, 0.15)'],
             'driver'         => ['label' => 'Official Driver', 'color' => '#0284c7', 'bg' => 'rgba(2, 132, 199, 0.15)'],
@@ -730,7 +730,7 @@
             'vehicles' => 'Fleet Assets', 'drivers' => 'Fleet Assets',
             'tracking' => 'Fleet Assets', 'fuel'    => 'Fleet Assets', 'maintenance' => 'Fleet Assets',
             'audit'    => 'COA & Compliance', 'compliance' => 'COA & Compliance',
-            'users'    => 'Administration', 'dashboard' => 'Overview',
+            'users'    => 'Administration', 'admin' => 'Administration', 'dashboard' => 'Overview',
         ];
         $currentUri   = uri_string();
         $crumbSection = 'Overview';
@@ -919,6 +919,10 @@
             ============================================================ -->
             <?php if ($userRole === 'admin'): ?>
                 <div class="nav-section-title">Administration</div>
+                <a href="<?= base_url('admin/flowchart') ?>" class="sidebar-link <?= strpos(uri_string(), 'admin/flowchart') === 0 ? 'active' : '' ?>" title="System Architecture Flowchart &amp; Module Navigations">
+                    <i class="fa-solid fa-diagram-project"></i> Flowchart &amp; Navigations
+                    <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(16, 185, 129, 0.2); color: #34d399; letter-spacing: 0.06em;">VISUAL</span>
+                </a>
                 <a href="<?= base_url('users') ?>" class="sidebar-link <?= strpos(uri_string(), 'users') === 0 ? 'active' : '' ?>" title="Provision and manage user accounts for every role">
                     <i class="fa-solid fa-users-gear"></i> User Accounts
                     <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; letter-spacing: 0.06em;">SUPER ADMIN</span>
@@ -1177,7 +1181,37 @@
                                             <span class="badge bg-primary">Module 05</span>
                                             <strong class="text-dark">Fuel Logging & Financial Audits</strong>
                                         </div>
-                                        <p class="text-muted small mb-1">Captures fuel volume (liters), cost (â‚±), odometer readings, and receipt image uploads. Computes the executive Fleet Cost per Kilometer metric (Total Operating Expenses &divide; Total Fleet Distance) to identify operational wastage.</p>
+                                        <p class="text-muted small mb-0">Captures fuel volume (liters), cost (₱), odometer readings, and receipt image uploads. Computes the executive Fleet Cost per Kilometer metric (Total Operating Expenses &divide; Total Fleet Distance) to identify operational wastage.</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="p-3 border rounded-2" style="background: #f8fafc; border-color: #cbd5e1 !important;">
+                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-diagram-project text-primary fs-5"></i>
+                                                <strong class="text-dark">Official Travel &amp; Maintenance Flowchart</strong>
+                                            </div>
+                                            <a href="<?= base_url('admin/flowchart') ?>" class="btn btn-sm btn-corp-primary text-decoration-none">
+                                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Interactive Flowchart &amp; Nav
+                                            </a>
+                                        </div>
+                                        <p class="text-muted small mb-3">View sequential flow nodes from VRS Request, 2-Tier SLA Approvals, Dispatch Assignment, BLOWBAGETS Checklist, Gate QR Scan, Live GPS Telematics, to Post-Trip COA Audit.</p>
+                                        <div class="d-flex align-items-center gap-2 overflow-auto pb-1" style="font-size: 0.72rem;">
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-file-pen text-primary me-1"></i>1. VRS</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-stamp text-warning me-1"></i>2. Approval</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-truck text-success me-1"></i>3. Dispatch</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-clipboard-check text-purple me-1"></i>4. Safety</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-qrcode text-secondary me-1"></i>5. Gate</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-satellite-dish text-info me-1"></i>6. Radar</span>
+                                            <i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-scale-balanced text-danger me-1"></i>7. Audit</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

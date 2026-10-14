@@ -6,9 +6,9 @@
     $roleBadges = [
         'admin'          => ['label' => 'Super Admin / Director',  'color' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.15)'],
         'requestor'      => ['label' => 'Staff / Requestor',       'color' => '#8b5cf6', 'bg' => 'rgba(139, 92, 246, 0.15)'],
-        'approver_oic'   => ['label' => 'Tier 1 Approver (OIC)',   'color' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.15)'],
+        'approver_oic'   => ['label' => 'Tier 1 Oversight (OIC)',   'color' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.15)'],
         'approver_admin' => ['label' => 'Tier 2 Approver (Admin)', 'color' => '#06b6d4', 'bg' => 'rgba(6, 182, 212, 0.15)'],
-        'dispatcher'     => ['label' => 'Motorpool Dispatcher',    'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
+        'dispatcher'     => ['label' => 'Motorpool Dispatcher (Tier 1 Approver)', 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
         'guard'          => ['label' => 'Gate Security Officer',   'color' => '#64748b', 'bg' => 'rgba(100, 116, 139, 0.15)'],
         'auditor'        => ['label' => 'COA Resident Auditor',    'color' => '#d97706', 'bg' => 'rgba(217, 119, 6, 0.15)'],
         'driver'         => ['label' => 'Official Driver',         'color' => '#0284c7', 'bg' => 'rgba(2, 132, 199, 0.15)'],
@@ -24,9 +24,14 @@
         <h1 class="page-title mb-1">User Account Administration</h1>
         <p class="text-muted small mb-0">Provision and govern sign-in accounts for every role in the fleet system. All actions are recorded in the immutable audit trail (NFR-3).</p>
     </div>
-    <a href="<?= base_url('users/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
-        <i class="fa-solid fa-user-plus me-1"></i> Provision New Account
-    </a>
+    <div class="d-flex align-items-center gap-2">
+        <a href="<?= base_url('admin/flowchart') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+            <i class="fa-solid fa-diagram-project me-1 text-primary"></i> System Flowchart &amp; Nav
+        </a>
+        <a href="<?= base_url('users/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+            <i class="fa-solid fa-user-plus me-1"></i> Provision New Account
+        </a>
+    </div>
 </div>
 
 <!-- Access Restriction Notice -->

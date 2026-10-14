@@ -8,7 +8,7 @@
             <i class="fa-solid fa-stamp me-1"></i> Multi-Tier Governance &bull; BR-02 SLA Enforcer
         </div>
         <h1 class="page-title mb-1">Approval Portal &amp; 4-Hour Escalation SLA Monitor</h1>
-        <p class="text-muted small mb-0">Official review queues for Division Directors, OICs, and Administrative Division Head.</p>
+        <p class="text-muted small mb-0">Official review queues for the Motorpool Dispatcher (Tier 1) and the Administrative Division Head (Tier 2).</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <span class="badge bg-white text-dark border p-2 shadow-sm small">
@@ -29,7 +29,7 @@
 <ul class="nav nav-pills mb-4 gap-2" id="approvalTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active rounded-pill px-3 py-2 small" id="tier1-tab" data-bs-toggle="pill" data-bs-target="#tier1-pane" type="button" role="tab">
-            <i class="fa-solid fa-user-check me-1"></i> Tier 1: OIC Endorsements
+            <i class="fa-solid fa-user-check me-1"></i> Tier 1: Dispatcher Endorsements
             <span class="badge bg-warning text-dark ms-1"><?= count($pendingOic) ?></span>
         </button>
     </li>
@@ -48,12 +48,12 @@
 </ul>
 
 <div class="tab-content" id="approvalTabsContent">
-    <!-- Tier 1 Pane (OIC Endorsements) -->
+    <!-- Tier 1 Pane (Motorpool Dispatcher Endorsements) -->
     <div class="tab-pane fade show active" id="tier1-pane" role="tabpanel">
         <div class="card-panel border shadow-sm">
             <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark small text-uppercase">Tier 1: Staff / Regional Director / OIC Review Queue</h6>
+                    <h6 class="mb-0 fw-bold text-dark small text-uppercase">Tier 1: Motorpool Dispatcher Review Queue</h6>
                     <div class="text-muted" style="font-size: 0.72rem;">Tier-1 endorsement or rejection escalates to Tier 2 after <strong>4 hours</strong> (FR-1.4); requests expire after 24 hours.</div>
                 </div>
             </div>
@@ -113,9 +113,15 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
+                                        <?php if (empty($canActTier1)): ?>
+                                            <span class="badge bg-secondary py-1 px-2" title="Tier 1 approval authority rests with the Motorpool Dispatcher.">
+                                                <i class="fa-solid fa-eye me-1"></i> View Only
+                                            </span>
+                                        <?php else: ?>
                                         <button type="button" class="btn btn-sm btn-primary py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#actionModal<?= $r['id'] ?>">
-                                            <i class="fa-solid fa-gavel me-1"></i> Review & Act
+                                            <i class="fa-solid fa-gavel me-1"></i> Review &amp; Act
                                         </button>
+                                        <?php endif; ?>
 
                                         <?php if (!empty($canOverride)): ?>
                                             <!-- FR-1.3 Emergency Fast-Track Override -->
@@ -242,7 +248,7 @@
                     <thead>
                         <tr>
                             <th>VRS No</th>
-                            <th>Requesting Office & OIC Endorser</th>
+                            <th>Requesting Office & Tier 1 Endorser</th>
                             <th>Destination & Purpose</th>
                             <th>Schedule</th>
                             <th>SLA Countdown (4h)</th>
@@ -273,7 +279,7 @@
                                     <td>
                                         <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
                                         <div class="text-muted small" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-check-double text-success me-1"></i>Endorsed by: <?= esc($r['oic_approver_name'] ?? 'OIC') ?>
+                                            <i class="fa-solid fa-check-double text-success me-1"></i>Endorsed by: <?= esc($r['oic_approver_name'] ?? 'Motorpool Dispatcher') ?>
                                         </div>
                                     </td>
                                     <td>
@@ -295,9 +301,15 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
+                                        <?php if (empty($canActTier2)): ?>
+                                            <span class="badge bg-secondary py-1 px-2" title="Tier 2 authorization rests with the Administrative Division Head.">
+                                                <i class="fa-solid fa-eye me-1"></i> View Only
+                                            </span>
+                                        <?php else: ?>
                                         <button type="button" class="btn btn-sm btn-success py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#adminModal<?= $r['id'] ?>">
                                             <i class="fa-solid fa-stamp me-1"></i> Authorize Trip
                                         </button>
+                                        <?php endif; ?>
 
                                         <?php if (!empty($canOverride)): ?>
                                             <button type="button" class="btn btn-sm btn-danger py-1 px-2 shadow-sm d-block w-100 mt-1" data-bs-toggle="modal" data-bs-target="#overrideModal2<?= $r['id'] ?>">

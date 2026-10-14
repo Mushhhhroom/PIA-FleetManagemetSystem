@@ -39,8 +39,8 @@ class UserController extends BaseController
     public const ASSIGNABLE_ROLES = [
         'admin'          => 'Super Admin / Director',
         'approver_admin' => 'Tier 2 Approver (Admin Head)',
-        'approver_oic'   => 'Tier 1 Approver (OIC)',
-        'dispatcher'     => 'Motorpool Dispatcher',
+        'approver_oic'   => 'Tier 1 Oversight (OIC)',
+        'dispatcher'     => 'Motorpool Dispatcher (Tier 1 Approver)',
         'maintenance'    => 'Safety & PMS Technician',
         'driver'         => 'Official Driver',
         'guard'          => 'Gate Security Officer',
@@ -385,5 +385,19 @@ class UserController extends BaseController
     protected function roleLabel(string $role): string
     {
         return self::ASSIGNABLE_ROLES[$role] ?? ucfirst($role);
+    }
+
+    /**
+     * Flowchart and System Navigations view for Super Admin.
+     */
+    public function flowchart()
+    {
+        if ($denied = $this->guardSuperAdmin()) {
+            return $denied;
+        }
+
+        return view('admin/flowchart', [
+            'title' => 'System Flowchart & Navigation',
+        ]);
     }
 }

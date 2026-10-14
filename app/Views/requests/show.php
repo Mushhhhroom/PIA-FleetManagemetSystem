@@ -51,7 +51,7 @@
             </div>
         </div>
 
-        <!-- Stage 2: OIC Endorsement -->
+        <!-- Stage 2: Motorpool Dispatcher Endorsement (Tier 1) -->
         <div class="col-4 col-md-2">
             <?php
                 $isOicDone = $request['oic_action'] === 'approved';
@@ -59,7 +59,7 @@
             ?>
             <div class="p-2 rounded <?= $isOicDone ? 'bg-success bg-opacity-10 border border-success-subtle' : ($isOicPending ? 'bg-warning bg-opacity-10 border border-warning-subtle' : 'bg-light border') ?>">
                 <i class="fa-solid <?= $isOicDone ? 'fa-circle-check text-success' : ($isOicPending ? 'fa-spinner fa-spin text-warning' : 'fa-circle text-muted opacity-50') ?> d-block mb-1"></i>
-                <div class="fw-semibold text-dark" style="font-size: 0.72rem;">2. OIC Endorsed</div>
+                <div class="fw-semibold text-dark" style="font-size: 0.72rem;">2. Dispatcher Endorsed</div>
                 <div class="mono text-muted" style="font-size: 0.65rem;">
                     <?= $isOicDone ? date('M d, H:i', strtotime($request['oic_action_at'])) : ($isOicPending ? 'Pending Action' : 'Awaiting') ?>
                 </div>
@@ -310,10 +310,10 @@
                 </span>
             </div>
             <div class="p-3">
-                <!-- Tier 1: OIC Endorsement -->
+                <!-- Tier 1: Motorpool Dispatcher Endorsement -->
                 <div class="border-bottom pb-3 mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="fw-semibold text-dark small">1. Staff Director / OIC</span>
+                        <span class="fw-semibold text-dark small">1. Motorpool Dispatcher (Tier 1)</span>
                         <?php if ($request['oic_action'] === 'approved'): ?>
                             <span class="badge bg-success small"><i class="fa-solid fa-check"></i> Endorsed</span>
                         <?php elseif ($request['oic_action'] === 'rejected'): ?>
@@ -322,7 +322,7 @@
                             <span class="badge bg-warning text-dark small">Pending</span>
                         <?php endif; ?>
                     </div>
-                    <div class="text-dark small fw-medium"><?= esc($request['oic_approver_name'] ?? 'Division Chief / OIC') ?></div>
+                    <div class="text-dark small fw-medium"><?= esc($request['oic_approver_name'] ?? 'Motorpool Dispatcher') ?></div>
                     <?php if ($request['oic_action_at']): ?>
                         <div class="mono text-muted" style="font-size: 0.7rem;">
                             Action Date: <?= date('M d, Y h:i A', strtotime($request['oic_action_at'])) ?>
@@ -366,10 +366,10 @@
         <!-- Approver Quick Action (if applicable) -->
         <?php
             $userRole = session()->get('user_role');
-            $canOicAct = ($userRole === 'approver_oic' || $userRole === 'admin') && $request['status'] === 'pending_oic';
+            $canTier1Act = ($userRole === 'dispatcher' || $userRole === 'admin') && $request['status'] === 'pending_oic';
             $canAdminAct = ($userRole === 'approver_admin' || $userRole === 'admin') && $request['status'] === 'pending_admin';
         ?>
-        <?php if ($canOicAct || $canAdminAct): ?>
+        <?php if ($canTier1Act || $canAdminAct): ?>
             <div class="card-panel border border-primary shadow-sm p-3 mb-4 bg-primary bg-opacity-10">
                 <div class="fw-bold text-primary small mb-2">
                     <i class="fa-solid fa-gavel me-1"></i> Approver Action Required
@@ -384,7 +384,7 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" name="action" value="approve" class="btn btn-success btn-sm flex-fill">
-                            <i class="fa-solid fa-check me-1"></i> <?= $canOicAct ? 'Endorse Request' : 'Authorize Travel' ?>
+                            <i class="fa-solid fa-check me-1"></i> <?= $canTier1Act ? 'Endorse Request' : 'Authorize Travel' ?>
                         </button>
                         <button type="submit" name="action" value="reject" class="btn btn-outline-danger btn-sm">
                             Disapprove

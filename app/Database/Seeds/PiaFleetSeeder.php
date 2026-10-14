@@ -434,6 +434,9 @@ class PiaFleetSeeder extends Seeder
         $oicUser = $this->db->table('users')->where('email', 'oic.news@pia.gov.ph')->get()->getRow();
         $admUser = $this->db->table('users')->where('email', 'admin.head@pia.gov.ph')->get()->getRow();
         $guardUser = $this->db->table('users')->where('email', 'guard@pia.gov.ph')->get()->getRow();
+        // BRD revision: Tier 1 approval authority rests with the Motorpool Dispatcher
+        $dispUser = $this->db->table('users')->where('role', 'dispatcher')->where('status', 'active')->get()->getRow();
+        $tier1User = $dispUser ?: $oicUser;
 
         $hiace = $this->db->table('vehicles')->where('plate_number', 'SJL-4192')->get()->getRow() ?? $allVehicles[0];
         $fortuner = $this->db->table('vehicles')->where('plate_number', 'SAB-8821')->get()->getRow() ?? ($allVehicles[1] ?? $allVehicles[0]);
@@ -508,9 +511,9 @@ class PiaFleetSeeder extends Seeder
             ]);
         }
 
-        // Sample Request 2: SAME-DAY RUSH REQUEST with attached justification memo (Pending OIC Review with SLA timer)
+        // Sample Request 2: SAME-DAY RUSH REQUEST with attached justification memo (Pending Motorpool Dispatcher Review — Tier 1 SLA timer)
         $existingReq2 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0002')->get()->getRow();
-        if (!$existingReq2 && $reqUser && $oicUser) {
+        if (!$existingReq2 && $reqUser && $tier1User) {
             $rushDep = date('Y-m-d H:i:s', strtotime('+4 hours'));
             $rushRet = date('Y-m-d H:i:s', strtotime('+10 hours'));
 
@@ -532,7 +535,7 @@ class PiaFleetSeeder extends Seeder
                 'justification_file'     => 'uploads/justifications/sample_emergency_memo_ndrrmc.pdf',
                 'justification_notes'    => 'URGENT: Rapid deployment required per NDRRMC Red Alert advisory. Media briefing called on 2 hours notice.',
                 'status'                 => 'pending_oic',
-                'oic_approver_id'        => $oicUser->id,
+                'oic_approver_id'        => $tier1User->id,
                 'oic_action'             => 'pending',
                 'sla_deadline'           => date('Y-m-d H:i:s', strtotime('+22 hours')),
                 'created_at'             => date('Y-m-d H:i:s', strtotime('-2 hours')),

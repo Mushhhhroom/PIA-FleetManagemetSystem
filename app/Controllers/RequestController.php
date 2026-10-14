@@ -142,13 +142,17 @@ class RequestController extends BaseController
             return redirect()->back()->withInput()->with('error', 'The selected department does not exist. Please choose a valid department.');
         }
 
-        // Resolve OIC Approver based on office
+        // Resolve the Tier 1 Approver — Motorpool Dispatcher (BRD revision:
+        // Tier 1 approval authority transferred from the Division OIC to Dispatch).
         $officeId = (int)$this->request->getPost('office_id');
         $userModel = new UserModel();
-        $oicUser = $userModel->where('office_id', $officeId)->where('role', 'approver_oic')->first();
-        if (!$oicUser) {
-            // Fallback to any active OIC approver
-            $oicUser = $userModel->where('role', 'approver_oic')->first();
+        $tier1User = $userModel->where('role', 'dispatcher')->where('status', 'active')->first();
+        if (!$tier1User) {
+            // Fallback: the office's OIC keeps the queue routable without an active dispatcher
+            $tier1User = $userModel->where('office_id', $officeId)->where('role', 'approver_oic')->first();
+        }
+        if (!$tier1User) {
+            $tier1User = $userModel->where('role', 'approver_oic')->first();
         }
 
         $requestData = [
@@ -170,17 +174,17 @@ class RequestController extends BaseController
             'justification_file'     => $justificationFile,
             'justification_notes'    => $this->request->getPost('justification_notes') ?: null,
             'status'                 => 'pending_oic',
-            'oic_approver_id'        => $oicUser ? $oicUser['id'] : null,
+            'oic_approver_id'        => $tier1User ? $tier1User['id'] : null,
             'sla_deadline'           => $slaDeadline,
         ];
 
         $requestId = $this->requestModel->insert($requestData);
 
-        // Send Notification to Approver 1 (OIC)
-        if ($oicUser) {
+        // Notify the Tier 1 Approver (Motorpool Dispatcher) of the new filing
+        if ($tier1User) {
             $rushTag = $isRush ? '[URGENT RUSH] ' : '';
             $this->notificationModel->insert([
-                'user_id'    => $oicUser['id'],
+                'user_id'    => $tier1User['id'],
                 'title'      => "{$rushTag}New VRS Filed: {$vrsNumber}",
                 'message'    => "{$userName} filed a vehicle request to {$requestData['destination']}. Act within " . SlaService::ESCALATION_HOURS . " hours or it auto-escalates to the Administrative Division Chief (FR-1.4).",
                 'type'       => $isRush ? 'danger' : 'info',
@@ -192,7 +196,7 @@ class RequestController extends BaseController
 
         $msg = $isRush
             ? "Rush Vehicle Request {$vrsNumber} submitted with emergency justification. Approver escalation countdown started (" . SlaService::ESCALATION_HOURS . "h)."
-            : "Vehicle Request Slip {$vrsNumber} submitted successfully. Pending OIC review (" . SlaService::ESCALATION_HOURS . "-hour action window).";
+            : "Vehicle Request Slip {$vrsNumber} submitted successfully. Pending Motorpool Dispatcher review (Tier 1 — " . SlaService::ESCALATION_HOURS . "-hour action window).";
 
         // NFR-3: immutable audit trail
         AuditLogger::log(

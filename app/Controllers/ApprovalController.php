@@ -85,6 +85,9 @@ class ApprovalController extends BaseController
             'recentlyApproved' => $recentlyApproved,
             'emergencyOverrides' => $emergencyOverrides,
             'canOverride'      => in_array($userRole, ['admin', 'approver_admin', 'dispatcher'], true),
+            // BRD revision: Tier 1 action authority = Motorpool Dispatcher; Tier 2 = Administrative Division Head
+            'canActTier1'      => in_array($userRole, ['admin', 'dispatcher'], true),
+            'canActTier2'      => in_array($userRole, ['admin', 'approver_admin'], true),
         ];
 
         return view('approvals/index', $data);
@@ -110,10 +113,12 @@ class ApprovalController extends BaseController
             return redirect()->back()->with('error', 'Please provide justification remarks when rejecting an official travel request.');
         }
 
-        // Tier 1: OIC / Staff Director Approval
-        if ($userRole === 'approver_oic' || ($userRole === 'admin' && $request['status'] === 'pending_oic')) {
+        // Tier 1: Motorpool Dispatcher Approval (BRD revision — Tier 1
+        // approval authority transferred from the Division OIC to Dispatch).
+        if ($userRole === 'dispatcher' || ($userRole === 'admin' && $request['status'] === 'pending_oic')) {
+            $tier1Title = $userRole === 'dispatcher' ? 'Motorpool Dispatcher' : 'Super Admin';
             if ($request['status'] !== 'pending_oic') {
-                return redirect()->to('/approvals')->with('error', 'This request is no longer awaiting Tier 1 OIC action.');
+                return redirect()->to('/approvals')->with('error', 'This request is no longer awaiting Tier 1 (Motorpool Dispatcher) action.');
             }
 
             if ($action === 'approve') {
@@ -139,7 +144,7 @@ class ApprovalController extends BaseController
                     $this->notificationModel->insert([
                         'user_id'    => $adminHead['id'],
                         'title'      => "Endorsed VRS Ready for Final Approval: {$request['request_number']}",
-                        'message'    => "Dir. {$userName} has endorsed VRS {$request['request_number']} ({$request['destination']}). Requires administrative clearance within " . SlaService::ESCALATION_HOURS . " hours.",
+                        'message'    => "{$tier1Title} {$userName} has endorsed VRS {$request['request_number']} ({$request['destination']}). Requires administrative clearance within " . SlaService::ESCALATION_HOURS . " hours.",
                         'type'       => $request['is_rush_request'] ? 'danger' : 'info',
                         'link'       => '/approvals',
                         'is_read'    => 0,
@@ -150,7 +155,7 @@ class ApprovalController extends BaseController
                 // NFR-3: immutable audit trail
                 AuditLogger::log(
                     AuditLogger::VRS_APPROVED,
-                    "VRS {$request['request_number']} Tier-1 endorsed by {$userName} (OIC/Director).",
+                    "VRS {$request['request_number']} Tier-1 endorsed by {$userName} ({$tier1Title}).",
                     'trip_request',
                     (int) $id,
                     ['tier' => 1, 'remarks' => $remarks]
@@ -170,7 +175,7 @@ class ApprovalController extends BaseController
                 $this->notificationModel->insert([
                     'user_id'    => $request['requestor_id'],
                     'title'      => "Request Rejected: {$request['request_number']}",
-                    'message'    => "Your vehicle request was not endorsed by OIC. Reason: {$remarks}",
+                    'message'    => "Your vehicle request was not endorsed at Tier 1 by the {$tier1Title}. Reason: {$remarks}",
                     'type'       => 'danger',
                     'link'       => "/requests/{$id}",
                     'is_read'    => 0,
