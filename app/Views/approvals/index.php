@@ -30,7 +30,7 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link active rounded-pill px-3 py-2 small" id="tier1-tab" data-bs-toggle="pill" data-bs-target="#tier1-pane" type="button" role="tab">
             <i class="fa-solid fa-user-check me-1"></i> Tier 1: Dispatcher Endorsements
-            <span class="badge bg-warning text-dark ms-1"><?= count($pendingOic) ?></span>
+            <span class="badge bg-warning text-dark ms-1"><?= count($pendingDispatcher) ?></span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -70,7 +70,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($pendingOic)): ?>
+                        <?php if (empty($pendingDispatcher)): ?>
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="fa-solid fa-circle-check fa-2x mb-2 d-block text-success opacity-50"></i>
@@ -78,7 +78,7 @@
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($pendingOic as $r): ?>
+                            <?php foreach ($pendingDispatcher as $r): ?>
                                 <tr>
                                     <td>
                                         <a href="<?= base_url('requests/' . $r['id']) ?>" class="mono fw-bold text-decoration-none text-dark d-block">
@@ -86,7 +86,7 @@
                                         </a>
                                         <?php if ((int)$r['is_rush_request'] === 1): ?>
                                             <span class="badge bg-danger text-white" style="font-size: 0.65rem;">
-                                                <i class="fa-solid fa-bolt"></i> RUSH (BR-03)
+                                                 <i class="fa-solid fa-bolt"></i> RUSH (BR-03)
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -123,107 +123,6 @@
                                         </button>
                                         <?php endif; ?>
 
-                                        <?php if (!empty($canOverride)): ?>
-                                            <!-- FR-1.3 Emergency Fast-Track Override -->
-                                            <button type="button" class="btn btn-sm btn-danger py-1 px-2 shadow-sm d-block w-100 mt-1" data-bs-toggle="modal" data-bs-target="#overrideModal<?= $r['id'] ?>">
-                                                <i class="fa-solid fa-bolt me-1"></i> Emergency Override
-                                            </button>
-                                            <div class="modal fade text-start" id="overrideModal<?= $r['id'] ?>" tabindex="-1">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content border-0 shadow">
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h6 class="modal-title fw-bold">
-                                                                <i class="fa-solid fa-bolt me-1"></i> FR-1.3 Emergency Fast-Track Override
-                                                            </h6>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <form action="<?= base_url('approvals/' . $r['id'] . '/emergency') ?>" method="POST">
-                                                            <?= csrf_field() ?>
-                                                            <div class="modal-body p-4">
-                                                                <div class="alert alert-warning p-2 small rounded mb-3">
-                                                                    <strong>Administrative Division Chief / Motorpool Head authority.</strong>
-                                                                    Bypasses both approval tiers for emergency operations.
-                                                                    Post-trip documentation is due within <strong>24 hours</strong> of trip completion (FR-1.3).
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <div class="small text-muted">VRS No:</div>
-                                                                    <div class="fw-bold text-dark mono"><?= esc($r['request_number']) ?></div>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <div class="small text-muted">Destination:</div>
-                                                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label small fw-semibold text-danger">Justification Remarks <span class="text-danger">*</span></label>
-                                                                    <textarea name="remarks" class="form-control form-control-sm" rows="3" required
-                                                                              placeholder="e.g. Urgent press coverage of calamity response; full documentation to follow."></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer bg-light p-3">
-                                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                <button type="submit" class="btn btn-sm btn-danger px-3 fw-semibold"
-                                                                        onclick="return confirm('AUTHORIZE EMERGENCY OVERRIDE? This bypasses the two-tier approval queue and is fully audited.');">
-                                                                    <i class="fa-solid fa-bolt me-1"></i> Authorize Override
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Review & Act Modal -->
-                                        <div class="modal fade text-start" id="actionModal<?= $r['id'] ?>" tabindex="-1">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow">
-                                                    <div class="modal-header bg-light">
-                                                        <h6 class="modal-title fw-bold text-dark">
-                                                            Review VRS: <?= esc($r['request_number']) ?>
-                                                        </h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
-                                                        <?= csrf_field() ?>
-                                                        <div class="modal-body p-4">
-                                                            <div class="mb-3">
-                                                                <div class="small text-muted">Destination:</div>
-                                                                <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <div class="small text-muted">Purpose:</div>
-                                                                <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <div class="small text-muted">Passengers:</div>
-                                                                <div class="mono small text-dark"><?= nl2br(esc($r['passenger_names'])) ?></div>
-                                                            </div>
-                                                            <?php if ((int)$r['is_rush_request'] === 1 && !empty($r['justification_file'])): ?>
-                                                                <div class="alert alert-danger p-2 small mb-3">
-                                                                    <strong>Emergency Memo Attached:</strong><br>
-                                                                    <?= esc($r['justification_notes']) ?><br>
-                                                                    <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="fw-bold text-danger text-decoration-underline">
-                                                                        <i class="fa-solid fa-file-pdf me-1"></i> View Justification Document
-                                                                    </a>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                            <div class="mb-3">
-                                                                <label class="form-label small fw-semibold text-dark">Endorsement Remarks</label>
-                                                                <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Endorsed. Essential state coverage."></textarea>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer bg-light p-3">
-                                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
-                                                                Disapprove
-                                                            </button>
-                                                            <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3">
-                                                                <i class="fa-solid fa-check me-1"></i> Endorse for Admin Clearance
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -251,7 +150,7 @@
                             <th>Requesting Office & Tier 1 Endorser</th>
                             <th>Destination & Purpose</th>
                             <th>Schedule</th>
-                            <th>SLA Countdown (4h)</th>
+                            <th>SLA Countdown (24h)</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -279,7 +178,15 @@
                                     <td>
                                         <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
                                         <div class="text-muted small" style="font-size: 0.72rem;">
-                                            <i class="fa-solid fa-check-double text-success me-1"></i>Endorsed by: <?= esc($r['oic_approver_name'] ?? 'Motorpool Dispatcher') ?>
+                                            <?php if (($r['dispatcher_action'] ?? null) === 'approved'): ?>
+                                                <i class="fa-solid fa-check-double text-success me-1"></i>Endorsed by: <?= esc($r['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?>
+                                            <?php elseif (!empty($r['escalated_at'])): ?>
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;" title="Tier 1 did not act within <?= \App\Services\SlaService::ESCALATION_HOURS ?> hours (FR-1.4)">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Auto-escalated &mdash; no Tier 1 endorsement
+                                                </span>
+                                            <?php else: ?>
+                                                <i class="fa-solid fa-circle-question me-1"></i>No Tier 1 endorsement on record
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td>
@@ -305,99 +212,20 @@
                                             <span class="badge bg-secondary py-1 px-2" title="Tier 2 authorization rests with the Administrative Division Head.">
                                                 <i class="fa-solid fa-eye me-1"></i> View Only
                                             </span>
+                                        <?php elseif ((int) $r['requestor_id'] === (int) ($userId ?? 0)): ?>
+                                            <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you cannot act on a VRS you filed.">
+                                                <i class="fa-solid fa-user-lock me-1"></i> Own Request
+                                            </span>
+                                        <?php elseif (($r['dispatcher_action'] ?? null) === 'approved' && (int) ($r['dispatcher_approver_id'] ?? 0) === (int) ($userId ?? 0)): ?>
+                                            <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you endorsed this VRS at Tier 1.">
+                                                <i class="fa-solid fa-user-lock me-1"></i> You Endorsed (Tier 1)
+                                            </span>
                                         <?php else: ?>
                                         <button type="button" class="btn btn-sm btn-success py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#adminModal<?= $r['id'] ?>">
                                             <i class="fa-solid fa-stamp me-1"></i> Authorize Trip
                                         </button>
                                         <?php endif; ?>
 
-                                        <?php if (!empty($canOverride)): ?>
-                                            <button type="button" class="btn btn-sm btn-danger py-1 px-2 shadow-sm d-block w-100 mt-1" data-bs-toggle="modal" data-bs-target="#overrideModal2<?= $r['id'] ?>">
-                                                <i class="fa-solid fa-bolt me-1"></i> Emergency Override
-                                            </button>
-                                            <div class="modal fade text-start" id="overrideModal2<?= $r['id'] ?>" tabindex="-1">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content border-0 shadow">
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h6 class="modal-title fw-bold">
-                                                                <i class="fa-solid fa-bolt me-1"></i> FR-1.3 Emergency Fast-Track Override
-                                                            </h6>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <form action="<?= base_url('approvals/' . $r['id'] . '/emergency') ?>" method="POST">
-                                                            <?= csrf_field() ?>
-                                                            <div class="modal-body p-4">
-                                                                <div class="alert alert-warning p-2 small rounded mb-3">
-                                                                    <strong>Administrative Division Chief / Motorpool Head authority.</strong>
-                                                                    Bypasses both approval tiers for emergency operations.
-                                                                    Post-trip documentation is due within <strong>24 hours</strong> of trip completion (FR-1.3).
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <div class="small text-muted">VRS No:</div>
-                                                                    <div class="fw-bold text-dark mono"><?= esc($r['request_number']) ?></div>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label small fw-semibold text-danger">Justification Remarks <span class="text-danger">*</span></label>
-                                                                    <textarea name="remarks" class="form-control form-control-sm" rows="3" required
-                                                                              placeholder="e.g. Urgent deployment for calamity response; full documentation to follow."></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer bg-light p-3">
-                                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                <button type="submit" class="btn btn-sm btn-danger px-3 fw-semibold"
-                                                                        onclick="return confirm('AUTHORIZE EMERGENCY OVERRIDE? This bypasses the two-tier approval queue and is fully audited.');">
-                                                                    <i class="fa-solid fa-bolt me-1"></i> Authorize Override
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Tier 2 Admin Modal -->
-                                        <div class="modal fade text-start" id="adminModal<?= $r['id'] ?>" tabindex="-1">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow">
-                                                    <div class="modal-header bg-light">
-                                                        <h6 class="modal-title fw-bold text-dark">
-                                                            Authorize VRS: <?= esc($r['request_number']) ?>
-                                                        </h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
-                                                        <?= csrf_field() ?>
-                                                        <div class="modal-body p-4">
-                                                            <div class="alert alert-success border-success-subtle p-2 px-3 rounded small mb-3">
-                                                                <i class="fa-solid fa-circle-check text-success me-1"></i>
-                                                                <strong>Tier 1 Endorsement Verified:</strong> <?= esc($r['oic_approver_name']) ?> approved this trip on <?= date('M d, Y', strtotime($r['oic_action_at'])) ?>.
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <div class="small text-muted">Destination:</div>
-                                                                <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <div class="small text-muted">Passengers (<?= esc($r['passenger_count']) ?>):</div>
-                                                                <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label small fw-semibold text-dark">Administrative Division Authorization Notes</label>
-                                                                <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Authorized for official dispatch. Motorpool to assign unit."></textarea>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer bg-light p-3">
-                                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
-                                                                Disapprove
-                                                            </button>
-                                                            <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-4 fw-semibold">
-                                                                <i class="fa-solid fa-stamp me-1"></i> Officially Authorize & Send to Dispatch
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -453,4 +281,231 @@
         </div>
     </div>
 </div>
+
+<!-- ========================================== -->
+<!-- Top-Level Modals for Tier 1 (Action & Override) -->
+<!-- ========================================== -->
+<?php if (!empty($pendingDispatcher)): ?>
+    <?php foreach ($pendingDispatcher as $r): ?>
+        <?php if (!empty($canOverride)): ?>
+            <div class="modal fade text-start" id="overrideModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-danger text-white">
+                            <h6 class="modal-title fw-bold">
+                                <i class="fa-solid fa-bolt me-1"></i> FR-1.3 Emergency Fast-Track Override
+                            </h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/emergency') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <div class="modal-body p-4">
+                                <div class="alert alert-warning p-2 small rounded mb-3">
+                                    <strong>Administrative Division Head authority.</strong>
+                                    Bypasses both approval tiers for emergency operations.
+                                    Post-trip documentation is due within <strong>24 hours</strong> of trip completion (FR-1.3).
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">VRS No:</div>
+                                    <div class="fw-bold text-dark mono"><?= esc($r['request_number']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Destination:</div>
+                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-danger">Justification Remarks <span class="text-danger">*</span></label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="3" required
+                                              placeholder="e.g. Urgent press coverage of calamity response; full documentation to follow."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-danger px-3 fw-semibold"
+                                        onclick="return confirm('AUTHORIZE EMERGENCY OVERRIDE? This bypasses the two-tier approval queue and is fully audited.');">
+                                    <i class="fa-solid fa-bolt me-1"></i> Authorize Override
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($canActTier1)): ?>
+            <div class="modal fade text-start" id="actionModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title fw-bold text-dark">
+                                <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check: <?= esc($r['request_number']) ?>
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="redirect_to" value="<?= base_url('approvals') ?>">
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <div class="small text-muted">Destination:</div>
+                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Purpose:</div>
+                                    <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Passengers:</div>
+                                    <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted fw-semibold mb-1">
+                                        <i class="fa-solid fa-file-lines text-primary me-1"></i> Document Check for VRS:
+                                    </div>
+                                    <?php if (!empty($r['justification_file'])): ?>
+                                        <div class="alert alert-info border-info-subtle p-2 px-3 small mb-0 rounded d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <strong>Attached Document / Justification:</strong>
+                                                <?php if (!empty($r['justification_notes'])): ?>
+                                                    <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect Document
+                                            </a>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="p-2 px-3 rounded bg-light border small text-muted">
+                                            <i class="fa-solid fa-circle-info text-secondary me-1"></i> Standard VRS Filing &mdash; verified travel itinerary and passenger specifications.
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-dark">Tier 1 Endorsement / Specification Remarks</label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Documents verified. Specification and travel requirements endorsed for Administrative Division Head clearance."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-ban me-1"></i> Disapprove (Specification Disapproval)
+                                </button>
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Endorse (Clearance to Tier 2)
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
+
+<!-- ========================================== -->
+<!-- Top-Level Modals for Tier 2 (Admin & Override) -->
+<!-- ========================================== -->
+<?php if (!empty($pendingAdmin)): ?>
+    <?php foreach ($pendingAdmin as $r): ?>
+        <?php if (!empty($canOverride)): ?>
+            <div class="modal fade text-start" id="overrideModal2<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-danger text-white">
+                            <h6 class="modal-title fw-bold">
+                                <i class="fa-solid fa-bolt me-1"></i> FR-1.3 Emergency Fast-Track Override
+                            </h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/emergency') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <div class="modal-body p-4">
+                                <div class="alert alert-warning p-2 small rounded mb-3">
+                                    <strong>Administrative Division Head authority.</strong>
+                                    Bypasses both approval tiers for emergency operations.
+                                    Post-trip documentation is due within <strong>24 hours</strong> of trip completion (FR-1.3).
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">VRS No:</div>
+                                    <div class="fw-bold text-dark mono"><?= esc($r['request_number']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-danger">Justification Remarks <span class="text-danger">*</span></label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="3" required
+                                              placeholder="e.g. Urgent deployment for calamity response; full documentation to follow."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-danger px-3 fw-semibold"
+                                        onclick="return confirm('AUTHORIZE EMERGENCY OVERRIDE? This bypasses the two-tier approval queue and is fully audited.');">
+                                    <i class="fa-solid fa-bolt me-1"></i> Authorize Override
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($canActTier2) && (int)$r['requestor_id'] !== (int)($userId ?? 0) && !((($r['dispatcher_action'] ?? null) === 'approved') && (int)($r['dispatcher_approver_id'] ?? 0) === (int)($userId ?? 0))): ?>
+            <div class="modal fade text-start" id="adminModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title fw-bold text-dark">
+                                Authorize VRS: <?= esc($r['request_number']) ?>
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="redirect_to" value="<?= base_url('approvals') ?>">
+                            <div class="modal-body p-4">
+                                <?php if (($r['dispatcher_action'] ?? null) === 'approved' && !empty($r['dispatcher_action_at'])): ?>
+                                <div class="alert alert-success border-success-subtle p-2 px-3 rounded small mb-3">
+                                    <i class="fa-solid fa-circle-check text-success me-1"></i>
+                                    <strong>Tier 1 Endorsement Verified:</strong> <?= esc($r['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?> endorsed this trip on <?= date('M d, Y h:i A', strtotime($r['dispatcher_action_at'])) ?>.
+                                </div>
+                                <?php else: ?>
+                                <div class="alert alert-warning p-2 px-3 rounded small mb-3">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <strong>No Tier 1 endorsement.</strong>
+                                    <?php if (!empty($r['escalated_at'])): ?>
+                                        The Motorpool Dispatcher did not act within <?= \App\Services\SlaService::ESCALATION_HOURS ?> hours; this VRS was auto-escalated on <?= date('M d, Y h:i A', strtotime($r['escalated_at'])) ?> (FR-1.4). Review it in full before authorizing.
+                                    <?php else: ?>
+                                        Review this VRS in full before authorizing.
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Destination:</div>
+                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Passengers (<?= esc($r['passenger_count']) ?>):</div>
+                                    <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-dark">Administrative Division Authorization Notes</label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Authorized for official dispatch. Motorpool to assign unit."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                                    Disapprove
+                                </button>
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-4 fw-semibold">
+                                    <i class="fa-solid fa-stamp me-1"></i> Officially Authorize & Send to Dispatch
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
+
 <?= $this->endSection() ?>

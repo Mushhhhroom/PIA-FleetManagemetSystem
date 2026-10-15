@@ -11,11 +11,101 @@
         <p class="text-muted small mb-0">Vehicle-driver matching, 5,000 km PMS safety locks, and e-DTT issuance.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
+        <?php if (!empty($pendingTier1)): ?>
+            <a href="#tier1-section" class="badge bg-warning bg-opacity-10 text-dark border border-warning-subtle p-2 px-3 small text-decoration-none">
+                <i class="fa-solid fa-file-circle-check text-warning me-1"></i> Tier 1 Document Check: <strong><?= count($pendingTier1) ?></strong>
+            </a>
+        <?php endif; ?>
         <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle p-2 px-3 small">
             <i class="fa-solid fa-check-circle me-1"></i> Ready for Dispatch: <strong><?= count($pendingDispatch) ?></strong>
         </span>
     </div>
 </div>
+
+<?php if (!empty($pendingTier1)): ?>
+<!-- Tier 1: VRS Review & Document Check Queue (Motorpool Dispatcher Authority) -->
+<div class="card-panel border border-warning shadow-sm mb-4" id="tier1-section">
+    <div class="p-3 border-bottom bg-warning bg-opacity-10 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <span class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; font-size: 0.75rem;">
+                <i class="fa-solid fa-file-circle-check"></i>
+            </span>
+            <div>
+                <span class="fw-bold text-dark small text-uppercase">Tier 1: VRS Review &amp; Document Check Queue</span>
+                <div class="text-muted" style="font-size: 0.72rem;">Assigned to Motorpool Dispatcher &bull; Check travel documents, passenger specifications, and endorse for Tier 2 administrative clearance.</div>
+            </div>
+        </div>
+        <span class="badge bg-warning text-dark rounded-pill small"><?= count($pendingTier1) ?> Pending Review</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table-minimal">
+            <thead>
+                <tr>
+                    <th>VRS Control No</th>
+                    <th>Requesting Division &amp; Official</th>
+                    <th>Destination &amp; Purpose</th>
+                    <th>Departure Schedule</th>
+                    <th>Document Check</th>
+                    <th>SLA (4h)</th>
+                    <th class="text-end">Tier 1 Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pendingTier1 as $r): ?>
+                    <tr>
+                        <td>
+                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="mono fw-bold text-decoration-none text-dark d-block">
+                                <?= esc($r['request_number']) ?>
+                            </a>
+                            <?php if ((int)$r['is_rush_request'] === 1): ?>
+                                <span class="badge bg-danger text-white" style="font-size: 0.65rem;">
+                                    <i class="fa-solid fa-bolt"></i> RUSH (BR-03)
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
+                            <div class="text-muted" style="font-size: 0.72rem;"><?= esc($r['requestor_name']) ?></div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark small text-truncate" style="max-width: 230px;" title="<?= esc($r['destination']) ?>">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($r['destination']) ?>
+                            </div>
+                            <div class="text-muted small text-truncate" style="max-width: 230px; font-size: 0.72rem;" title="<?= esc($r['purpose']) ?>">
+                                <?= esc($r['purpose']) ?>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="mono small fw-semibold" style="font-size: 0.76rem;">
+                                <?= date('M d, Y h:i A', strtotime($r['departure_time'])) ?>
+                            </div>
+                        </td>
+                        <td>
+                            <?php if (!empty($r['justification_file'])): ?>
+                                <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;">
+                                    <i class="fa-solid fa-paperclip me-1"></i> Inspect File
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted small" style="font-size: 0.72rem;">Standard Itinerary</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="badge <?= $r['sla_info']['class'] ?> small py-1 px-2">
+                                <i class="fa-solid fa-stopwatch me-1"></i><?= $r['sla_info']['text'] ?>
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-primary py-1 px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#dispatchTier1Modal<?= $r['id'] ?>">
+                                <i class="fa-solid fa-gavel me-1"></i> Review &amp; Endorse
+                            </button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Pending Dispatch Queue (Priority Action) -->
 <div class="card-panel border shadow-sm mb-4">
@@ -217,4 +307,75 @@
         </div>
     </div>
 </div>
+
+<?php if (!empty($pendingTier1)): ?>
+    <?php foreach ($pendingTier1 as $r): ?>
+        <div class="modal fade text-start" id="dispatchTier1Modal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-light">
+                        <h6 class="modal-title fw-bold text-dark">
+                            <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check: <?= esc($r['request_number']) ?>
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="redirect_to" value="<?= base_url('dispatch') ?>">
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <div class="small text-muted">Destination:</div>
+                                <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="small text-muted">Purpose:</div>
+                                <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="small text-muted">Passengers:</div>
+                                <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="small text-muted fw-semibold mb-1">
+                                    <i class="fa-solid fa-file-lines text-primary me-1"></i> Document Check for VRS:
+                                </div>
+                                <?php if (!empty($r['justification_file'])): ?>
+                                    <div class="alert alert-info border-info-subtle p-2 px-3 small mb-0 rounded d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong>Attached Document / Justification:</strong>
+                                            <?php if (!empty($r['justification_notes'])): ?>
+                                                <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect File
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="p-2 px-3 rounded bg-light border small text-muted">
+                                        <i class="fa-solid fa-circle-info text-secondary me-1"></i> Standard VRS Filing &mdash; verified travel itinerary and passenger specifications.
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Tier 1 Endorsement / Specification Remarks</label>
+                                <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Documents verified. Specification and travel requirements endorsed for Administrative Division Head clearance."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light p-3">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-ban me-1"></i> Disapprove (Specification Disapproval)
+                            </button>
+                            <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                                <i class="fa-solid fa-circle-check me-1"></i> Endorse (Clearance to Tier 2)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
+
 <?= $this->endSection() ?>

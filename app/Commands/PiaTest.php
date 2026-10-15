@@ -44,9 +44,9 @@ class PiaTest extends BaseCommand
         $officesCount = $db->table('offices')->countAll();
         $assertTest("Offices seeded (found {$officesCount} offices)", $officesCount >= 5);
 
-        // 2. Verify Government RBAC Users (All 7 Roles)
+        // 2. Verify Government RBAC Users (All Roles)
         CLI::write("\n--- Step 2: RBAC Roles Verification ---", 'yellow');
-        $requiredRoles = ['admin', 'requestor', 'approver_oic', 'approver_admin', 'dispatcher', 'guard', 'auditor', 'driver'];
+        $requiredRoles = ['admin', 'requestor', 'approver_admin', 'dispatcher', 'guard', 'auditor', 'driver'];
         foreach ($requiredRoles as $role) {
             $user = $db->table('users')->where('role', $role)->get()->getRow();
             $assertTest("User exists for role '{$role}': " . ($user ? $user->name : 'NONE'), $user !== null);
@@ -97,7 +97,7 @@ class PiaTest extends BaseCommand
         $gateModel = new GateLogModel();
 
         $requestor = $db->table('users')->where('role', 'requestor')->get()->getRow();
-        $oicUser   = $db->table('users')->where('role', 'approver_oic')->get()->getRow();
+        $dispUser  = $db->table('users')->where('role', 'dispatcher')->get()->getRow();
         $adminUser = $db->table('users')->where('role', 'approver_admin')->get()->getRow();
         $guardUser = $db->table('users')->where('role', 'guard')->get()->getRow();
         $hiace     = $db->table('vehicles')->where('plate_number', 'SJL-4192')->get()->getRow();
@@ -118,21 +118,21 @@ class PiaTest extends BaseCommand
             'departure_time'         => date('Y-m-d 08:00:00', strtotime('+3 days')),
             'return_time'            => date('Y-m-d 18:00:00', strtotime('+3 days')),
             'is_rush_request'        => 0,
-            'status'                 => 'pending_oic',
-            'oic_approver_id'        => $oicUser->id,
+            'status'                 => 'pending_dispatcher',
+            'dispatcher_approver_id' => $dispUser->id,
             'sla_deadline'           => date('Y-m-d H:i:s', strtotime('+24 hours')),
         ]);
-        $assertTest("5.1: VRS filed ({$vrsNo}), status 'pending_oic'", $newReqId > 0);
+        $assertTest("5.1: VRS filed ({$vrsNo}), status 'pending_dispatcher'", $newReqId > 0);
 
-        // 5.2 Tier 1 OIC Endorsement
+        // 5.2 Tier 1 Dispatcher Endorsement
         $reqModel->update($newReqId, [
-            'oic_action'    => 'approved',
-            'oic_action_at' => date('Y-m-d H:i:s'),
-            'oic_remarks'   => 'Endorsed for administrative authorization.',
-            'status'        => 'pending_admin',
+            'dispatcher_action'    => 'approved',
+            'dispatcher_action_at' => date('Y-m-d H:i:s'),
+            'dispatcher_remarks'   => 'Endorsed for administrative authorization.',
+            'status'               => 'pending_admin',
         ]);
-        $reqAfterOic = $reqModel->find($newReqId);
-        $assertTest("5.2: Tier 1 OIC Endorsement recorded, status 'pending_admin'", $reqAfterOic['status'] === 'pending_admin');
+        $reqAfterDisp = $reqModel->find($newReqId);
+        $assertTest("5.2: Tier 1 Dispatcher Endorsement recorded, status 'pending_admin'", $reqAfterDisp['status'] === 'pending_admin');
 
         // 5.3 Tier 2 Administrative Division Head Authorization (Atty. Julius S. De Peralta)
         $reqModel->update($newReqId, [

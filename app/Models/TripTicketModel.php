@@ -64,12 +64,12 @@ class TripTicketModel extends Model
                               drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number,
                               trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination, trip_requests.purpose, trip_requests.passenger_names, trip_requests.office_scope,
                               offices.office_code, offices.office_name, offices.address AS office_address,
-                              oic_u.name AS oic_name, adm_u.name AS admin_name')
+                              disp_u.name AS dispatcher_name, adm_u.name AS admin_name')
                     ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                     ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
                     ->join('trip_requests', 'trip_requests.id = trip_tickets.request_id', 'left')
                     ->join('offices', 'offices.id = trip_requests.office_id', 'left')
-                    ->join('users AS oic_u', 'oic_u.id = trip_requests.oic_approver_id', 'left')
+                    ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                     ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                     ->where('trip_tickets.id', $id)
                     ->first();

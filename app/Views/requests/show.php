@@ -23,6 +23,15 @@
         <a href="<?= base_url('requests/' . $request['id'] . '/print') ?>" target="_blank" class="btn-corp btn-corp-secondary text-decoration-none shadow-sm">
             <i class="fa-solid fa-print me-1"></i> Print Official VRS
         </a>
+        <?php if ($request['status'] === 'pending_dispatcher' && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
+            <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#showTier1Modal">
+                <i class="fa-solid fa-file-circle-check me-1"></i> Review &amp; Endorse (Tier 1)
+            </button>
+        <?php elseif ($request['status'] === 'pending_admin' && in_array(session()->get('user_role'), ['admin', 'approver_admin'])): ?>
+            <button type="button" class="btn btn-success btn-sm px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#showTier2Modal">
+                <i class="fa-solid fa-stamp me-1"></i> Authorize Travel (Tier 2)
+            </button>
+        <?php endif; ?>
         <?php if ($request['status'] === 'approved' && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
             <a href="<?= base_url('dispatch/assign/' . $request['id']) ?>" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
                 <i class="fa-solid fa-van-shuttle me-1"></i> Dispatch Vehicle & Driver
@@ -54,14 +63,15 @@
         <!-- Stage 2: Motorpool Dispatcher Endorsement (Tier 1) -->
         <div class="col-4 col-md-2">
             <?php
-                $isOicDone = $request['oic_action'] === 'approved';
-                $isOicPending = $request['status'] === 'pending_oic';
+                $isDispDone = ($request['dispatcher_action'] ?? null) === 'approved';
+                $isDispPending = ($request['status'] === 'pending_dispatcher');
+                $dispActionAt = $request['dispatcher_action_at'] ?? null;
             ?>
-            <div class="p-2 rounded <?= $isOicDone ? 'bg-success bg-opacity-10 border border-success-subtle' : ($isOicPending ? 'bg-warning bg-opacity-10 border border-warning-subtle' : 'bg-light border') ?>">
-                <i class="fa-solid <?= $isOicDone ? 'fa-circle-check text-success' : ($isOicPending ? 'fa-spinner fa-spin text-warning' : 'fa-circle text-muted opacity-50') ?> d-block mb-1"></i>
+            <div class="p-2 rounded <?= $isDispDone ? 'bg-success bg-opacity-10 border border-success-subtle' : ($isDispPending ? 'bg-warning bg-opacity-10 border border-warning-subtle' : 'bg-light border') ?>">
+                <i class="fa-solid <?= $isDispDone ? 'fa-circle-check text-success' : ($isDispPending ? 'fa-spinner fa-spin text-warning' : 'fa-circle text-muted opacity-50') ?> d-block mb-1"></i>
                 <div class="fw-semibold text-dark" style="font-size: 0.72rem;">2. Dispatcher Endorsed</div>
                 <div class="mono text-muted" style="font-size: 0.65rem;">
-                    <?= $isOicDone ? date('M d, H:i', strtotime($request['oic_action_at'])) : ($isOicPending ? 'Pending Action' : 'Awaiting') ?>
+                    <?= $isDispDone && $dispActionAt ? date('M d, H:i', strtotime($dispActionAt)) : ($isDispPending ? 'Pending Action' : 'Awaiting') ?>
                 </div>
             </div>
         </div>
@@ -233,14 +243,14 @@
                 </span>
             </div>
             <div class="p-3 text-center">
-                <?php if (in_array($request['status'], ['pending_oic', 'pending_admin'])): ?>
+                <?php if (in_array($request['status'], ['pending_dispatcher', 'pending_admin'])): ?>
                     <div class="mb-2">
                         <span class="badge <?= $request['sla_info']['class'] ?> fs-6 py-2 px-3">
                             <i class="fa-solid fa-clock me-1"></i> <?= $request['sla_info']['text'] ?>
                         </span>
                     </div>
                     <div class="small text-muted" style="font-size: 0.76rem;">
-                        <?= $request['status'] === 'pending_oic'
+                        <?= $request['status'] === 'pending_dispatcher'
                             ? 'Escalates to Tier 2 automatically after 4 hours.'
                             : 'Final authorization deadline (auto-expiry after 24 hours).' ?><br>
                         Deadline: <strong class="mono text-dark"><?= date('M d, Y h:i A', strtotime($request['sla_deadline'])) ?></strong>
@@ -314,23 +324,29 @@
                 <div class="border-bottom pb-3 mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <span class="fw-semibold text-dark small">1. Motorpool Dispatcher (Tier 1)</span>
-                        <?php if ($request['oic_action'] === 'approved'): ?>
+                        <?php if ($request['dispatcher_action'] === 'approved'): ?>
                             <span class="badge bg-success small"><i class="fa-solid fa-check"></i> Endorsed</span>
-                        <?php elseif ($request['oic_action'] === 'rejected'): ?>
+                        <?php elseif ($request['dispatcher_action'] === 'rejected'): ?>
                             <span class="badge bg-danger small">Disapproved</span>
+                        <?php elseif (!empty($request['escalated_at'])): ?>
+                            <span class="badge bg-warning text-dark small" title="No Tier 1 action within <?= \App\Services\SlaService::ESCALATION_HOURS ?>h (FR-1.4)">Auto-escalated</span>
+                        <?php elseif (!empty($request['is_emergency_override'])): ?>
+                            <span class="badge bg-danger small">Bypassed (Emergency)</span>
                         <?php else: ?>
                             <span class="badge bg-warning text-dark small">Pending</span>
                         <?php endif; ?>
                     </div>
-                    <div class="text-dark small fw-medium"><?= esc($request['oic_approver_name'] ?? 'Motorpool Dispatcher') ?></div>
-                    <?php if ($request['oic_action_at']): ?>
+                    <div class="text-dark small fw-medium">
+                        <?= !empty($request['dispatcher_action']) ? esc($request['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') : 'Motorpool Dispatcher (no action recorded)' ?>
+                    </div>
+                    <?php if ($request['dispatcher_action_at']): ?>
                         <div class="mono text-muted" style="font-size: 0.7rem;">
-                            Action Date: <?= date('M d, Y h:i A', strtotime($request['oic_action_at'])) ?>
+                            Action Date: <?= date('M d, Y h:i A', strtotime($request['dispatcher_action_at'])) ?>
                         </div>
                     <?php endif; ?>
-                    <?php if ($request['oic_remarks']): ?>
+                    <?php if ($request['dispatcher_remarks']): ?>
                         <div class="small text-muted fst-italic mt-1" style="font-size: 0.75rem;">
-                            "<?= esc($request['oic_remarks']) ?>"
+                            "<?= esc($request['dispatcher_remarks']) ?>"
                         </div>
                     <?php endif; ?>
                 </div>
@@ -343,6 +359,8 @@
                             <span class="badge bg-success small"><i class="fa-solid fa-check"></i> Authorized</span>
                         <?php elseif ($request['admin_action'] === 'rejected'): ?>
                             <span class="badge bg-danger small">Disapproved</span>
+                        <?php elseif ($request['status'] === 'pending_admin'): ?>
+                            <span class="badge bg-info text-white small">Pending</span>
                         <?php else: ?>
                             <span class="badge bg-secondary small">Awaiting Tier 1</span>
                         <?php endif; ?>
@@ -366,28 +384,32 @@
         <!-- Approver Quick Action (if applicable) -->
         <?php
             $userRole = session()->get('user_role');
-            $canTier1Act = ($userRole === 'dispatcher' || $userRole === 'admin') && $request['status'] === 'pending_oic';
-            $canAdminAct = ($userRole === 'approver_admin' || $userRole === 'admin') && $request['status'] === 'pending_admin';
+            $sessUserId = (int) session()->get('user_id');
+            $isOwnRequest = (int) $request['requestor_id'] === $sessUserId;
+            $isTier1Endorser = $request['dispatcher_action'] === 'approved' && (int) $request['dispatcher_approver_id'] === $sessUserId;
+            $canTier1Act = ($userRole === 'dispatcher' || $userRole === 'admin') && $request['status'] === 'pending_dispatcher';
+            $canAdminAct = ($userRole === 'approver_admin' || $userRole === 'admin') && $request['status'] === 'pending_admin' && !$isTier1Endorser;
         ?>
         <?php if ($canTier1Act || $canAdminAct): ?>
             <div class="card-panel border border-primary shadow-sm p-3 mb-4 bg-primary bg-opacity-10">
                 <div class="fw-bold text-primary small mb-2">
-                    <i class="fa-solid fa-gavel me-1"></i> Approver Action Required
+                    <i class="fa-solid fa-gavel me-1"></i> <?= $canTier1Act ? 'Tier 1 Dispatcher Document Check & Endorsement' : 'Tier 2 Administrative Authorization Required' ?>
                 </div>
                 <p class="small text-dark mb-3" style="font-size: 0.78rem;">
-                    You are authorized to review and act on this travel request.
+                    <?= $canTier1Act ? 'You are assigned as Motorpool Dispatcher to check VRS documents and specifications.' : 'You are authorized to review and act on this travel request.' ?>
                 </p>
                 <form action="<?= base_url('approvals/' . $request['id'] . '/action') ?>" method="POST">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="redirect_to" value="<?= base_url('requests/' . $request['id']) ?>">
                     <div class="mb-2">
-                        <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="Approval or justification remarks..."></textarea>
+                        <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="Endorsement or justification remarks..."></textarea>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" name="action" value="approve" class="btn btn-success btn-sm flex-fill">
-                            <i class="fa-solid fa-check me-1"></i> <?= $canTier1Act ? 'Endorse Request' : 'Authorize Travel' ?>
+                            <i class="fa-solid fa-check me-1"></i> <?= $canTier1Act ? 'Endorse (Clearance to Tier 2)' : 'Authorize Travel' ?>
                         </button>
                         <button type="submit" name="action" value="reject" class="btn btn-outline-danger btn-sm">
-                            Disapprove
+                            <?= $canTier1Act ? 'Disapprove (Specification)' : 'Disapprove' ?>
                         </button>
                     </div>
                 </form>
@@ -395,4 +417,101 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Modal for Tier 1 Dispatcher Review & Endorsement -->
+<?php if ($request['status'] === 'pending_dispatcher' && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
+    <div class="modal fade text-start" id="showTier1Modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h6 class="modal-title fw-bold text-dark">
+                        <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="<?= base_url('approvals/' . $request['id'] . '/action') ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect_to" value="<?= base_url('requests/' . $request['id']) ?>">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <div class="small text-muted">VRS Control:</div>
+                            <div class="fw-bold text-dark mono"><?= esc($request['request_number']) ?></div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="small text-muted">Destination &amp; Purpose:</div>
+                            <div class="fw-semibold text-dark"><?= esc($request['destination']) ?></div>
+                            <div class="small text-muted mt-1"><?= nl2br(esc($request['purpose'])) ?></div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="small text-muted">Passengers (<?= esc($request['passenger_count']) ?> pax):</div>
+                            <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($request['passenger_names'])) ?></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Specification &amp; Document Review Remarks</label>
+                            <textarea name="remarks" class="form-control form-control-sm" rows="3" placeholder="e.g. Travel itinerary and passenger specifications verified. Endorsed for Administrative Division Head clearance."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light p-3">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                            <i class="fa-solid fa-ban me-1"></i> Disapprove (Specification)
+                        </button>
+                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                            <i class="fa-solid fa-circle-check me-1"></i> Endorse (Clearance to Tier 2)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Modal for Tier 2 Administrative Division Head Authorization -->
+<?php if ($request['status'] === 'pending_admin' && in_array(session()->get('user_role'), ['admin', 'approver_admin'])): ?>
+    <div class="modal fade text-start" id="showTier2Modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h6 class="modal-title fw-bold text-dark">
+                        <i class="fa-solid fa-stamp text-success me-1"></i> Tier 2 Administrative Division Head Authorization
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="<?= base_url('approvals/' . $request['id'] . '/action') ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect_to" value="<?= base_url('requests/' . $request['id']) ?>">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <div class="small text-muted">VRS Control:</div>
+                            <div class="fw-bold text-dark mono"><?= esc($request['request_number']) ?></div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="small text-muted">Tier 1 Endorsement:</div>
+                            <div class="small text-success fw-semibold">
+                                <i class="fa-solid fa-check-double me-1"></i> Endorsed by <?= esc($request['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?>
+                            </div>
+                            <?php if (!empty($request['dispatcher_remarks'])): ?>
+                                <div class="text-muted small fst-italic">"<?= esc($request['dispatcher_remarks']) ?>"</div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Administrative Authorization Remarks</label>
+                            <textarea name="remarks" class="form-control form-control-sm" rows="3" placeholder="e.g. Travel approved per official guidelines. Authorized for vehicle and driver dispatch."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light p-3">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                            <i class="fa-solid fa-ban me-1"></i> Disapprove
+                        </button>
+                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                            <i class="fa-solid fa-circle-check me-1"></i> Authorize Official Travel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <?= $this->endSection() ?>

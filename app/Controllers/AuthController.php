@@ -180,7 +180,7 @@ class AuthController extends BaseController
             'driver'                         => '/driver/trips',
             'guard'                          => '/gate',
             'requestor'                      => '/requests',
-            'approver_oic', 'approver_admin' => '/approvals',
+            'approver_admin'                 => '/approvals',
             'dispatcher'                     => '/dispatch',
             'auditor'                        => '/audit',
             'maintenance'                    => '/maintenance',
@@ -196,6 +196,10 @@ class AuthController extends BaseController
             AuditLogger::log(AuditLogger::LOGOUT, 'User signed out.', 'user', (int) session()->get('user_id'));
         }
         session()->destroy();
+        if (isset($_COOKIE['ci_session'])) {
+            unset($_COOKIE['ci_session']);
+            setcookie('ci_session', '', time() - 3600, '/');
+        }
         return redirect()->to('/login')->with('success', 'You have been successfully logged out.');
     }
 

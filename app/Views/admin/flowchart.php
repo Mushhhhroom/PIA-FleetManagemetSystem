@@ -209,12 +209,17 @@
             <ul class="nav nav-pills" id="flowchartNav" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active py-1 px-3 small fw-semibold" id="tab-travel-flow-btn" data-bs-toggle="pill" data-bs-target="#flow-travel" type="button" role="tab">
-                        <i class="fa-solid fa-route me-1"></i> 1. Travel Request Lifecycle
+                        <i class="fa-solid fa-route me-1"></i> 1. Official Travel Lifecycle (10 Stages)
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-3 small fw-semibold" id="tab-maintenance-flow-btn" data-bs-toggle="pill" data-bs-target="#flow-maintenance" type="button" role="tab">
-                        <i class="fa-solid fa-wrench me-1"></i> 2. Safety &amp; Maintenance (PMS)
+                        <i class="fa-solid fa-screwdriver-wrench me-1"></i> 2. Defect Grounding &amp; PIR Queue
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-3 small fw-semibold" id="tab-audit-flow-btn" data-bs-toggle="pill" data-bs-target="#flow-audit" type="button" role="tab">
+                        <i class="fa-solid fa-scale-balanced me-1"></i> 3. Odometer Variance &amp; COA Anomaly
                     </button>
                 </li>
             </ul>
@@ -231,9 +236,9 @@
                             <div class="flow-icon bg-blue-subtle text-primary">
                                 <i class="fa-solid fa-file-pen"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Request Submission</h6>
-                            <span class="badge bg-secondary mb-2" style="font-size: 0.65rem;">Requestor</span>
-                            <p class="text-muted small mb-3">Employee drafts Vehicle Request Slip (VRS) with destination, passengers, and dates.</p>
+                            <h6 class="fw-bold mb-1">INPUT: VRS Filing</h6>
+                            <span class="badge bg-secondary mb-2" style="font-size: 0.65rem;">Employee Request</span>
+                            <p class="text-muted small mb-3">Employee requests transport, submitting destination, purpose, dates, passengers, and emergency memos.</p>
                             <a href="<?= base_url('requests') ?>" class="btn btn-sm btn-outline-primary w-100">
                                 Open VRS <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
@@ -244,14 +249,14 @@
                         <!-- Step 2 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 2</div>
-                            <div class="flow-icon bg-amber-subtle text-warning">
-                                <i class="fa-solid fa-stamp"></i>
+                            <div class="flow-icon bg-amber-subtle text-danger">
+                                <i class="fa-solid fa-file-circle-check"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Two-Tier Approval</h6>
-                            <span class="badge bg-warning text-dark mb-2" style="font-size: 0.65rem;">Dispatcher &amp; Admin Head</span>
-                            <p class="text-muted small mb-3">Tier 1 Motorpool Dispatcher endorses, Tier 2 Admin Head grants final authority with 4h SLA.</p>
+                            <h6 class="fw-bold mb-1">Tier 1 Dispatcher Approval</h6>
+                            <span class="badge bg-danger text-white mb-2" style="font-size: 0.65rem;">Motorpool Dispatcher</span>
+                            <p class="text-muted small mb-3">Motorpool Dispatcher checks documents, passenger specs, and justification; endorses or issues specification disapproval.</p>
                             <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                Approvals <i class="fa-solid fa-arrow-right ms-1"></i>
+                                Check Documents <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
 
@@ -260,14 +265,14 @@
                         <!-- Step 3 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 3</div>
-                            <div class="flow-icon bg-emerald-subtle text-success">
-                                <i class="fa-solid fa-truck-ramp-box"></i>
+                            <div class="flow-icon bg-purple-subtle text-purple">
+                                <i class="fa-solid fa-stamp"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Vehicle Dispatch</h6>
-                            <span class="badge bg-success mb-2" style="font-size: 0.65rem;">Dispatcher</span>
-                            <p class="text-muted small mb-3">Motorpool assigns compliant driver, available vehicle, toll RFID card, and issues e-DTT.</p>
-                            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                Dispatch <i class="fa-solid fa-arrow-right ms-1"></i>
+                            <h6 class="fw-bold mb-1">Tier 2 Admin Approval</h6>
+                            <span class="badge bg-purple text-white mb-2" style="font-size: 0.65rem;">Head, Admin Division</span>
+                            <p class="text-muted small mb-3">Administrative Division Head reviews endorsed VRS and grants final official travel authorization.</p>
+                            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Authorize <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
 
@@ -276,14 +281,14 @@
                         <!-- Step 4 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 4</div>
-                            <div class="flow-icon bg-purple-subtle text-purple">
-                                <i class="fa-solid fa-clipboard-check"></i>
+                            <div class="flow-icon bg-rose-subtle text-danger">
+                                <i class="fa-solid fa-truck-fast"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Pre-Trip Inspection</h6>
-                            <span class="badge bg-dark mb-2" style="font-size: 0.65rem;">Driver</span>
-                            <p class="text-muted small mb-3">Driver executes 10-point BLOWBAGETS safety checklist prior to engine ignition.</p>
-                            <a href="<?= base_url('safety') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                Checklist <i class="fa-solid fa-arrow-right ms-1"></i>
+                            <h6 class="fw-bold mb-1">Dispatch &amp; Allocation</h6>
+                            <span class="badge bg-danger text-white mb-2" style="font-size: 0.65rem;">Motorpool Dispatcher</span>
+                            <p class="text-muted small mb-3">Assigns verified vehicle, certified driver, toll RFID card, and issues official e-DTT.</p>
+                            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Dispatch Console <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
 
@@ -292,14 +297,14 @@
                         <!-- Step 5 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 5</div>
-                            <div class="flow-icon bg-slate-subtle text-secondary">
-                                <i class="fa-solid fa-qrcode"></i>
+                            <div class="flow-icon bg-emerald-subtle text-success">
+                                <i class="fa-solid fa-clipboard-check"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Gate Verification</h6>
-                            <span class="badge bg-secondary mb-2" style="font-size: 0.65rem;">Security Guard</span>
-                            <p class="text-muted small mb-3">Guard scans DTT QR code at entrance/exit gate to log departure/return and odometer.</p>
-                            <a href="<?= base_url('gate') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                Gate Scanner <i class="fa-solid fa-arrow-right ms-1"></i>
+                            <h6 class="fw-bold mb-1">Pre-Trip BLOWBAGETS</h6>
+                            <span class="badge bg-success text-white mb-2" style="font-size: 0.65rem;">Assigned Driver</span>
+                            <p class="text-muted small mb-3">10-point inspection (Battery, Light, Oil, Water, Brake, Air, Gas, Engine, Tire, Self) before road departure.</p>
+                            <a href="<?= base_url('safety') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Safety Check <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
 
@@ -308,14 +313,14 @@
                         <!-- Step 6 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 6</div>
-                            <div class="flow-icon bg-blue-subtle text-info">
-                                <i class="fa-solid fa-satellite-dish"></i>
+                            <div class="flow-icon bg-slate-subtle text-secondary">
+                                <i class="fa-solid fa-qrcode"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Transit &amp; Telematics</h6>
-                            <span class="badge bg-info text-dark mb-2" style="font-size: 0.65rem;">System &amp; IoT</span>
-                            <p class="text-muted small mb-3">Live GPS coordinates stream to radar screen; overspeeding flags log automatically.</p>
-                            <a href="<?= base_url('tracking') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                Live Radar <i class="fa-solid fa-arrow-right ms-1"></i>
+                            <h6 class="fw-bold mb-1">Gate Out Security Scan</h6>
+                            <span class="badge bg-secondary mb-2" style="font-size: 0.65rem;">Security Guard</span>
+                            <p class="text-muted small mb-3">Guard verifies e-DTT, logs departure timestamp, starting odometer, and clears vehicle exit.</p>
+                            <a href="<?= base_url('gate') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Gate Scanner <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
 
@@ -324,14 +329,62 @@
                         <!-- Step 7 -->
                         <div class="flow-card">
                             <div class="flow-step-num">Step 7</div>
-                            <div class="flow-icon bg-rose-subtle text-danger">
+                            <div class="flow-icon bg-blue-subtle text-info">
+                                <i class="fa-solid fa-satellite-dish"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">En Route Telematics &amp; Fuel</h6>
+                            <span class="badge bg-info text-dark mb-2" style="font-size: 0.65rem;">Telematics &amp; Driver PWA</span>
+                            <p class="text-muted small mb-3">Live ping stream, speed watcher alert (>80 km/h), real-time radar, and driver fuel receipt upload.</p>
+                            <a href="<?= base_url('tracking') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Live Radar <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Step 8 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Step 8</div>
+                            <div class="flow-icon bg-slate-subtle text-secondary">
+                                <i class="fa-solid fa-barcode"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Gate In Verification</h6>
+                            <span class="badge bg-secondary mb-2" style="font-size: 0.65rem;">Security Guard</span>
+                            <p class="text-muted small mb-3">Guard logs arrival timestamp, return odometer reading, and verifies passenger headcount.</p>
+                            <a href="<?= base_url('gate') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Return Scan <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Step 9 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Step 9</div>
+                            <div class="flow-icon bg-amber-subtle text-warning">
                                 <i class="fa-solid fa-scale-balanced"></i>
                             </div>
-                            <h6 class="fw-bold mb-1">Trip Close &amp; COA Audit</h6>
-                            <span class="badge bg-warning text-dark mb-2" style="font-size: 0.65rem;">Auditor / Admin</span>
-                            <p class="text-muted small mb-3">Post-trip fuel &amp; odometer reconciliation, Form B compliance compilation, immutable trail.</p>
+                            <h6 class="fw-bold mb-1">Reconciliation &amp; Form B</h6>
+                            <span class="badge bg-warning text-dark mb-2" style="font-size: 0.65rem;">COA Auditor &amp; System</span>
+                            <p class="text-muted small mb-3">Matches OSRM distance and fuel, computes CPK, writes immutable audit log, and compiles Form B.</p>
+                            <a href="<?= base_url('compliance') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Form B Portal <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Step 10 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Step 10</div>
+                            <div class="flow-icon bg-emerald-subtle text-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Trip Closed &amp; Archived</h6>
+                            <span class="badge bg-success mb-2" style="font-size: 0.65rem;">COA Compliant</span>
+                            <p class="text-muted small mb-3">Audit verified and archived; vehicle returned to available pool for subsequent dispatch.</p>
                             <a href="<?= base_url('audit') ?>" class="btn btn-sm btn-outline-primary w-100">
-                                COA Audits <i class="fa-solid fa-arrow-right ms-1"></i>
+                                Audit Logs <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
@@ -403,6 +456,73 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Flowchart 3: Odometer Variance & COA Anomaly -->
+                <div class="tab-pane fade" id="flow-audit" role="tabpanel">
+                    <div class="flowchart-track">
+                        <!-- Stage 1 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Stage 1</div>
+                            <div class="flow-icon bg-amber-subtle text-warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Variance Detected</h6>
+                            <span class="badge bg-warning text-dark mb-2" style="font-size: 0.65rem;">System Rule</span>
+                            <p class="text-muted small mb-3">Actual gate-to-gate odometer reading deviates from computed OSRM route distance by over 15%.</p>
+                            <a href="<?= base_url('gate') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Gate Logs <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Stage 2 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Stage 2</div>
+                            <div class="flow-icon bg-rose-subtle text-danger">
+                                <i class="fa-solid fa-flag"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Flag Audit Anomaly</h6>
+                            <span class="badge bg-danger mb-2" style="font-size: 0.65rem;">COA Auditor</span>
+                            <p class="text-muted small mb-3">Reimbursement locked; anomaly flagged for route inspection and driver delay correlation.</p>
+                            <a href="<?= base_url('audit') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                COA Audits <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Stage 3 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Stage 3</div>
+                            <div class="flow-icon bg-blue-subtle text-primary">
+                                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Investigation Review</h6>
+                            <span class="badge bg-primary mb-2" style="font-size: 0.65rem;">COA Resident Auditor</span>
+                            <p class="text-muted small mb-3">Cross-examines fuel receipts, telematics route breadcrumbs, and official passenger logs.</p>
+                            <a href="<?= base_url('audit/logs') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Audit Trail <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="flow-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+                        <!-- Stage 4 -->
+                        <div class="flow-card">
+                            <div class="flow-step-num">Stage 4</div>
+                            <div class="flow-icon bg-emerald-subtle text-success">
+                                <i class="fa-solid fa-file-shield"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">COA Form B Integration</h6>
+                            <span class="badge bg-success mb-2" style="font-size: 0.65rem;">System &amp; Auditor</span>
+                            <p class="text-muted small mb-3">Resolved audit findings recorded into monthly Form B report and vehicle released to available pool.</p>
+                            <a href="<?= base_url('compliance') ?>" class="btn btn-sm btn-outline-primary w-100">
+                                Form B Portal <i class="fa-solid fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -414,7 +534,7 @@
                 <i class="fa-solid fa-file-image text-success fs-5"></i>
                 <div>
                     <h6 class="mb-0 fw-bold">Official Standard System Flowchart Diagram (ANSI / ISO Specification)</h6>
-                    <small class="text-muted">High-Resolution 2400 &times; 3600 standard flowchart with terminators, decision diamonds, process blocks, I/O parallelograms &amp; RBAC matrix</small>
+                    <small class="text-muted">High-Resolution 2500 &times; 1350 standard flowchart matching official PIA workflow blueprint</small>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -455,14 +575,14 @@
             </div>
 
             <!-- Crisp Diagram View Container -->
-            <div class="border rounded-2 p-2 bg-white text-center position-relative overflow-hidden" style="max-height: 800px; overflow-y: auto;">
+            <div class="border rounded-2 p-3 text-center position-relative overflow-hidden" style="background: #121214; max-height: 850px; overflow-y: auto;">
                 <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" target="_blank" title="Click to view full original size">
                     <img src="<?= base_url('assets/images/system_entire_flowchart.png') ?>" alt="PIA-AFMS Complete Standard Architecture Flowchart" class="img-fluid rounded shadow-sm" style="max-width: 100%; height: auto; display: inline-block;">
                 </a>
             </div>
             <div class="d-flex align-items-center justify-content-between mt-2 pt-2 px-1 text-muted small">
-                <span><i class="fa-solid fa-circle-info me-1 text-primary"></i> Click image above or button to open full-scale vector-grade 2400&times;3600px rendering.</span>
-                <span class="mono">PNG Format &bull; 445 KB</span>
+                <span><i class="fa-solid fa-circle-info me-1 text-primary"></i> Click image above or button to open full-scale 2500&times;1350px dark-theme official standard flowchart rendering.</span>
+                <span class="mono">PNG Format &bull; <?= round(filesize(FCPATH . 'assets/images/system_entire_flowchart.png') / 1024) ?> KB</span>
             </div>
         </div>
     </div>

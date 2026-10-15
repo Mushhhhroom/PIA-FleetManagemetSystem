@@ -42,7 +42,7 @@
     <a href="<?= base_url('requests') ?>" class="btn btn-sm <?= empty($activeFilter) || $activeFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
         All Requests
     </a>
-    <a href="<?= base_url('requests?status=pending_oic') ?>" class="btn btn-sm <?= $activeFilter === 'pending_oic' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('requests?status=pending_dispatcher') ?>" class="btn btn-sm <?= $activeFilter === 'pending_dispatcher' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
         <i class="fa-solid fa-user-clock me-1"></i> Pending Dispatcher (Tier 1)
     </a>
     <a href="<?= base_url('requests?status=pending_admin') ?>" class="btn btn-sm <?= $activeFilter === 'pending_admin' ? 'btn-info text-white' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
@@ -130,7 +130,7 @@
                                 </span>
                             </td>
                             <td>
-                                <?php if (in_array($r['status'], ['pending_oic', 'pending_admin'])): ?>
+                                <?php if (in_array($r['status'], ['pending_dispatcher', 'pending_admin'])): ?>
                                     <span class="badge <?= $r['sla_info']['class'] ?> small py-1 px-2">
                                         <i class="fa-solid fa-stopwatch me-1"></i><?= $r['sla_info']['text'] ?>
                                     </span>
@@ -147,13 +147,13 @@
                             <td>
                                 <?php
                                     $statusPills = [
-                                        'pending_oic'   => ['label' => 'Pending Dispatcher', 'class' => 'bg-warning text-dark'],
-                                        'pending_admin' => ['label' => 'Pending Admin Head', 'class' => 'bg-info text-white'],
-                                        'approved'      => ['label' => 'Authorized', 'class' => 'bg-success text-white'],
-                                        'dispatched'    => ['label' => 'Dispatched', 'class' => 'bg-primary text-white'],
-                                        'completed'     => ['label' => 'Completed', 'class' => 'bg-secondary text-white'],
-                                        'rejected'      => ['label' => 'Disapproved', 'class' => 'bg-danger text-white'],
-                                        'expired'       => ['label' => 'SLA Expired', 'class' => 'bg-dark text-white'],
+                                        'pending_dispatcher' => ['label' => 'Pending Dispatcher', 'class' => 'bg-warning text-dark'],
+                                        'pending_admin'      => ['label' => 'Pending Admin Head', 'class' => 'bg-info text-white'],
+                                        'approved'           => ['label' => 'Authorized', 'class' => 'bg-success text-white'],
+                                        'dispatched'         => ['label' => 'Dispatched', 'class' => 'bg-primary text-white'],
+                                        'completed'          => ['label' => 'Completed', 'class' => 'bg-secondary text-white'],
+                                        'rejected'           => ['label' => 'Disapproved', 'class' => 'bg-danger text-white'],
+                                        'expired'            => ['label' => 'SLA Expired', 'class' => 'bg-dark text-white'],
                                     ];
                                     $st = $statusPills[$r['status']] ?? ['label' => ucfirst($r['status']), 'class' => 'bg-secondary text-white'];
                                 ?>
@@ -161,8 +161,17 @@
                                     <?= $st['label'] ?>
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <div class="dropdown">
+                            <td class="text-end text-nowrap">
+                                <?php if ($r['status'] === 'pending_dispatcher' && in_array($userRole, ['admin', 'dispatcher'])): ?>
+                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2 shadow-sm text-decoration-none me-1" style="font-size: 0.75rem;" title="Review documents and endorse/disapprove" data-bs-toggle="modal" data-bs-target="#reqTier1Modal<?= $r['id'] ?>">
+                                        <i class="fa-solid fa-file-circle-check me-1"></i> Review &amp; Endorse
+                                    </button>
+                                <?php elseif ($r['status'] === 'pending_admin' && in_array($userRole, ['admin', 'approver_admin'])): ?>
+                                    <button type="button" class="btn btn-sm btn-success py-1 px-2 shadow-sm text-decoration-none me-1" style="font-size: 0.75rem;" title="Authorize official travel" data-bs-toggle="modal" data-bs-target="#reqAdminModal<?= $r['id'] ?>">
+                                        <i class="fa-solid fa-stamp me-1"></i> Authorize
+                                    </button>
+                                <?php endif; ?>
+                                <div class="dropdown d-inline-block">
                                     <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown">
                                         <i class="fa-solid fa-ellipsis-vertical"></i>
                                     </button>
@@ -177,6 +186,22 @@
                                                 <i class="fa-solid fa-print me-2 text-secondary"></i> Print ADMIN-F-018 rev2
                                             </a>
                                         </li>
+                                        <?php if ($r['status'] === 'pending_dispatcher' && in_array($userRole, ['admin', 'dispatcher'])): ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item small text-primary fw-semibold" href="<?= base_url('approvals') ?>">
+                                                    <i class="fa-solid fa-file-circle-check me-2"></i> Review &amp; Endorse (Tier 1)
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+                                        <?php if ($r['status'] === 'pending_admin' && in_array($userRole, ['admin', 'approver_admin'])): ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item small text-success fw-semibold" href="<?= base_url('approvals') ?>">
+                                                    <i class="fa-solid fa-stamp me-2"></i> Administrative Clearance (Tier 2)
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
                                         <?php if ($r['status'] === 'approved' && in_array($userRole, ['admin', 'dispatcher'])): ?>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
@@ -203,4 +228,107 @@
         </table>
     </div>
 </div>
+
+<?php if (!empty($requests)): ?>
+    <?php foreach ($requests as $r): ?>
+        <?php if ($r['status'] === 'pending_dispatcher' && in_array($userRole, ['admin', 'dispatcher'])): ?>
+            <div class="modal fade text-start" id="reqTier1Modal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title fw-bold text-dark">
+                                <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check: <?= esc($r['request_number']) ?>
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="redirect_to" value="<?= base_url('requests') ?>">
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <div class="small text-muted">Destination:</div>
+                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Purpose:</div>
+                                    <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted">Passengers:</div>
+                                    <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'] ?? '')) ?></div>
+                                </div>
+                                <?php if (!empty($r['justification_file'])): ?>
+                                    <div class="alert alert-info border-info-subtle p-2 px-3 small mb-3 rounded d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong>Attached Justification Memo:</strong>
+                                            <?php if (!empty($r['justification_notes'])): ?>
+                                                <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect File
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-dark">Tier 1 Endorsement Remarks</label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Travel requirements and itinerary verified. Endorsed for Administrative Division Head clearance."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-ban me-1"></i> Disapprove (Specification)
+                                </button>
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Endorse (Clearance to Tier 2)
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($r['status'] === 'pending_admin' && in_array($userRole, ['admin', 'approver_admin'])): ?>
+            <div class="modal fade text-start" id="reqAdminModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h6 class="modal-title fw-bold text-dark">
+                                <i class="fa-solid fa-stamp text-success me-1"></i> Tier 2 Administrative Authorization: <?= esc($r['request_number']) ?>
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="redirect_to" value="<?= base_url('requests') ?>">
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <div class="small text-muted">Destination &amp; Purpose:</div>
+                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                    <div class="small text-muted mt-1"><?= nl2br(esc($r['purpose'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-dark">Authorization Remarks</label>
+                                    <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="e.g. Travel approved per official guidelines."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light p-3">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-ban me-1"></i> Disapprove
+                                </button>
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-3 fw-semibold">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Authorize Travel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
+
 <?= $this->endSection() ?>

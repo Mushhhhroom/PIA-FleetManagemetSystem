@@ -142,17 +142,12 @@ class RequestController extends BaseController
             return redirect()->back()->withInput()->with('error', 'The selected department does not exist. Please choose a valid department.');
         }
 
-        // Resolve the Tier 1 Approver — Motorpool Dispatcher (BRD revision:
-        // Tier 1 approval authority transferred from the Division OIC to Dispatch).
+        // Resolve the Tier 1 Approver — Motorpool Dispatcher
         $officeId = (int)$this->request->getPost('office_id');
         $userModel = new UserModel();
-        $tier1User = $userModel->where('role', 'dispatcher')->where('status', 'active')->first();
+        $tier1User = $userModel->where('office_id', $officeId)->where('role', 'dispatcher')->where('status', 'active')->first();
         if (!$tier1User) {
-            // Fallback: the office's OIC keeps the queue routable without an active dispatcher
-            $tier1User = $userModel->where('office_id', $officeId)->where('role', 'approver_oic')->first();
-        }
-        if (!$tier1User) {
-            $tier1User = $userModel->where('role', 'approver_oic')->first();
+            $tier1User = $userModel->where('role', 'dispatcher')->where('status', 'active')->first();
         }
 
         $requestData = [
@@ -173,14 +168,15 @@ class RequestController extends BaseController
             'is_rush_request'        => $isRush ? 1 : 0,
             'justification_file'     => $justificationFile,
             'justification_notes'    => $this->request->getPost('justification_notes') ?: null,
-            'status'                 => 'pending_oic',
-            'oic_approver_id'        => $tier1User ? $tier1User['id'] : null,
+            'status'                 => 'pending_dispatcher',
+            // dispatcher_approver_id is recorded when the Dispatcher endorses/rejects
+            'dispatcher_approver_id' => null,
             'sla_deadline'           => $slaDeadline,
         ];
 
         $requestId = $this->requestModel->insert($requestData);
 
-        // Notify the Tier 1 Approver (Motorpool Dispatcher) of the new filing
+        // Notify the Motorpool Dispatcher of the new filing
         if ($tier1User) {
             $rushTag = $isRush ? '[URGENT RUSH] ' : '';
             $this->notificationModel->insert([

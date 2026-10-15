@@ -39,8 +39,7 @@ class UserController extends BaseController
     public const ASSIGNABLE_ROLES = [
         'admin'          => 'Super Admin / Director',
         'approver_admin' => 'Tier 2 Approver (Admin Head)',
-        'approver_oic'   => 'Tier 1 Oversight (OIC)',
-        'dispatcher'     => 'Motorpool Dispatcher (Tier 1 Approver)',
+        'dispatcher'     => 'Motorpool Dispatcher (Tier 1 Approver & Asset Allocation)',
         'maintenance'    => 'Safety & PMS Technician',
         'driver'         => 'Official Driver',
         'guard'          => 'Gate Security Officer',
@@ -388,12 +387,13 @@ class UserController extends BaseController
     }
 
     /**
-     * Flowchart and System Navigations view for Super Admin.
+     * Flowchart and System Navigations view for Super Admin & Motorpool Dispatcher.
      */
     public function flowchart()
     {
-        if ($denied = $this->guardSuperAdmin()) {
-            return $denied;
+        $role = session()->get('user_role');
+        if (!in_array($role, ['admin', 'dispatcher'], true)) {
+            return redirect()->to('/')->with('error', 'Access Restricted: Flowchart viewing is limited to Administrators and Dispatchers.');
         }
 
         return view('admin/flowchart', [

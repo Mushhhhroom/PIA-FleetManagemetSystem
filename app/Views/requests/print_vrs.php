@@ -255,10 +255,22 @@
         <div class="sig-box">
             <div class="sig-label">Recommending Approval (Tier 1):</div>
             <div>
-                <div class="sig-name"><?= esc($request['oic_approver_name'] ?? 'Motorpool Dispatcher') ?></div>
-                <div class="sig-title"><?= esc($request['oic_approver_designation'] ?? 'Motorpool Dispatcher (Tier 1 Approver)') ?></div>
+                <?php if (($request['dispatcher_action'] ?? null) === 'approved'): ?>
+                    <div class="sig-name"><?= esc($request['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?></div>
+                    <div class="sig-title"><?= esc($request['dispatcher_approver_designation'] ?? 'Motorpool Dispatcher (Tier 1 Document & Specification Review)') ?></div>
+                <?php else: ?>
+                    <div class="sig-name">____________________</div>
+                    <div class="sig-title">
+                        Motorpool Dispatcher (Tier 1 Review)
+                        <?php if (!empty($request['escalated_at'])): ?>
+                            <br><strong>NOT ENDORSED &mdash; AUTO-ESCALATED (FR-1.4)</strong>
+                        <?php elseif (!empty($request['is_emergency_override'])): ?>
+                            <br><strong>BYPASSED &mdash; EMERGENCY OVERRIDE (FR-1.3)</strong>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
                 <div class="mono" style="font-size: 7.5pt; text-align: center; margin-top: 2px;">
-                    Date Signed: <?= $request['oic_action_at'] ? date('M d, Y h:i A', strtotime($request['oic_action_at'])) : '____________________' ?>
+                    Date Signed: <?= $request['dispatcher_action_at'] ? date('M d, Y h:i A', strtotime($request['dispatcher_action_at'])) : '____________________' ?>
                 </div>
             </div>
         </div>

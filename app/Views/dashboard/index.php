@@ -26,6 +26,48 @@
     </div>
 </div>
 
+<!-- Tier 1 VRS & Dispatch Action Alerts for Dispatcher & Admin -->
+<?php if (!empty($pendingTier1Count) && $pendingTier1Count > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
+    <div class="alert alert-warning border-warning-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                <i class="fa-solid fa-file-circle-exclamation"></i>
+            </span>
+            <div>
+                <strong class="text-dark d-block">Tier 1 Approval Queue: <?= $pendingTier1Count ?> Vehicle Request Slip(s) Awaiting Dispatcher Review</strong>
+                <span class="small text-muted">Verify passenger specifications, destination feasibility, and justification documents under the 4-hour SLA benchmark.</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary px-3 fw-semibold">
+                <i class="fa-solid fa-gavel me-1"></i> Review &amp; Act (Approvals Portal)
+            </a>
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-outline-secondary px-3">
+                <i class="fa-solid fa-truck-fast me-1"></i> Dispatch Console
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($pendingDispatchCount) && $pendingDispatchCount > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
+    <div class="alert alert-info border-info-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                <i class="fa-solid fa-truck-fast"></i>
+            </span>
+            <div>
+                <strong class="text-dark d-block">Asset Allocation: <?= $pendingDispatchCount ?> Authorized Request(s) Ready for Dispatch</strong>
+                <span class="small text-muted">Cleared by Administrative Division Head. Assign vehicles, qualified drivers, and generate electronic Trip Tickets (e-DTT).</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-success px-3 fw-semibold">
+                <i class="fa-solid fa-van-shuttle me-1"></i> Open Dispatch Console
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
 <!-- KPI Metric Tiles -->
 <div class="row g-3 mb-4">
     <div class="col-xl-2 col-md-4 col-6">

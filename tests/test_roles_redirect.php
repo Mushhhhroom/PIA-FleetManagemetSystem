@@ -3,12 +3,12 @@
 $roles = [
     'admin@pia.gov.ph'       => ['pass' => 'Admin_PIA2026!',    'expected' => '/'],
     'requestor@pia.gov.ph'   => ['pass' => 'Requestor_2026!',   'expected' => '/requests'],
-    'oic.news@pia.gov.ph'    => ['pass' => 'Oic_News2026!',     'expected' => '/approvals'],
     'admin.head@pia.gov.ph'  => ['pass' => 'AdminHead_2026!',   'expected' => '/approvals'],
     'dispatcher@pia.gov.ph'  => ['pass' => 'Dispatch_2026!',    'expected' => '/dispatch'],
     'guard@pia.gov.ph'       => ['pass' => 'Guard_2026!',       'expected' => '/gate'],
     'auditor@pia.gov.ph'     => ['pass' => 'Auditor_2026!',     'expected' => '/audit'],
     'driver.santos@pia.gov.ph'=> ['pass' => 'Driver_2026!',     'expected' => '/driver/trips'],
+    'maintenance@fleet.com'  => ['pass' => 'Maintenance_2026!', 'expected' => '/maintenance'],
 ];
 
 echo "=== TESTING ROLE-BASED LOGIN REDIRECTION ===" . PHP_EOL;

@@ -14,8 +14,8 @@ class TripRequestModel extends Model
         'request_number', 'requestor_id', 'requestor_name', 'office_id', 'department_id', 'office_scope',
         'destination', 'purpose', 'passenger_names', 'passenger_count', 'departure_time',
         'return_time', 'requested_driver_id', 'requested_vehicle_type', 'is_rush_request',
-        'justification_file', 'justification_notes', 'status', 'oic_approver_id', 'oic_action',
-        'oic_action_at', 'oic_remarks', 'admin_approver_id', 'admin_action', 'admin_action_at',
+        'justification_file', 'justification_notes', 'status', 'dispatcher_approver_id', 'dispatcher_action',
+        'dispatcher_action_at', 'dispatcher_remarks', 'admin_approver_id', 'admin_action', 'admin_action_at',
         'admin_remarks', 'sla_deadline', 'is_sla_breached',
         'is_emergency_override', 'emergency_override_by', 'emergency_override_at',
         'emergency_override_remarks', 'escalated_at',
@@ -31,14 +31,14 @@ class TripRequestModel extends Model
                                   offices.office_code, offices.office_name, offices.office_type,
                                   departments.department_code, departments.department_name, departments.head_name AS department_head,
                                   users.name AS requestor_full_name, users.email AS requestor_email,
-                                  oic_u.name AS oic_approver_name,
+                                  disp_u.name AS dispatcher_approver_name,
                                   adm_u.name AS admin_approver_name,
                                   CONCAT(drivers.first_name, " ", drivers.last_name) AS requested_driver_name,
                                   trip_tickets.id AS ticket_id, trip_tickets.ticket_serial_no, trip_tickets.status AS ticket_status')
                         ->join('offices', 'offices.id = trip_requests.office_id', 'left')
                         ->join('departments', 'departments.id = trip_requests.department_id', 'left')
                         ->join('users', 'users.id = trip_requests.requestor_id', 'left')
-                        ->join('users AS oic_u', 'oic_u.id = trip_requests.oic_approver_id', 'left')
+                        ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                         ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                         ->join('drivers', 'drivers.id = trip_requests.requested_driver_id', 'left')
                         ->join('trip_tickets', 'trip_tickets.request_id = trip_requests.id', 'left')
@@ -70,7 +70,8 @@ class TripRequestModel extends Model
                               offices.office_code, offices.office_name, offices.office_type, offices.address AS office_address,
                               departments.department_code, departments.department_name, departments.head_name AS department_head,
                               users.name AS requestor_full_name, users.email AS requestor_email, users.designation AS requestor_designation,
-                              oic_u.name AS oic_approver_name, oic_u.designation AS oic_approver_designation,
+                              disp_u.name AS dispatcher_approver_name,
+                              disp_u.designation AS dispatcher_approver_designation,
                               adm_u.name AS admin_approver_name, adm_u.designation AS admin_approver_designation,
                               CONCAT(drivers.first_name, " ", drivers.last_name) AS requested_driver_name,
                               trip_tickets.id AS ticket_id, trip_tickets.ticket_serial_no, trip_tickets.status AS ticket_status,
@@ -79,7 +80,7 @@ class TripRequestModel extends Model
                     ->join('offices', 'offices.id = trip_requests.office_id', 'left')
                     ->join('departments', 'departments.id = trip_requests.department_id', 'left')
                     ->join('users', 'users.id = trip_requests.requestor_id', 'left')
-                    ->join('users AS oic_u', 'oic_u.id = trip_requests.oic_approver_id', 'left')
+                    ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                     ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                     ->join('drivers', 'drivers.id = trip_requests.requested_driver_id', 'left')
                     ->join('trip_tickets', 'trip_tickets.request_id = trip_requests.id', 'left')

@@ -9,7 +9,7 @@ class CreatePiaFleetTables extends Migration
     public function up()
     {
         // 1. Expand User Roles to support Government RBAC
-        $this->db->query("ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'dispatcher', 'maintenance', 'driver', 'requestor', 'approver_oic', 'approver_admin', 'guard', 'auditor') DEFAULT 'requestor'");
+        $this->db->query("ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'dispatcher', 'maintenance', 'driver', 'requestor', 'approver_admin', 'guard', 'auditor') DEFAULT 'requestor'");
         $this->db->query("ALTER TABLE `users` ADD COLUMN `office_id` INT UNSIGNED NULL AFTER `role`");
         $this->db->query("ALTER TABLE `users` ADD COLUMN `designation` VARCHAR(100) NULL AFTER `name`");
 
@@ -141,26 +141,26 @@ class CreatePiaFleetTables extends Migration
             // Overall Status
             'status' => [
                 'type'       => 'ENUM',
-                'constraint' => ['pending_oic', 'pending_admin', 'approved', 'dispatched', 'completed', 'rejected', 'expired'],
-                'default'    => 'pending_oic',
+                'constraint' => ['pending_dispatcher', 'pending_admin', 'approved', 'dispatched', 'completed', 'rejected', 'expired'],
+                'default'    => 'pending_dispatcher',
             ],
-            // Approver 1: Staff / Regional Director / OIC
-            'oic_approver_id' => [
+            // Approver 1: Motorpool Dispatcher (Tier 1 Review)
+            'dispatcher_approver_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'null'       => true,
             ],
-            'oic_action' => [
+            'dispatcher_action' => [
                 'type'       => 'ENUM',
                 'constraint' => ['pending', 'approved', 'rejected'],
                 'default'    => 'pending',
             ],
-            'oic_action_at' => [
+            'dispatcher_action_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
             ],
-            'oic_remarks' => [
+            'dispatcher_remarks' => [
                 'type' => 'TEXT',
                 'null' => true,
             ],

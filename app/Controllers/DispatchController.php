@@ -37,6 +37,12 @@ class DispatchController extends BaseController
 
     public function index()
     {
+        // 0. Pending Tier 1 VRS requests awaiting Dispatcher document check & endorsement
+        $pendingTier1 = $this->requestModel->getRequestsWithDetails(['status' => 'pending_dispatcher']);
+        foreach ($pendingTier1 as &$t1) {
+            $t1['sla_info'] = \App\Services\SlaService::formatSlaCountdown($t1['sla_deadline']);
+        }
+
         // 1. Approved requests waiting for dispatch
         $pendingDispatch = $this->requestModel->getRequestsWithDetails(['status' => 'approved']);
 
@@ -51,6 +57,7 @@ class DispatchController extends BaseController
 
         $data = [
             'title'            => 'Motorpool Dispatch Command & Heuristic Allocation',
+            'pendingTier1'     => $pendingTier1,
             'pendingDispatch'  => $pendingDispatch,
             'activeDispatches' => $activeDispatches,
             'vehicles'         => $vehicles,

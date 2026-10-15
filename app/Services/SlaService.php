@@ -39,7 +39,7 @@ class SlaService
         $now = date('Y-m-d H:i:s');
 
         $dueList = $this->db->table('trip_requests')
-            ->where('status', 'pending_oic')
+            ->where('status', 'pending_dispatcher')
             ->where('escalated_at IS NULL')
             ->where('sla_deadline IS NOT NULL')
             ->where('sla_deadline <', $now)
@@ -48,7 +48,7 @@ class SlaService
         $escalated = [];
         foreach ($dueList as $req) {
             $userModel = new UserModel();
-            $adminHead = $userModel->where('role', 'approver_admin')->first();
+            $adminHead = $userModel->where('role', 'approver_admin')->where('status', 'active')->first();
 
             $this->requestModel->update($req['id'], [
                 'escalated_at'      => $now,
@@ -66,7 +66,7 @@ class SlaService
                 $mailer->notify(
                     (int) $adminHead['id'],
                     "ESCALATED: VRS {$req['request_number']} awaits your action",
-                    "The Initial Approver did not act on vehicle request {$req['request_number']} to "
+                    "The Motorpool Dispatcher did not act on vehicle request {$req['request_number']} to "
                     . "{$req['destination']} within the mandatory " . self::ESCALATION_HOURS . "-hour window. "
                     . "Per BRD FR-1.4 the request has been auto-escalated to the Administrative Division Chief.",
                     'warning',
@@ -91,7 +91,7 @@ class SlaService
                 . self::ESCALATION_HOURS . "h SLA breach (FR-1.4).",
                 'trip_request',
                 (int) $req['id'],
-                ['previous_status' => 'pending_oic', 'new_status' => 'pending_admin']
+                ['previous_status' => 'pending_dispatcher', 'new_status' => 'pending_admin']
             );
 
             $escalated[] = $req['request_number'];
@@ -110,7 +110,7 @@ class SlaService
     {
         $now = date('Y-m-d H:i:s');
         $expiredList = $this->db->table('trip_requests')
-            ->whereIn('status', ['pending_oic', 'pending_admin'])
+            ->whereIn('status', ['pending_dispatcher', 'pending_admin'])
             ->where('sla_deadline <', $now)
             ->where('sla_deadline IS NOT NULL')
             ->get()->getResultArray();
@@ -118,7 +118,7 @@ class SlaService
         $processed = [];
         foreach ($expiredList as $req) {
             // Never expire something the escalation pass can still handle
-            if ($req['status'] === 'pending_oic' && empty($req['escalated_at'])) {
+            if ($req['status'] === 'pending_dispatcher' && empty($req['escalated_at'])) {
                 continue;
             }
 

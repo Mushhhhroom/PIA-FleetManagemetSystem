@@ -414,18 +414,28 @@
            runs on every full-page navigation without JS.
         ------------------------------------------------------------- */
         .content-canvas {
-            animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: pageEnter 0.18s ease-out;
         }
 
         @keyframes pageEnter {
             from {
                 opacity: 0;
-                transform: translateY(6px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
             }
+        }
+
+        /* Ensure modals and backdrops always maintain correct stacking & interactivity */
+        .modal {
+            z-index: 1065 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+        .modal-dialog {
+            z-index: 1070 !important;
+            position: relative;
         }
 
         /* Section headers settle in just after the page canvas */
@@ -710,9 +720,8 @@
         $roleBadges = [
             'admin'          => ['label' => 'Super Admin / Director', 'color' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.15)'],
             'requestor'      => ['label' => 'Staff / Requestor', 'color' => '#8b5cf6', 'bg' => 'rgba(139, 92, 246, 0.15)'],
-            'approver_oic'   => ['label' => 'Tier 1 Oversight (OIC)', 'color' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.15)'],
             'approver_admin' => ['label' => 'Tier 2 Approver (Admin Head)', 'color' => '#06b6d4', 'bg' => 'rgba(6, 182, 212, 0.15)'],
-            'dispatcher'     => ['label' => 'Motorpool Dispatcher (Tier 1 Approver)', 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
+            'dispatcher'     => ['label' => 'Motorpool Dispatcher (Tier 1 Approver & Asset Allocation)', 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.15)'],
             'guard'          => ['label' => 'Gate Security Officer', 'color' => '#64748b', 'bg' => 'rgba(100, 116, 139, 0.15)'],
             'auditor'        => ['label' => 'COA Resident Auditor', 'color' => '#d97706', 'bg' => 'rgba(217, 119, 6, 0.15)'],
             'driver'         => ['label' => 'Official Driver', 'color' => '#0284c7', 'bg' => 'rgba(2, 132, 199, 0.15)'],
@@ -745,12 +754,30 @@
         // bounces non-ops roles with an "Access Restricted" flash.
         $homeRoute = match ($userRole) {
             'requestor'                     => 'requests',
-            'approver_oic', 'approver_admin' => 'approvals',
+            'approver_admin'                => 'approvals',
+            'dispatcher'                    => 'dispatch',
             'auditor'                       => 'audit',
             'guard'                         => 'gate',
             'driver'                        => 'driver/trips',
             default                         => '',
         };
+
+        // Calculate pending approvals count for badge in sidebar
+        $pendingApprovalsBadge = 0;
+        if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'], true)) {
+            try {
+                $db = \Config\Database::connect();
+                if ($userRole === 'dispatcher') {
+                    $pendingApprovalsBadge = $db->table('trip_requests')->where('status', 'pending_dispatcher')->countAllResults();
+                } elseif ($userRole === 'approver_admin') {
+                    $pendingApprovalsBadge = $db->table('trip_requests')->where('status', 'pending_admin')->countAllResults();
+                } else {
+                    $pendingApprovalsBadge = $db->table('trip_requests')->whereIn('status', ['pending_dispatcher', 'pending_admin'])->countAllResults();
+                }
+            } catch (\Throwable $e) {
+                $pendingApprovalsBadge = 0;
+            }
+        }
     ?>
 
     <!-- Sidebar Navigation -->
@@ -792,21 +819,24 @@
             <!-- ============================================================
                  2 · OFFICIAL TRAVEL WORKFLOW (BRD Modules 1–3, 5)
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_oic', 'approver_admin', 'auditor', 'guard', 'driver'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_admin', 'auditor', 'guard', 'driver'])): ?>
                 <button type="button" class="nav-section-toggle" data-nav-group="workflow" aria-expanded="true">
                     Official Travel Workflow <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
                 <div class="nav-group" data-nav-group-body="workflow">
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_oic', 'approver_admin', 'auditor'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_admin', 'auditor'])): ?>
                     <a href="<?= base_url('requests') ?>" class="sidebar-link <?= strpos(uri_string(), 'requests') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-file-signature"></i> Vehicle Requests (VRS)
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'approver_oic', 'approver_admin', 'dispatcher'])): ?>
-                    <a href="<?= base_url('approvals') ?>" class="sidebar-link <?= strpos(uri_string(), 'approvals') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-stamp"></i> Approvals &amp; 4h Escalation
+                <?php if (in_array($userRole, ['admin', 'approver_admin', 'dispatcher'])): ?>
+                    <a href="<?= base_url('approvals') ?>" class="sidebar-link d-flex align-items-center justify-content-between <?= strpos(uri_string(), 'approvals') === 0 ? 'active' : '' ?>">
+                        <span><i class="fa-solid fa-stamp"></i> Approvals &amp; 4h Escalation</span>
+                        <?php if ($pendingApprovalsBadge > 0): ?>
+                            <span class="badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 2px 7px;" title="<?= $pendingApprovalsBadge ?> pending requests awaiting action"><?= $pendingApprovalsBadge ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
@@ -915,27 +945,29 @@
             <?php endif; ?>
 
             <!-- ============================================================
-                 6 · ADMINISTRATION (account governance)
+                 6 · ADMINISTRATION & ARCHITECTURE
             ============================================================ -->
-            <?php if ($userRole === 'admin'): ?>
-                <div class="nav-section-title">Administration</div>
+            <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                <div class="nav-section-title">Administration &amp; Architecture</div>
                 <a href="<?= base_url('admin/flowchart') ?>" class="sidebar-link <?= strpos(uri_string(), 'admin/flowchart') === 0 ? 'active' : '' ?>" title="System Architecture Flowchart &amp; Module Navigations">
                     <i class="fa-solid fa-diagram-project"></i> Flowchart &amp; Navigations
                     <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(16, 185, 129, 0.2); color: #34d399; letter-spacing: 0.06em;">VISUAL</span>
                 </a>
+                <?php if ($userRole === 'admin'): ?>
                 <a href="<?= base_url('users') ?>" class="sidebar-link <?= strpos(uri_string(), 'users') === 0 ? 'active' : '' ?>" title="Provision and manage user accounts for every role">
                     <i class="fa-solid fa-users-gear"></i> User Accounts
                     <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; letter-spacing: 0.06em;">SUPER ADMIN</span>
                 </a>
+                <?php endif; ?>
             <?php endif; ?>
 
             <!-- ============================================================
                  7 · MOBILE OPERATIONS
             ============================================================ -->
             <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver'])): ?>
-                <div class="nav-section-title">Mobile Operations</div>
+                <div class="nav-section-title">Driver Operations</div>
                 <a href="<?= base_url('driver/trips') ?>" target="_blank" class="sidebar-link">
-                    <i class="fa-solid fa-mobile-screen"></i> Driver Mobile PWA <i class="fa-solid fa-arrow-up-right-from-square ms-auto text-muted small"></i>
+                    <i class="fa-solid fa-compass"></i> Driver Web Portal <i class="fa-solid fa-arrow-up-right-from-square ms-auto text-muted small"></i>
                 </a>
             <?php endif; ?>
         </nav>
@@ -1223,63 +1255,99 @@
                                 <table class="table table-bordered table-sm align-middle">
                                     <thead class="table-light">
                                         <tr class="small text-uppercase">
-                                            <th>Role</th>
-                                            <th>Command Center</th>
-                                            <th>Vehicles & Drivers</th>
-                                            <th>Trips Dispatch</th>
-                                            <th>GPS Radar</th>
-                                            <th>Maintenance PMS</th>
-                                            <th>Financial Reports</th>
+                                            <th>Role & Designation</th>
+                                            <th>VRS Approvals</th>
+                                            <th>Dispatch & Assets</th>
+                                            <th>Trip Tickets (e-DTT)</th>
+                                            <th>Gate Checkpoint</th>
+                                            <th>Safety & PMS</th>
+                                            <th>COA & Compliance</th>
                                         </tr>
                                     </thead>
                                     <tbody class="small">
                                         <tr>
                                             <td>
                                                 <span class="badge" style="background:#3b82f6;">Administrator</span>
-                                                <div class="text-muted" style="font-size:0.7rem;">Chief Fleet Director</div>
+                                                <div class="text-muted" style="font-size:0.7rem;">Director-General / Super Admin</div>
                                             </td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Super Override</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full Control</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full Control</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full Control</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full Control</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Full Control</td>
                                         </tr>
                                         <tr>
                                             <td>
-                                                <span class="badge" style="background:#10b981;">Dispatcher</span>
-                                                <div class="text-muted" style="font-size:0.7rem;">Logistics Coordinator</div>
+                                                <span class="badge" style="background:#06b6d4;">Admin Division Head</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">Tier 2 Approver (Julius De Peralta)</div>
                                             </td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> View</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Manage</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Create / Complete</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Live Stream</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Tier 2 Authorize & FR-1.3 Override</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View Feasibility</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Section A Sign-off</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View Reports</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge" style="background:#10b981;">Motorpool Dispatcher</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">Tier 1 Approver & Fleet Allocator</div>
+                                            </td>
+                                            <td class="text-success text-center fw-bold text-success"><i class="fa-solid fa-check-double"></i> Tier 1 Document Review &amp; Endorse</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Vehicle &amp; Driver Allocation</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Issue e-DTT</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Monitor Gate</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> BLOWBAGETS View</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> Operations Audit</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge" style="background:#64748b;">Security Guard</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">Compound Gate Officer</div>
+                                            </td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Verify Departure &amp; Return</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Gate In/Out QR Scanner</td>
                                             <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
                                             <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
                                         </tr>
                                         <tr>
                                             <td>
-                                                <span class="badge" style="background:#f59e0b;">Maintenance</span>
-                                                <div class="text-muted" style="font-size:0.7rem;">Workshop Supervisor</div>
+                                                <span class="badge" style="background:#d97706;">COA Auditor</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">State Resident Auditor</div>
                                             </td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Telematics</td>
-                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View Only</td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Telematics</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Work Orders & OBD</td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View All VRS</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View Logs</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> Reconcile Odometers</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> Gate Audit</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> Maintenance Audit</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Form B &amp; CPK Certify</td>
                                         </tr>
                                         <tr>
                                             <td>
-                                                <span class="badge" style="background:#06b6d4;">Driver</span>
-                                                <div class="text-muted" style="font-size:0.7rem;">Commercial Operator</div>
+                                                <span class="badge" style="background:#0284c7;">Official Driver</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">Commercial Transport Operator</div>
                                             </td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> PWA Portal</td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> Own Truck</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Start / End</td>
-                                            <td class="text-primary text-center"><i class="fa-solid fa-location-arrow"></i> GPS Ping</td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> Report Incident</td>
-                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> Submit Receipt</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> View Assignment</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Driver PWA Section B</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-qrcode"></i> Present QR</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Pre-Trip BLOWBAGETS</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> Fuel Receipts Only</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge" style="background:#8b5cf6;">Requestor / Staff</span>
+                                                <div class="text-muted" style="font-size:0.7rem;">PIA Division Personnel</div>
+                                            </td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-file-pen"></i> File VRS &amp; Track SLA</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-primary text-center"><i class="fa-solid fa-eye"></i> View Assigned Trip</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
+                                            <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1390,6 +1458,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Relocate all modals directly to document.body to prevent stacking context or backdrop-trapping bugs
+        document.querySelectorAll('.modal').forEach(function (modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+        });
+
         const sidebarToggle  = document.getElementById('sidebarToggle');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 

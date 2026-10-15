@@ -132,19 +132,7 @@ class PiaFleetSeeder extends Seeder
                 'created_at'  => $now,
                 'updated_at'  => $now,
             ],
-            // Approver 1 (Staff Director / Regional Director / OIC)
-            [
-                'name'        => 'Dir. Maria Elena Rodriguez',
-                'designation' => 'Staff Director, News & Information Division',
-                'email'       => 'oic.news@pia.gov.ph',
-                'password'    => password_hash('Oic_News2026!', PASSWORD_DEFAULT),
-                'role'        => 'approver_oic',
-                'office_id'   => $newsOffice ? $newsOffice->id : 3,
-                'phone'       => '+63 917 555 0101',
-                'status'      => 'active',
-                'created_at'  => $now,
-                'updated_at'  => $now,
-            ],
+
             // Approver 2 (Administrative Division Head - Atty. Julius S. De Peralta)
             [
                 'name'        => 'Atty. Julius S. De Peralta',
@@ -431,12 +419,11 @@ class PiaFleetSeeder extends Seeder
 
         // 5. Seed Demonstration Vehicle Request Slips (ADMIN-F-018 rev2)
         $reqUser = $this->db->table('users')->where('email', 'requestor@pia.gov.ph')->get()->getRow();
-        $oicUser = $this->db->table('users')->where('email', 'oic.news@pia.gov.ph')->get()->getRow();
         $admUser = $this->db->table('users')->where('email', 'admin.head@pia.gov.ph')->get()->getRow();
         $guardUser = $this->db->table('users')->where('email', 'guard@pia.gov.ph')->get()->getRow();
-        // BRD revision: Tier 1 approval authority rests with the Motorpool Dispatcher
+        // Tier 1 approval authority rests with the Motorpool Dispatcher
         $dispUser = $this->db->table('users')->where('role', 'dispatcher')->where('status', 'active')->get()->getRow();
-        $tier1User = $dispUser ?: $oicUser;
+        $tier1User = $dispUser;
 
         $hiace = $this->db->table('vehicles')->where('plate_number', 'SJL-4192')->get()->getRow() ?? $allVehicles[0];
         $fortuner = $this->db->table('vehicles')->where('plate_number', 'SAB-8821')->get()->getRow() ?? ($allVehicles[1] ?? $allVehicles[0]);
@@ -445,7 +432,7 @@ class PiaFleetSeeder extends Seeder
 
         // Sample Request 1: Approved and Dispatched with live e-DTT ready for Gate clearance
         $existingReq1 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0001')->get()->getRow();
-        if (!$existingReq1 && $reqUser && $oicUser && $admUser) {
+        if (!$existingReq1 && $reqUser && $dispUser && $admUser) {
             $depTime = date('Y-m-d 08:30:00', strtotime('+1 day'));
             $retTime = date('Y-m-d 17:00:00', strtotime('+1 day'));
 
@@ -465,10 +452,10 @@ class PiaFleetSeeder extends Seeder
                 'requested_vehicle_type' => 'van',
                 'is_rush_request'        => 0,
                 'status'                 => 'dispatched',
-                'oic_approver_id'        => $oicUser->id,
-                'oic_action'             => 'approved',
-                'oic_action_at'          => date('Y-m-d H:i:s', strtotime('-12 hours')),
-                'oic_remarks'            => 'Endorsed. Essential state media coverage.',
+                'dispatcher_approver_id' => $dispUser->id,
+                'dispatcher_action'      => 'approved',
+                'dispatcher_action_at'   => date('Y-m-d H:i:s', strtotime('-12 hours')),
+                'dispatcher_remarks'     => 'Endorsed. Essential state media coverage.',
                 'admin_approver_id'      => $admUser->id,
                 'admin_action'           => 'approved',
                 'admin_action_at'        => date('Y-m-d H:i:s', strtotime('-6 hours')),
@@ -534,18 +521,18 @@ class PiaFleetSeeder extends Seeder
                 'is_rush_request'        => 1, // Same-day emergency flag (BR-03)
                 'justification_file'     => 'uploads/justifications/sample_emergency_memo_ndrrmc.pdf',
                 'justification_notes'    => 'URGENT: Rapid deployment required per NDRRMC Red Alert advisory. Media briefing called on 2 hours notice.',
-                'status'                 => 'pending_oic',
-                'oic_approver_id'        => $tier1User->id,
-                'oic_action'             => 'pending',
+                'status'                 => 'pending_dispatcher',
+                'dispatcher_approver_id' => $tier1User->id,
+                'dispatcher_action'      => 'pending',
                 'sla_deadline'           => date('Y-m-d H:i:s', strtotime('+22 hours')),
                 'created_at'             => date('Y-m-d H:i:s', strtotime('-2 hours')),
                 'updated_at'             => $now,
             ]);
         }
 
-        // Sample Request 3: Endorsed by OIC, currently waiting on Atty. Julius S. De Peralta (pending_admin)
+        // Sample Request 3: Endorsed by Dispatcher, currently waiting on Atty. Julius S. De Peralta (pending_admin)
         $existingReq3 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0003')->get()->getRow();
-        if (!$existingReq3 && $reqUser && $oicUser && $admUser) {
+        if (!$existingReq3 && $reqUser && $dispUser && $admUser) {
             $dep3 = date('Y-m-d 09:00:00', strtotime('+2 days'));
             $ret3 = date('Y-m-d 18:00:00', strtotime('+2 days'));
 
@@ -565,10 +552,10 @@ class PiaFleetSeeder extends Seeder
                 'requested_vehicle_type' => 'van',
                 'is_rush_request'        => 0,
                 'status'                 => 'pending_admin',
-                'oic_approver_id'        => $oicUser->id,
-                'oic_action'             => 'approved',
-                'oic_action_at'          => date('Y-m-d H:i:s', strtotime('-3 hours')),
-                'oic_remarks'            => 'Endorsed for administrative clearance.',
+                'dispatcher_approver_id' => $dispUser->id,
+                'dispatcher_action'      => 'approved',
+                'dispatcher_action_at'   => date('Y-m-d H:i:s', strtotime('-3 hours')),
+                'dispatcher_remarks'     => 'Endorsed for administrative clearance.',
                 'admin_approver_id'      => $admUser->id,
                 'admin_action'           => 'pending',
                 'sla_deadline'           => date('Y-m-d H:i:s', strtotime('+21 hours')),
@@ -579,7 +566,7 @@ class PiaFleetSeeder extends Seeder
 
         // Sample Request 4: Fully Completed historical trip with full Fuel Balance & Dual Certifications
         $existingReq4 = $this->db->table('trip_requests')->where('request_number', 'VRS-2026-0004')->get()->getRow();
-        if (!$existingReq4 && $reqUser && $oicUser && $admUser && $guardUser) {
+        if (!$existingReq4 && $reqUser && $dispUser && $admUser && $guardUser) {
             $pastDep = date('Y-m-d 07:00:00', strtotime('-3 days'));
             $pastRet = date('Y-m-d 19:30:00', strtotime('-3 days'));
 
@@ -599,9 +586,9 @@ class PiaFleetSeeder extends Seeder
                 'requested_vehicle_type' => 'van',
                 'is_rush_request'        => 0,
                 'status'                 => 'completed',
-                'oic_approver_id'        => $oicUser->id,
-                'oic_action'             => 'approved',
-                'oic_action_at'          => date('Y-m-d H:i:s', strtotime('-4 days')),
+                'dispatcher_approver_id' => $dispUser->id,
+                'dispatcher_action'      => 'approved',
+                'dispatcher_action_at'   => date('Y-m-d H:i:s', strtotime('-4 days')),
                 'admin_approver_id'      => $admUser->id,
                 'admin_action'           => 'approved',
                 'admin_action_at'        => date('Y-m-d H:i:s', strtotime('-3 days 20 hours')),

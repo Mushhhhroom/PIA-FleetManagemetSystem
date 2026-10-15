@@ -7,6 +7,8 @@ use App\Models\DriverModel;
 use App\Models\TripModel;
 use App\Models\MaintenanceModel;
 use App\Models\FuelLogModel;
+use App\Models\TripRequestModel;
+use App\Services\SlaService;
 
 class DashboardController extends BaseController
 {
@@ -17,6 +19,17 @@ class DashboardController extends BaseController
         $tripModel = new TripModel();
         $maintenanceModel = new MaintenanceModel();
         $fuelModel = new FuelLogModel();
+        $requestModel = new TripRequestModel();
+
+        // 0. Official Travel VRS Queues
+        $pendingTier1Count = $requestModel->where('status', 'pending_dispatcher')->countAllResults();
+        $pendingAdminCount = $requestModel->where('status', 'pending_admin')->countAllResults();
+        $pendingDispatchCount = $requestModel->where('status', 'approved')->countAllResults();
+
+        $pendingTier1List = $requestModel->getRequestsWithDetails(['status' => 'pending_dispatcher'], 5);
+        foreach ($pendingTier1List as &$t1) {
+            $t1['sla_info'] = SlaService::formatSlaCountdown($t1['sla_deadline']);
+        }
 
         // 1. KPI Counts
         $totalVehicles = $vehicleModel->countAllResults();
@@ -49,21 +62,25 @@ class DashboardController extends BaseController
         $maintenanceAlerts = $maintenanceModel->getRecordsWithVehicle(5);
 
         $data = [
-            'title'               => 'Fleet Command Center',
-            'totalVehicles'       => $totalVehicles,
-            'inTransitVehicles'   => $inTransitVehicles,
-            'activeVehicles'      => $activeVehicles,
-            'maintenanceVehicles' => $maintenanceVehicles,
-            'totalDrivers'        => $totalDrivers,
-            'availableDrivers'    => $availableDrivers,
-            'onTripDrivers'       => $onTripDrivers,
-            'activeTrips'         => $activeTrips,
-            'scheduledTrips'      => $scheduledTrips,
-            'openMaintenance'     => $openMaintenance,
-            'totalFuelCost'       => $totalFuelCost,
-            'liveVehicles'        => $liveVehicles,
-            'recentTrips'         => $recentTrips,
-            'maintenanceAlerts'   => $maintenanceAlerts,
+            'title'                => 'Fleet Command Center',
+            'totalVehicles'        => $totalVehicles,
+            'inTransitVehicles'    => $inTransitVehicles,
+            'activeVehicles'       => $activeVehicles,
+            'maintenanceVehicles'  => $maintenanceVehicles,
+            'totalDrivers'         => $totalDrivers,
+            'availableDrivers'     => $availableDrivers,
+            'onTripDrivers'        => $onTripDrivers,
+            'activeTrips'          => $activeTrips,
+            'scheduledTrips'       => $scheduledTrips,
+            'openMaintenance'      => $openMaintenance,
+            'totalFuelCost'        => $totalFuelCost,
+            'liveVehicles'         => $liveVehicles,
+            'recentTrips'          => $recentTrips,
+            'maintenanceAlerts'    => $maintenanceAlerts,
+            'pendingTier1Count'    => $pendingTier1Count,
+            'pendingAdminCount'    => $pendingAdminCount,
+            'pendingDispatchCount' => $pendingDispatchCount,
+            'pendingTier1List'     => $pendingTier1List,
         ];
 
         return view('dashboard/index', $data);

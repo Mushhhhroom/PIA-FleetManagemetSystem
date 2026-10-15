@@ -106,7 +106,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // =========================================================================
 
     // 1. Vehicle Request Slips (ADMIN-F-018 rev2)
-    $routes->group('', ['filter' => 'role:admin,dispatcher,requestor,approver_oic,approver_admin,auditor'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,dispatcher,requestor,approver_admin,auditor'], static function ($routes) {
         $routes->get('requests', 'RequestController::index');
         $routes->get('requests/new', 'RequestController::create');
         $routes->post('requests', 'RequestController::store');
@@ -119,9 +119,9 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('approvals/(:num)/action', 'ApprovalController::action/$1');
     });
 
-    // FR-1.3: the queue is also readable by dispatchers (emergency-override authority)
+    // Approval queue: Dispatcher (Tier 1), Admin Head (Tier 2)
     $routes->get('approvals', 'ApprovalController::index',
-        ['filter' => 'role:admin,approver_oic,approver_admin,dispatcher']);
+        ['filter' => 'role:admin,approver_admin,dispatcher']);
 
     // 3. Motorpool Dispatch Command & Heuristic Allocation Engine
     $routes->group('', ['filter' => 'role:admin,dispatcher'], static function ($routes) {
@@ -160,9 +160,10 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->get('compliance/non-usage/(:num)', 'ComplianceController::certificate/$1');
     });
 
-    // FR-1.3 — Emergency Fast-Track Override (Admin Division Chief / Motorpool Head)
+    // FR-1.3 — Emergency Fast-Track Override (Admin Division Head / Super Admin only;
+    // the Tier 1 Dispatcher is excluded so it cannot bypass the Head's final authority)
     $routes->post('approvals/(:num)/emergency', 'ApprovalController::emergencyOverride/$1',
-        ['filter' => 'role:admin,approver_admin,dispatcher']);
+        ['filter' => 'role:admin,approver_admin']);
 
     // FR-2.2 — Interactive Dispatch Allocation Calendar (shared anti-double-booking view)
     $routes->get('dispatch/calendar', 'DispatchController::calendar', ['filter' => 'role:admin,dispatcher']);
@@ -205,8 +206,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('(:num)/toggle', 'UserController::toggle/$1');
     });
 
-    // Flowchart and System Visualizer — Super Admin Only
-    $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin']);
+    // Flowchart and System Visualizer — Super Admin & Motorpool Dispatcher
+    $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin,dispatcher']);
 
     // In-app notification center (every BRD flow mirrors here)
     $routes->group('', ['filter' => 'auth'], static function ($routes) {

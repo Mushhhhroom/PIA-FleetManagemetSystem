@@ -35,59 +35,62 @@ class ApprovalController extends BaseController
         $builder = $this->requestModel->select('trip_requests.*,
                                                 offices.office_name, offices.office_code,
                                                 users.name AS requestor_full_name, users.designation AS requestor_designation,
-                                                oic_u.name AS oic_approver_name,
+                                                disp_u.name AS dispatcher_approver_name,
                                                 adm_u.name AS admin_approver_name')
                                       ->join('offices', 'offices.id = trip_requests.office_id', 'left')
                                       ->join('users', 'users.id = trip_requests.requestor_id', 'left')
-                                      ->join('users AS oic_u', 'oic_u.id = trip_requests.oic_approver_id', 'left')
+                                      ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                                       ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                                       ->orderBy('trip_requests.is_rush_request', 'DESC')
                                       ->orderBy('trip_requests.sla_deadline', 'ASC');
 
-        if ($userRole === 'approver_oic') {
-            $builder->whereIn('trip_requests.status', ['pending_oic', 'pending_admin', 'approved']);
-        } elseif ($userRole === 'approver_admin') {
+        if ($userRole === 'approver_admin') {
             $builder->whereIn('trip_requests.status', ['pending_admin', 'approved']);
         } else {
-            // Admin sees all
-            $builder->whereIn('trip_requests.status', ['pending_oic', 'pending_admin', 'approved', 'rejected', 'expired']);
+            // Super Admin and Motorpool Dispatcher see both approval tiers plus authorized requests.
+            $builder->whereIn('trip_requests.status', ['pending_dispatcher', 'pending_admin', 'approved']);
         }
 
         $allRequests = $builder->findAll();
 
-        $pendingOic   = [];
-        $pendingAdmin = [];
-        $recentlyApproved = [];
+        $pendingDispatcher = [];
+        $pendingAdmin      = [];
+        $recentlyApproved  = [];
 
         foreach ($allRequests as $req) {
             $req['sla_info'] = SlaService::formatSlaCountdown($req['sla_deadline']);
-            if ($req['status'] === 'pending_oic') {
-                $pendingOic[] = $req;
+            if ($req['status'] === 'pending_dispatcher') {
+                $pendingDispatcher[] = $req;
             } elseif ($req['status'] === 'pending_admin') {
                 $pendingAdmin[] = $req;
-            } else {
+            } elseif ($req['status'] === 'approved') {
+                // Only genuinely authorized requests belong in "Recently Authorized"
                 $recentlyApproved[] = $req;
             }
         }
 
-        // FR-1.3: emergency overrides awaiting post-trip documentation, plus
-        // whether this user may authorize a new override.
+        // FR-1.3: emergency overrides awaiting post-trip documentation.
+        // Overridden requests are already 'approved', so look there.
         $emergencyOverrides = array_values(array_filter(
-            array_merge($pendingOic, $pendingAdmin),
+            $recentlyApproved,
             fn($r) => !empty($r['is_emergency_override'])
+                && in_array($r['post_trip_doc_status'] ?? null, ['pending', 'overdue'], true)
         ));
 
         $data = [
-            'title'            => 'Government Approval Portal & 4h Escalation Monitor',
-            'userRole'         => $userRole,
-            'pendingOic'       => $pendingOic,
-            'pendingAdmin'     => $pendingAdmin,
-            'recentlyApproved' => $recentlyApproved,
+            'title'              => 'Government Approval Portal & 4h Escalation Monitor',
+            'userRole'           => $userRole,
+            'userId'             => (int) $userId,
+            'pendingDispatcher'  => $pendingDispatcher,
+            'pendingAdmin'       => $pendingAdmin,
+            'recentlyApproved'   => $recentlyApproved,
             'emergencyOverrides' => $emergencyOverrides,
-            'canOverride'      => in_array($userRole, ['admin', 'approver_admin', 'dispatcher'], true),
-            // BRD revision: Tier 1 action authority = Motorpool Dispatcher; Tier 2 = Administrative Division Head
-            'canActTier1'      => in_array($userRole, ['admin', 'dispatcher'], true),
-            'canActTier2'      => in_array($userRole, ['admin', 'approver_admin'], true),
+            // FR-1.3 + segregation of duties: only the Administrative Division
+            // Head (or Super Admin) may bypass the two-tier chain.
+            'canOverride'        => in_array($userRole, ['admin', 'approver_admin'], true),
+            // Tier 1 action authority = Motorpool Dispatcher (or Super Admin); Tier 2 = Administrative Division Head
+            'canActTier1'        => in_array($userRole, ['admin', 'dispatcher'], true),
+            'canActTier2'        => in_array($userRole, ['admin', 'approver_admin'], true),
         ];
 
         return view('approvals/index', $data);
@@ -107,36 +110,50 @@ class ApprovalController extends BaseController
 
         $action = $this->request->getPost('action'); // 'approve' or 'reject'
         $remarks = trim((string)$this->request->getPost('remarks'));
+        $redirectTo = trim((string)$this->request->getPost('redirect_to'));
         $now = date('Y-m-d H:i:s');
 
         if ($action === 'reject' && empty($remarks)) {
             return redirect()->back()->with('error', 'Please provide justification remarks when rejecting an official travel request.');
         }
 
-        // Tier 1: Motorpool Dispatcher Approval (BRD revision — Tier 1
-        // approval authority transferred from the Division OIC to Dispatch).
-        if ($userRole === 'dispatcher' || ($userRole === 'admin' && $request['status'] === 'pending_oic')) {
+        if (!in_array($action, ['approve', 'reject'], true)) {
+            $fallback = $redirectTo ?: '/approvals';
+            return redirect()->to($fallback)->with('error', 'Invalid approval action.');
+        }
+
+        // Segregation of duties: the Tier 1 endorser cannot also grant Tier 2
+        // final authority on the same VRS (unless super admin override).
+        if ($request['status'] === 'pending_admin'
+            && ($request['dispatcher_action'] ?? null) === 'approved'
+            && (int) ($request['dispatcher_approver_id'] ?? 0) === (int) $userId
+            && $userRole !== 'admin') {
+            return redirect()->to('/approvals')->with('error', 'You endorsed this VRS at Tier 1; final Tier 2 authorization must come from a different official.');
+        }
+
+        // Tier 1: Motorpool Dispatcher Approval
+        if ($userRole === 'dispatcher' || ($userRole === 'admin' && $request['status'] === 'pending_dispatcher')) {
             $tier1Title = $userRole === 'dispatcher' ? 'Motorpool Dispatcher' : 'Super Admin';
-            if ($request['status'] !== 'pending_oic') {
-                return redirect()->to('/approvals')->with('error', 'This request is no longer awaiting Tier 1 (Motorpool Dispatcher) action.');
+            if ($request['status'] !== 'pending_dispatcher') {
+                return redirect()->to('/approvals')->with('error', 'This request is no longer awaiting Tier 1 action.');
             }
 
             if ($action === 'approve') {
-                // Find Admin Division Head (Atty. Julius S. De Peralta)
+                // Find the active Admin Division Head (Atty. Julius S. De Peralta)
                 $userModel = new UserModel();
-                $adminHead = $userModel->where('role', 'approver_admin')->first();
+                $adminHead = $userModel->where('role', 'approver_admin')->where('status', 'active')->first();
 
-                // Refresh SLA deadline for Tier 2 approval (FR-1.4: 4-hour windows)
-                $newSlaDeadline = date('Y-m-d H:i:s', strtotime('+' . SlaService::ESCALATION_HOURS . ' hours'));
+                // Tier 2 final-action window (BR-02: 24-hour window)
+                $newSlaDeadline = date('Y-m-d H:i:s', strtotime('+' . SlaService::FINAL_SLA_HOURS . ' hours'));
 
                 $this->requestModel->update($id, [
-                    'oic_approver_id'  => $userId,
-                    'oic_action'       => 'approved',
-                    'oic_action_at'    => $now,
-                    'oic_remarks'      => $remarks ?: 'Endorsed for administrative clearance.',
-                    'admin_approver_id'=> $adminHead ? $adminHead['id'] : null,
-                    'status'           => 'pending_admin',
-                    'sla_deadline'     => $newSlaDeadline,
+                    'dispatcher_approver_id' => $userId,
+                    'dispatcher_action'      => 'approved',
+                    'dispatcher_action_at'   => $now,
+                    'dispatcher_remarks'     => $remarks ?: 'Endorsed for administrative clearance.',
+                    'admin_approver_id'      => $adminHead ? $adminHead['id'] : null,
+                    'status'                 => 'pending_admin',
+                    'sla_deadline'           => $newSlaDeadline,
                 ]);
 
                 // Notify Admin Head
@@ -144,7 +161,7 @@ class ApprovalController extends BaseController
                     $this->notificationModel->insert([
                         'user_id'    => $adminHead['id'],
                         'title'      => "Endorsed VRS Ready for Final Approval: {$request['request_number']}",
-                        'message'    => "{$tier1Title} {$userName} has endorsed VRS {$request['request_number']} ({$request['destination']}). Requires administrative clearance within " . SlaService::ESCALATION_HOURS . " hours.",
+                        'message'    => "{$tier1Title} {$userName} has endorsed VRS {$request['request_number']} ({$request['destination']}). Requires administrative clearance within " . SlaService::FINAL_SLA_HOURS . " hours or the request expires.",
                         'type'       => $request['is_rush_request'] ? 'danger' : 'info',
                         'link'       => '/approvals',
                         'is_read'    => 0,
@@ -161,33 +178,24 @@ class ApprovalController extends BaseController
                     ['tier' => 1, 'remarks' => $remarks]
                 );
 
-                return redirect()->to('/approvals')->with('success', "VRS {$request['request_number']} endorsed successfully. Transferred to Administrative Division Head.");
+                $target = $redirectTo ?: ($userRole === 'dispatcher' ? '/dispatch' : '/approvals');
+                return redirect()->to($target)->with('success', "VRS {$request['request_number']} endorsed successfully. Transferred to Administrative Division Head.");
             } else {
                 // Reject at Tier 1
                 $this->requestModel->update($id, [
-                    'oic_approver_id' => $userId,
-                    'oic_action'      => 'rejected',
-                    'oic_action_at'   => $now,
-                    'oic_remarks'     => $remarks,
-                    'status'          => 'rejected',
+                    'dispatcher_approver_id' => $userId,
+                    'dispatcher_action'      => 'rejected',
+                    'dispatcher_action_at'   => $now,
+                    'dispatcher_remarks'     => $remarks,
+                    'status'                 => 'rejected',
                 ]);
 
-                $this->notificationModel->insert([
-                    'user_id'    => $request['requestor_id'],
-                    'title'      => "Request Rejected: {$request['request_number']}",
-                    'message'    => "Your vehicle request was not endorsed at Tier 1 by the {$tier1Title}. Reason: {$remarks}",
-                    'type'       => 'danger',
-                    'link'       => "/requests/{$id}",
-                    'is_read'    => 0,
-                    'created_at' => $now,
-                ]);
-
-                // FR-1.5: automated email notification on rejection
+                // FR-1.5: in-app + email notification on rejection
                 $this->mailer->notify(
                     (int) $request['requestor_id'],
-                    "VRS Rejected: {$request['request_number']}",
-                    "Your Vehicle Request Slip for travel to {$request['destination']} was NOT endorsed. "
-                    . "Reason: {$remarks}",
+                    "Request Rejected: {$request['request_number']}",
+                    "Your Vehicle Request Slip for travel to {$request['destination']} was not endorsed at Tier 1 "
+                    . "by the {$tier1Title}. Reason: {$remarks}",
                     'danger',
                     "/requests/{$id}"
                 );
@@ -201,7 +209,8 @@ class ApprovalController extends BaseController
                     ['tier' => 1, 'remarks' => $remarks]
                 );
 
-                return redirect()->to('/approvals')->with('success', "VRS {$request['request_number']} has been rejected.");
+                $target = $redirectTo ?: ($userRole === 'dispatcher' ? '/dispatch' : '/approvals');
+                return redirect()->to($target)->with('success', "VRS {$request['request_number']} has been rejected.");
             }
         }
 
@@ -255,7 +264,8 @@ class ApprovalController extends BaseController
                     ['tier' => 2, 'remarks' => $remarks]
                 );
 
-                return redirect()->to('/approvals')->with('success', "VRS {$request['request_number']} officially authorized! Request is now in the Dispatch Queue.");
+                $target = $redirectTo ?: '/approvals';
+                return redirect()->to($target)->with('success', "VRS {$request['request_number']} officially authorized! Request is now in the Dispatch Queue.");
             } else {
                 // Reject at Tier 2
                 $this->requestModel->update($id, [
@@ -266,20 +276,11 @@ class ApprovalController extends BaseController
                     'status'            => 'rejected',
                 ]);
 
-                $this->notificationModel->insert([
-                    'user_id'    => $request['requestor_id'],
-                    'title'      => "Request Disapproved: {$request['request_number']}",
-                    'message'    => "Administrative Division Head disapproved travel request. Reason: {$remarks}",
-                    'type'       => 'danger',
-                    'link'       => "/requests/{$id}",
-                    'is_read'    => 0,
-                    'created_at' => $now,
-                ]);
-
-                // FR-1.5: automated email notification on rejection
+                // FR-1.5: in-app + email notification on rejection
+                // (MailerService::notify() creates the in-app record itself).
                 $this->mailer->notify(
                     (int) $request['requestor_id'],
-                    "VRS Disapproved: {$request['request_number']}",
+                    "Request Disapproved: {$request['request_number']}",
                     "The Administrative Division Head disapproved your Vehicle Request Slip for travel to "
                     . "{$request['destination']}. Reason: {$remarks}",
                     'danger',
@@ -295,7 +296,8 @@ class ApprovalController extends BaseController
                     ['tier' => 2, 'remarks' => $remarks]
                 );
 
-                return redirect()->to('/approvals')->with('success', "VRS {$request['request_number']} disapproved.");
+                $target = $redirectTo ?: '/approvals';
+                return redirect()->to($target)->with('success', "VRS {$request['request_number']} disapproved.");
             }
         }
 
@@ -305,10 +307,14 @@ class ApprovalController extends BaseController
     /**
      * FR-1.3 (Emergency Fast-Track Override)
      *
-     * The Administrative Division Chief or Motorpool Head bypasses the
-     * multi-stage approvals for urgent deployments (media coverage, press
-     * conferences, crisis response). Post-trip documentation is required
-     * within 24 hours.
+     * The Administrative Division Chief bypasses the multi-stage approvals
+     * for urgent deployments (media coverage, press conferences, crisis
+     * response). Post-trip documentation is required within 24 hours.
+     *
+     * Segregation of duties: the Motorpool Dispatcher is the Tier 1 approver
+     * AND the officer who allocates vehicles, so the Dispatcher may NOT use
+     * this override — otherwise one person could skip the Admin Head's final
+     * authority and dispatch the trip alone.
      */
     public function emergencyOverride($id)
     {
@@ -317,11 +323,10 @@ class ApprovalController extends BaseController
         $userId   = $session->get('user_id');
         $userName = $session->get('user_name');
 
-        // BRD FR-1.3: Administrative Division Chief or Motorpool Head
-        // (the super-admin acts with Division Chief authority).
-        $isDivisionHead = in_array($userRole, ['approver_admin', 'admin'], true);
-        if (!$isDivisionHead && $userRole !== 'dispatcher') {
-            return redirect()->to('/approvals')->with('error', 'Emergency Fast-Track Override is restricted to the Administrative Division Chief and the Motorpool Head (FR-1.3).');
+        // BRD FR-1.3: Administrative Division Chief (the super-admin acts
+        // with Division Chief authority).
+        if (!in_array($userRole, ['approver_admin', 'admin'], true)) {
+            return redirect()->to('/approvals')->with('error', 'Emergency Fast-Track Override is restricted to the Administrative Division Head (FR-1.3).');
         }
 
         $request = $this->requestModel->find($id);
@@ -329,8 +334,12 @@ class ApprovalController extends BaseController
             return redirect()->to('/approvals')->with('error', 'Request not found.');
         }
 
-        if (!in_array($request['status'], ['pending_oic', 'pending_admin'], true)) {
+        if (!in_array($request['status'], ['pending_dispatcher', 'pending_admin'], true)) {
             return redirect()->to('/approvals')->with('error', 'Only requests awaiting approval can be fast-tracked.');
+        }
+
+        if ((int) $request['requestor_id'] === (int) $userId) {
+            return redirect()->to('/approvals')->with('error', 'You cannot fast-track a Vehicle Request Slip that you filed yourself.');
         }
 
         $remarks = trim((string) $this->request->getPost('remarks'));
@@ -349,26 +358,15 @@ class ApprovalController extends BaseController
             // FR-1.3: post-trip documentation due within 24 hours
             'post_trip_doc_due'         => date('Y-m-d H:i:s', strtotime('+24 hours')),
             'post_trip_doc_status'      => 'pending',
-            'admin_approver_id'         => $isDivisionHead ? $userId : ($request['admin_approver_id'] ?? null),
+            // Tier 2 authority is exercised by the acting Division Head
+            'admin_approver_id'         => $userId,
             'admin_action'              => 'approved',
-            'admin_action_at'           => $isDivisionHead ? $now : $request['admin_action_at'],
-            'admin_remarks'             => $isDivisionHead
-                ? "EMERGENCY OVERRIDE: {$remarks}"
-                : $request['admin_remarks'],
+            'admin_action_at'           => $now,
+            'admin_remarks'             => "EMERGENCY OVERRIDE: {$remarks}",
         ]);
 
-        // Notify the requester
-        $this->notificationModel->insert([
-            'user_id'    => $request['requestor_id'],
-            'title'      => "EMERGENCY DISPATCH APPROVED: {$request['request_number']}",
-            'message'    => "Emergency fast-track override applied by {$userName}. Justification: {$remarks} Post-trip documentation is due within 24 hours (FR-1.3).",
-            'type'       => 'danger',
-            'link'       => "/requests/{$id}",
-            'is_read'    => 0,
-            'created_at' => $now,
-        ]);
-
-        // Email + in-app (FR-1.3 requires post-trip doc reminder within 24h)
+        // Notify the requester — email + in-app (FR-1.3 requires post-trip doc
+        // reminder within 24h). MailerService::notify() creates the in-app record.
         $this->mailer->notify(
             (int) $request['requestor_id'],
             "EMERGENCY OVERRIDE — {$request['request_number']} (post-trip docs due in 24h)",

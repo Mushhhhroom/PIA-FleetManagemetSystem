@@ -69,7 +69,7 @@ class RoleFilter implements FilterInterface
                     'maintenance'                    => '/maintenance',
                     'dispatcher'                     => '/dispatch',
                     'requestor'                      => '/requests',
-                    'approver_oic', 'approver_admin' => '/approvals',
+                    'approver_admin'                 => '/approvals',
                     'auditor'                        => '/audit',
                     default                          => '/',
                 };

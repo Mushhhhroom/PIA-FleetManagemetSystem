@@ -324,31 +324,22 @@
                     <span class="role-chip" style="font-size: 0.65rem;">Staff</span>
                 </button>
 
-                <button type="button" class="quick-role-btn py-1" onclick="setCreds('oic.news@pia.gov.ph', 'Oic_News2026!')">
+                <button type="button" class="quick-role-btn py-1" onclick="setCreds('dispatcher@pia.gov.ph', 'Dispatch_2026!')">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-user-check text-warning" style="font-size: 0.8rem; width: 14px;"></i>
-                        <span class="fw-semibold small">Tier 1 Oversight (OIC)</span>
-                        <span class="text-muted small" style="font-size: 0.7rem;">&bull; oic.news@pia.gov.ph</span>
+                        <i class="fa-solid fa-truck-fast text-success" style="font-size: 0.8rem; width: 14px;"></i>
+                        <span class="fw-semibold small">Motorpool Dispatcher (Tier 1 Approver &amp; Asset Allocation)</span>
+                        <span class="text-muted small" style="font-size: 0.7rem;">&bull; dispatcher@pia.gov.ph</span>
                     </div>
-                    <span class="role-chip" style="font-size: 0.65rem;">OIC</span>
+                    <span class="role-chip" style="font-size: 0.65rem;">Dispatch</span>
                 </button>
 
                 <button type="button" class="quick-role-btn py-1" onclick="setCreds('admin.head@pia.gov.ph', 'AdminHead_2026!')">
                     <div class="d-flex align-items-center gap-2">
                         <i class="fa-solid fa-stamp text-info" style="font-size: 0.8rem; width: 14px;"></i>
-                        <span class="fw-semibold small">Tier 2: Atty. De Peralta</span>
+                        <span class="fw-semibold small">Tier 2: Atty. De Peralta (Admin Head)</span>
                         <span class="text-muted small" style="font-size: 0.7rem;">&bull; admin.head@pia.gov.ph</span>
                     </div>
                     <span class="role-chip" style="font-size: 0.65rem;">Admin Head</span>
-                </button>
-
-                <button type="button" class="quick-role-btn py-1" onclick="setCreds('dispatcher@pia.gov.ph', 'Dispatch_2026!')">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-truck-fast text-success" style="font-size: 0.8rem; width: 14px;"></i>
-                        <span class="fw-semibold small">Motorpool Dispatcher (Tier 1 Approver)</span>
-                        <span class="text-muted small" style="font-size: 0.7rem;">&bull; dispatcher@pia.gov.ph</span>
-                    </div>
-                    <span class="role-chip" style="font-size: 0.65rem;">Dispatch</span>
                 </button>
 
                 <button type="button" class="quick-role-btn py-1" onclick="setCreds('guard@pia.gov.ph', 'Guard_2026!')">
@@ -371,11 +362,20 @@
 
                 <button type="button" class="quick-role-btn py-1" onclick="setCreds('driver.santos@pia.gov.ph', 'Driver_2026!')">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-mobile-screen text-primary" style="font-size: 0.8rem; width: 14px;"></i>
+                        <i class="fa-solid fa-compass text-primary" style="font-size: 0.8rem; width: 14px;"></i>
                         <span class="fw-semibold small">Official Driver (R. Santos)</span>
                         <span class="text-muted small" style="font-size: 0.7rem;">&bull; driver.santos@pia.gov.ph</span>
                     </div>
                     <span class="role-chip" style="font-size: 0.65rem;">Driver</span>
+                </button>
+
+                <button type="button" class="quick-role-btn py-1" onclick="setCreds('maintenance@fleet.com', 'Maintenance_2026!')">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-screwdriver-wrench text-warning" style="font-size: 0.8rem; width: 14px;"></i>
+                        <span class="fw-semibold small">Motorpool Mechanic / Technician</span>
+                        <span class="text-muted small" style="font-size: 0.7rem;">&bull; maintenance@fleet.com</span>
+                    </div>
+                    <span class="role-chip" style="font-size: 0.65rem;">Mechanic</span>
                 </button>
             </div>
         </div>

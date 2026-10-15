@@ -25,6 +25,14 @@ abstract class BaseController extends Controller
      * The creation of dynamic property is deprecated in PHP 8.2.
      */
 
+    /**
+     * An array of helpers to be loaded automatically upon
+     * class instantiation.
+     *
+     * @var list<string>
+     */
+    protected $helpers = ['form', 'url'];
+
     // protected $session;
 
     /**
@@ -34,10 +42,14 @@ abstract class BaseController extends Controller
     {
         // Load here all helpers you want to be available in your controllers that extend BaseController.
         // Caution: Do not put the this below the parent::initController() call below.
-        // $this->helpers = ['form', 'url'];
+        $this->helpers = array_unique(array_merge($this->helpers, ['form', 'url']));
 
         // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
+
+        // Prevent client/browser caching of authenticated dynamic views
+        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $this->response->setHeader('Pragma', 'no-cache');
 
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');

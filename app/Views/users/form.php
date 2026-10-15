@@ -8,8 +8,7 @@
     $roleBadges = [
         'admin'          => ['Super Admin / Director', '#3b82f6'],
         'approver_admin' => ['Tier 2 Approver (Admin Head)', '#06b6d4'],
-        'approver_oic'   => ['Tier 1 Oversight (OIC)', '#f59e0b'],
-        'dispatcher'     => ['Motorpool Dispatcher (Tier 1 Approver)', '#10b981'],
+        'dispatcher'     => ['Motorpool Dispatcher (Tier 1 Approver & Asset Allocation)', '#10b981'],
         'maintenance'    => ['Safety & PMS Technician', '#ea580c'],
         'driver'         => ['Official Driver', '#0284c7'],
         'guard'          => ['Gate Security Officer', '#64748b'],
