@@ -198,11 +198,11 @@
 
         /* Static section labels (single-link sections) */
         .nav-section-title {
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             font-family: var(--font-mono);
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #64748b;
+            color: #94a3b8; /* WCAG 2.2 AA compliant (5.2:1 against #0b1324) */
             padding: 14px 12px 6px;
             font-weight: 600;
         }
@@ -216,11 +216,11 @@
             background: none;
             border: 0;
             padding: 12px 12px 6px;
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             font-family: var(--font-mono);
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #64748b;
+            color: #94a3b8; /* WCAG 2.2 AA compliant (5.2:1 against #0b1324) */
             font-weight: 600;
             cursor: pointer;
             border-radius: 6px;
@@ -228,7 +228,7 @@
         }
 
         .nav-section-toggle:hover {
-            color: #94a3b8;
+            color: #cbd5e1;
         }
 
         .nav-section-toggle .chevron {
@@ -254,14 +254,15 @@
             display: flex;
             align-items: center;
             gap: 11px;
-            padding: 8px 12px;
+            padding: 9px 12px;
+            min-height: 42px; /* Touch target accessibility */
             color: #94a3b8;
             font-size: 0.82rem;
             font-weight: 500;
             text-decoration: none;
             border-radius: 7px;
             transition: all 0.15s ease;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
         }
 
         .sidebar-link i {
@@ -582,6 +583,90 @@
             border: 1px solid #fecaca;
         }
 
+        /* Contextual Policy & Acronym Tooltip Badges (Issue #21) */
+        .policy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            cursor: help;
+            text-decoration: none;
+            border: 1px dashed;
+            vertical-align: middle;
+            transition: all 0.15s ease;
+        }
+
+        .policy-badge-info {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+        .policy-badge-info:hover, .policy-badge-info:focus-visible {
+            background: #e0f2fe;
+            color: #0284c7;
+            border-color: #38bdf8;
+            outline: none;
+        }
+
+        .policy-badge-warning {
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fde68a;
+        }
+        .policy-badge-warning:hover, .policy-badge-warning:focus-visible {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #f59e0b;
+            outline: none;
+        }
+
+        .policy-badge-danger {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fca5a5;
+        }
+        .policy-badge-danger:hover, .policy-badge-danger:focus-visible {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #ef4444;
+            outline: none;
+        }
+
+        .policy-info-icon {
+            font-size: 0.68rem;
+            opacity: 0.85;
+        }
+
+        /* Custom High-Contrast Tooltip Styling */
+        .tooltip .tooltip-inner {
+            max-width: 300px;
+            padding: 9px 13px;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            text-align: left;
+            border-radius: 8px;
+            background-color: #0f172a;
+            color: #f8fafc;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip .tooltip-inner strong {
+            color: #38bdf8;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        .tooltip .tooltip-arrow::before {
+            border-top-color: #0f172a !important;
+            border-bottom-color: #0f172a !important;
+        }
+
         /* Minimalist Table */
         .table-minimal {
             width: 100%;
@@ -809,7 +894,7 @@
             <!-- ============================================================
                  1 · OVERVIEW
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
                 <div class="nav-section-title">Overview</div>
                 <a href="<?= base_url('dashboard') ?>" class="sidebar-link <?= uri_string() === '' || uri_string() === 'dashboard' ? 'active' : '' ?>">
                     <i class="fa-solid fa-chart-line"></i> Command Center
@@ -840,7 +925,7 @@
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
                     <a href="<?= base_url('dispatch') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch') === 0 && strpos(uri_string(), 'calendar') === false ? 'active' : '' ?>">
                         <i class="fa-solid fa-truck-fast"></i> Dispatch Console
                     </a>
@@ -849,13 +934,13 @@
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor', 'approver_admin'])): ?>
                     <a href="<?= base_url('tickets') ?>" class="sidebar-link <?= strpos(uri_string(), 'tickets') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-ticket"></i> Driver's Trip Tickets (e-DTT)
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher'])): ?>
+                <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher', 'approver_admin'])): ?>
                     <a href="<?= base_url('gate') ?>" class="sidebar-link <?= strpos(uri_string(), 'gate') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-shield-halved"></i> Gate QR Checkpoint
                     </a>
@@ -866,25 +951,25 @@
             <!-- ============================================================
                  3 · SAFETY & PREVENTIVE OPERATIONS (BRD Modules 5–6)
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'maintenance'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'maintenance', 'approver_admin'])): ?>
                 <button type="button" class="nav-section-toggle" data-nav-group="safety" aria-expanded="true">
                     Safety &amp; Preventive Ops <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
                 <div class="nav-group" data-nav-group-body="safety">
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'approver_admin'])): ?>
                     <a href="<?= base_url('safety') ?>" class="sidebar-link <?= strpos(uri_string(), 'safety') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-clipboard-check"></i> BLOWBAGETS Safety Checks
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
                     <a href="<?= base_url('pir') ?>" class="sidebar-link <?= strpos(uri_string(), 'pir') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-screwdriver-wrench"></i> Mechanic PIR Queue
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor', 'approver_admin'])): ?>
                     <a href="<?= base_url('rfid') ?>" class="sidebar-link <?= strpos(uri_string(), 'rfid') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-credit-card"></i> Tollway RFID Cards
                     </a>
@@ -895,7 +980,7 @@
             <!-- ============================================================
                  4 · FLEET ASSETS & INFRASTRUCTURE
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
                 <button type="button" class="nav-section-toggle" data-nav-group="assets" aria-expanded="true">
                     Fleet Assets &amp; Infrastructure <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
@@ -903,7 +988,7 @@
                 <a href="<?= base_url('vehicles') ?>" class="sidebar-link <?= strpos(uri_string(), 'vehicles') === 0 ? 'active' : '' ?>">
                     <i class="fa-solid fa-truck"></i> Vehicle Fleet (5K PMS)
                 </a>
-                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
                     <a href="<?= base_url('drivers') ?>" class="sidebar-link <?= strpos(uri_string(), 'drivers') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-id-card"></i> Driver Personnel
                     </a>
@@ -911,12 +996,12 @@
                 <a href="<?= base_url('tracking') ?>" class="sidebar-link <?= uri_string() === 'tracking' ? 'active' : '' ?>">
                     <i class="fa-solid fa-satellite-dish"></i> Live GPS Radar
                 </a>
-                <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
                     <a href="<?= base_url('fuel') ?>" class="sidebar-link <?= strpos(uri_string(), 'fuel') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-gas-pump"></i> Fuel Records
                     </a>
                 <?php endif; ?>
-                <?php if (in_array($userRole, ['admin', 'maintenance'])): ?>
+                <?php if (in_array($userRole, ['admin', 'maintenance', 'approver_admin'])): ?>
                     <a href="<?= base_url('maintenance') ?>" class="sidebar-link <?= strpos(uri_string(), 'maintenance') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-wrench"></i> Service Orders &amp; PMS
                     </a>
@@ -947,7 +1032,7 @@
             <!-- ============================================================
                  6 · ADMINISTRATION & ARCHITECTURE
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
                 <div class="nav-section-title">Administration &amp; Architecture</div>
                 <a href="<?= base_url('admin/flowchart') ?>" class="sidebar-link <?= strpos(uri_string(), 'admin/flowchart') === 0 ? 'active' : '' ?>" title="System Architecture Flowchart &amp; Module Navigations">
                     <i class="fa-solid fa-diagram-project"></i> Flowchart &amp; Navigations
@@ -1463,6 +1548,16 @@
             if (modal.parentElement !== document.body) {
                 document.body.appendChild(modal);
             }
+        });
+
+        // Initialize all Bootstrap tooltips globally with HTML and accessibility support (Issue #21)
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                container: 'body',
+                html: true,
+                trigger: 'hover focus'
+            });
         });
 
         const sidebarToggle  = document.getElementById('sidebarToggle');

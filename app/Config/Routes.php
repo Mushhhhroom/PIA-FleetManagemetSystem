@@ -42,8 +42,8 @@ $routes->group('api/v1', static function ($routes) {
 // Authenticated Application Routes (Protected by Auth and Role RBAC)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
 
-    // General Operations (Admin, Dispatcher, Maintenance)
-    $routes->group('', ['filter' => 'role:admin,dispatcher,maintenance'], static function ($routes) {
+    // General Operations (Admin, Dispatcher, Maintenance, Approver Admin)
+    $routes->group('', ['filter' => 'role:admin,dispatcher,maintenance,approver_admin'], static function ($routes) {
         $routes->get('/', 'DashboardController::index');
         $routes->get('dashboard', 'DashboardController::index');
         $routes->get('tracking', 'TrackingController::index');
@@ -58,8 +58,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('vehicles/(:num)/delete', 'VehicleController::delete/$1');
     });
 
-    // Dispatch & Personnel Operations (Admin, Dispatcher)
-    $routes->group('', ['filter' => 'role:admin,dispatcher'], static function ($routes) {
+    // Dispatch & Personnel Operations (Admin, Dispatcher, Approver Admin)
+    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin'], static function ($routes) {
         // Drivers & Operators
         $routes->get('drivers', 'DriverController::index');
         $routes->get('drivers/new', 'DriverController::create');
@@ -82,8 +82,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('fuel', 'FuelController::store');
     });
 
-    // Technical Maintenance & Workshop (Admin, Maintenance)
-    $routes->group('', ['filter' => 'role:admin,maintenance'], static function ($routes) {
+    // Technical Maintenance & Workshop (Admin, Maintenance, Approver Admin)
+    $routes->group('', ['filter' => 'role:admin,maintenance,approver_admin'], static function ($routes) {
         $routes->get('maintenance', 'MaintenanceController::index');
         $routes->get('maintenance/new', 'MaintenanceController::create');
         $routes->post('maintenance', 'MaintenanceController::store');
@@ -124,14 +124,17 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         ['filter' => 'role:admin,approver_admin,dispatcher']);
 
     // 3. Motorpool Dispatch Command & Heuristic Allocation Engine
-    $routes->group('', ['filter' => 'role:admin,dispatcher'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin'], static function ($routes) {
         $routes->get('dispatch', 'DispatchController::index');
         $routes->get('dispatch/assign/(:num)', 'DispatchController::assign/$1');
         $routes->post('dispatch/assign/(:num)', 'DispatchController::storeAssignment/$1');
+        $routes->post('dispatch/auto-deny-conflicts', 'DispatchController::autoDenyConflicts');
+        $routes->post('dispatch/deny-driver-conflict/(:num)', 'DispatchController::denyDriverConflict/$1');
+        $routes->post('dispatch/merge-batch', 'DispatchController::mergeBatch');
     });
 
     // 4. Driver\'s Trip Tickets (ADMIN-F-001 rev1) & Dual Certifications
-    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,guard,auditor'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,guard,auditor,approver_admin'], static function ($routes) {
         $routes->get('tickets', 'TripTicketController::index');
         $routes->get('tickets/(:num)', 'TripTicketController::show/$1');
         $routes->get('tickets/(:num)/print', 'TripTicketController::printDtt/$1');
@@ -141,7 +144,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     });
 
     // 5. Compound Gate Security Checkpoint & QR Scanner
-    $routes->group('', ['filter' => 'role:admin,guard,dispatcher'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,guard,dispatcher,approver_admin'], static function ($routes) {
         $routes->get('gate', 'GateSecurityController::index');
         $routes->match(['get', 'post'], 'gate/verify', 'GateSecurityController::verify');
         $routes->post('gate/record', 'GateSecurityController::recordScan');
@@ -166,25 +169,25 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         ['filter' => 'role:admin,approver_admin']);
 
     // FR-2.2 — Interactive Dispatch Allocation Calendar (shared anti-double-booking view)
-    $routes->get('dispatch/calendar', 'DispatchController::calendar', ['filter' => 'role:admin,dispatcher']);
-    $routes->get('dispatch/calendar/feed', 'DispatchController::calendarFeed', ['filter' => 'role:admin,dispatcher']);
+    $routes->get('dispatch/calendar', 'DispatchController::calendar', ['filter' => 'role:admin,dispatcher,approver_admin']);
+    $routes->get('dispatch/calendar/feed', 'DispatchController::calendarFeed', ['filter' => 'role:admin,dispatcher,approver_admin']);
 
     // FR-5.1 / FR-5.2 — Mandatory BLOWBAGETS pre-trip safety checklist
-    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,auditor'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,auditor,approver_admin'], static function ($routes) {
         $routes->get('safety', 'SafetyChecklistController::index');
         $routes->get('safety/(:num)', 'SafetyChecklistController::create/$1');
         $routes->post('safety/(:num)', 'SafetyChecklistController::store/$1');
     });
 
     // FR-5.3 — Mechanic Pre-Repair Inspection (PIR) queue & workflow
-    $routes->group('', ['filter' => 'role:admin,maintenance,dispatcher'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,maintenance,dispatcher,approver_admin'], static function ($routes) {
         $routes->get('pir', 'PirController::index');
         $routes->get('pir/(:num)', 'PirController::show/$1');
         $routes->post('pir/(:num)', 'PirController::update/$1');
     });
 
     // FR-6.1 / FR-6.2 / FR-6.3 — Tollway RFID balances, reloads & low-balance alerts
-    $routes->group('', ['filter' => 'role:admin,dispatcher,auditor'], static function ($routes) {
+    $routes->group('', ['filter' => 'role:admin,dispatcher,auditor,approver_admin'], static function ($routes) {
         $routes->get('rfid', 'RfidController::index');
         $routes->post('rfid/cards', 'RfidController::storeCard');
         $routes->post('rfid/reload', 'RfidController::reload');
@@ -206,8 +209,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('(:num)/toggle', 'UserController::toggle/$1');
     });
 
-    // Flowchart and System Visualizer — Super Admin & Motorpool Dispatcher
-    $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin,dispatcher']);
+    // Flowchart and System Visualizer — Super Admin, Motorpool Dispatcher & Tier 2 Approver
+    $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin,dispatcher,approver_admin']);
 
     // In-app notification center (every BRD flow mirrors here)
     $routes->group('', ['filter' => 'auth'], static function ($routes) {

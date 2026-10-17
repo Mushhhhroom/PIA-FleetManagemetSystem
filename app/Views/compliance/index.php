@@ -9,7 +9,14 @@
         </div>
         <h1 class="page-title mb-1">COA &amp; Government Compliance Portal</h1>
         <p class="text-muted small mb-0">
-            FR-7.1 regulatory expiry alerts &bull; FR-7.2 COA Form B &bull; FR-7.3 fuel efficiency analytics &bull; FR-7.4 Certificates of Non-Usage.
+            FR-7.1 regulatory expiry alerts &bull; 
+            <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>COA Form B (Monthly Travel Report)</strong><br>Mandated by COA Circular No. 75-6. Official monthly report detailing distance, fuel consumed, trip ticket serials, and travel justification." tabindex="0" role="button">
+                COA Form B (FR-7.2) <i class="fa-solid fa-circle-question policy-info-icon"></i>
+            </span> &bull; 
+            FR-7.3 fuel efficiency analytics &bull; 
+            <span class="policy-badge policy-badge-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Certificate of Non-Usage (CNU)</strong><br>Official certification required when government vehicles remain parked/idle throughout the reporting month, certifying zero official travel." tabindex="0" role="button">
+                CNU (FR-7.4) <i class="fa-solid fa-circle-question policy-info-icon"></i>
+            </span>.
         </p>
     </div>
     <div class="d-flex gap-2 align-items-center">
@@ -144,7 +151,13 @@
     <!-- FR-7.2 — COA Form B quick actions -->
     <div class="col-lg-6">
         <div class="card-panel h-100">
-            <h2 class="h6 fw-bold mb-3"><i class="fa-solid fa-file-lines me-2" style="color: var(--primary-accent);"></i> FR-7.2 — COA Form B (Monthly Report of Official Travel)</h2>
+            <h2 class="h6 fw-bold mb-3 d-flex align-items-center flex-wrap gap-2">
+                <i class="fa-solid fa-file-lines me-1" style="color: var(--primary-accent);"></i> 
+                FR-7.2 — COA Form B
+                <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>COA Form B (Monthly Travel Report)</strong><br>Prescribed by COA Circular No. 75-6. An immutable ledger recording trip serials, odometer start/end, fuel consumed, and driver certifications for audit submission." tabindex="0" role="button">
+                    COA Form B <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                </span>
+            </h2>
             <p class="text-muted small">
                 One-click generation of the official monthly report containing driver details, distance travelled,
                 fuel consumed, destination addresses and passenger lists.
@@ -161,7 +174,13 @@
     <!-- FR-7.4 — Certificates of Non-Usage -->
     <div class="col-lg-6">
         <div class="card-panel h-100">
-            <h2 class="h6 fw-bold mb-3"><i class="fa-solid fa-certificate me-2" style="color: var(--primary-accent);"></i> FR-7.4 — Certificates of Non-Usage</h2>
+            <h2 class="h6 fw-bold mb-3 d-flex align-items-center flex-wrap gap-2">
+                <i class="fa-solid fa-certificate me-1" style="color: var(--primary-accent);"></i> 
+                FR-7.4 — Certificates of Non-Usage
+                <span class="policy-badge policy-badge-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Certificate of Non-Usage (CNU)</strong><br>Required by COA when a government vehicle logs 0 km in a billing cycle. Certifies the vehicle was parked/under repair, justifying zero fuel vouchers." tabindex="0" role="button">
+                    CNU <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                </span>
+            </h2>
 
             <?php if (empty($idleVehicles)): ?>
                 <p class="text-muted small mb-3">

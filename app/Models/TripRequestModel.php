@@ -14,7 +14,8 @@ class TripRequestModel extends Model
         'request_number', 'requestor_id', 'requestor_name', 'office_id', 'department_id', 'office_scope',
         'destination', 'purpose', 'passenger_names', 'passenger_count', 'departure_time',
         'return_time', 'requested_driver_id', 'requested_vehicle_type', 'is_rush_request',
-        'justification_file', 'justification_notes', 'status', 'dispatcher_approver_id', 'dispatcher_action',
+        'justification_file', 'justification_notes', 'status', 'ticket_id', 'is_merged', 'merged_with_request_id',
+        'dispatcher_approver_id', 'dispatcher_action',
         'dispatcher_action_at', 'dispatcher_remarks', 'admin_approver_id', 'admin_action', 'admin_action_at',
         'admin_remarks', 'sla_deadline', 'is_sla_breached',
         'is_emergency_override', 'emergency_override_by', 'emergency_override_at',
@@ -41,7 +42,7 @@ class TripRequestModel extends Model
                         ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                         ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                         ->join('drivers', 'drivers.id = trip_requests.requested_driver_id', 'left')
-                        ->join('trip_tickets', 'trip_tickets.request_id = trip_requests.id', 'left')
+                        ->join('trip_tickets', 'trip_tickets.id = trip_requests.ticket_id OR (trip_requests.ticket_id IS NULL AND trip_tickets.request_id = trip_requests.id)', 'left')
                         ->orderBy('trip_requests.id', 'DESC');
 
         if (!empty($filters['status'])) {
@@ -83,7 +84,7 @@ class TripRequestModel extends Model
                     ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                     ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                     ->join('drivers', 'drivers.id = trip_requests.requested_driver_id', 'left')
-                    ->join('trip_tickets', 'trip_tickets.request_id = trip_requests.id', 'left')
+                    ->join('trip_tickets', 'trip_tickets.id = trip_requests.ticket_id OR (trip_requests.ticket_id IS NULL AND trip_tickets.request_id = trip_requests.id)', 'left')
                     ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                     ->where('trip_requests.id', $id)
                     ->first();

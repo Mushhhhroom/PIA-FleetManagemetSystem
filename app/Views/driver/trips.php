@@ -3,40 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="theme-color" content="#080e1a">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PIA Motorpool Driver">
-    <title><?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?> | Driver Mobile Portal</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PIA Driver">
+    <title><?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?> | Driver Mobile</title>
 
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5 & FontAwesome 6 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
-    <!-- QRCode.js for high-speed offline gate pass generation -->
+    <!-- QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         :root {
-            --app-bg: #080e1a;
-            --surface-1: #0f172a;
-            --surface-2: #1e293b;
-            --surface-3: #334155;
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-active: rgba(56, 189, 248, 0.4);
-
-            --cyan-primary: #38bdf8;
-            --cyan-glow: rgba(56, 189, 248, 0.25);
-            --emerald-accent: #10b981;
-            --amber-accent: #f59e0b;
-            --rose-accent: #f43f5e;
-            --text-main: #f8fafc;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border-subtle: #e2e8f0;
+            --border-focus: #cbd5e1;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
             --text-muted: #94a3b8;
+
+            --brand-primary: #1e3a8a;
+            --brand-accent: #2563eb;
+            --brand-light: #eff6ff;
+
+            --success: #059669;
+            --success-light: #ecfdf5;
+            --warning: #d97706;
+            --warning-light: #fffbeb;
+            --danger: #dc2626;
+            --danger-light: #fef2f2;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-pill: 9999px;
 
             --touch-target: 48px;
             --safe-bottom: env(safe-area-inset-bottom, 16px);
@@ -49,15 +59,14 @@
         }
 
         body {
-            background-color: var(--app-bg);
-            color: var(--text-main);
+            background-color: var(--bg-page);
+            color: var(--text-primary);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
-            padding-bottom: calc(88px + var(--safe-bottom));
+            padding-bottom: calc(76px + var(--safe-bottom));
             margin: 0;
             -webkit-font-smoothing: antialiased;
-            letter-spacing: -0.011em;
-            touch-action: manipulation;
+            letter-spacing: -0.01em;
         }
 
         .mono {
@@ -66,539 +75,481 @@
         }
 
         /* -------------------------------------------------------------
-           Header & App Bar
+           Header & App Bar (Minimalist White/Slate)
         ------------------------------------------------------------- */
-        .driver-app-bar {
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: calc(12px + var(--safe-top)) 16px 12px;
+        .driver-header {
+            background: #ffffff;
             border-bottom: 1px solid var(--border-subtle);
+            padding: calc(10px + var(--safe-top)) 16px 10px;
             position: sticky;
             top: 0;
-            z-index: 1020;
+            z-index: 1030;
         }
 
-        .telemetry-beacon {
+        .driver-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--brand-primary);
+        }
+
+        .duty-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-size: 0.72rem;
-            color: #34d399;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            padding: 3px 9px;
-            border-radius: 999px;
             font-weight: 600;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+        }
+        .duty-badge.duty-available {
+            background: var(--success-light);
+            color: var(--success);
+            border-color: #a7f3d0;
+        }
+        .duty-badge.duty-on_trip {
+            background: var(--warning-light);
+            color: var(--warning);
+            border-color: #fde68a;
+        }
+        .duty-badge.duty-off_duty {
+            background: #f1f5f9;
+            color: var(--text-secondary);
+            border-color: #e2e8f0;
         }
 
-        .beacon-dot {
+        .status-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-            animation: beacon-pulse 2s infinite;
-        }
-
-        @keyframes beacon-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            background: currentColor;
         }
 
         /* -------------------------------------------------------------
-           Mobile Cards & Surfaces
+           Minimalist Cards & Surfaces
         ------------------------------------------------------------- */
-        .mobile-card {
-            background: var(--surface-2);
+        .driver-card {
+            background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             padding: 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
             position: relative;
-            overflow: hidden;
-            transition: border-color 0.15s ease, transform 0.15s ease;
         }
 
-        .mobile-card.card-highlight {
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.12);
+        .card-active-trip {
+            border-color: #93c5fd;
+            background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
         }
 
-        .mobile-card-header {
+        .driver-card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        /* Quick Metric HUD */
-        .hud-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-        @media (min-width: 576px) {
-            .hud-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .hud-tile {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .hud-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .hud-value {
-            font-size: 1.15rem;
+        .card-title-sm {
+            font-size: 0.72rem;
             font-weight: 700;
-            color: #ffffff;
-            line-height: 1.2;
-        }
-
-        /* -------------------------------------------------------------
-           Quick Action Buttons (Ergonomic Touch Targets)
-        ------------------------------------------------------------- */
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        @media (min-width: 480px) {
-            .action-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .btn-action-tile {
-            background: var(--surface-1);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 14px 10px;
-            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin: 0;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 8px;
-            min-height: var(--touch-target);
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            position: relative;
+            gap: 6px;
         }
 
-        .btn-action-tile:active {
-            transform: scale(0.97);
-            background: var(--surface-3);
-        }
-
-        .btn-action-tile .tile-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+        /* Metrics Strip */
+        .metric-strip {
             display: grid;
-            place-items: center;
-            font-size: 1.15rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
         }
-
-        .btn-action-tile .tile-title {
-            font-size: 0.76rem;
+        .metric-cell {
+            background: #f8fafc;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 0.65rem;
             font-weight: 600;
-            color: #f1f5f9;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+        .metric-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
             line-height: 1.2;
         }
 
         /* -------------------------------------------------------------
-           QR Gate Pass Card (High-Contrast for Scanners)
+           Route Origin-Destination Minimal Flow
         ------------------------------------------------------------- */
-        .qr-gate-pass-box {
+        .route-flow {
+            position: relative;
+            padding-left: 24px;
+            margin: 8px 0 12px;
+        }
+        .route-flow::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+        .route-point {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .route-point:last-child {
+            margin-bottom: 0;
+        }
+        .route-point::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
             background: #ffffff;
-            color: #0b1324;
-            border-radius: 14px;
-            padding: 16px;
+            border: 3px solid #94a3b8;
+        }
+        .route-point.active::before {
+            border-color: var(--brand-accent);
+            background: var(--brand-accent);
+        }
+        .route-point.destination::before {
+            border-color: var(--danger);
+            background: var(--danger);
+        }
+
+        /* -------------------------------------------------------------
+           QR Gate Pass (Ultra-Readable Scanner Optimized)
+        ------------------------------------------------------------- */
+        .qr-pass-container {
+            background: #ffffff;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px;
             text-align: center;
             margin: 12px 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
-
-        .qr-canvas-container {
+        .qr-code-box {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: #ffffff;
-            padding: 8px;
-            border-radius: 8px;
-            margin: 4px auto;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #f1f5f9;
         }
-
-        .qr-canvas-container img,
-        .qr-canvas-container canvas {
+        .qr-code-box img,
+        .qr-code-box canvas {
             display: block;
             margin: 0 auto;
-            max-width: 100%;
         }
 
         /* -------------------------------------------------------------
-           Route Stops Visualizer
+           Minimalist Quick Action Row
         ------------------------------------------------------------- */
-        .route-stop {
-            position: relative;
-            padding-left: 28px;
-            padding-bottom: 12px;
+        .quick-actions-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
         }
-
-        .route-stop::before {
-            content: '';
-            position: absolute;
-            left: 6px;
-            top: 4px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--cyan-primary);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-        }
-
-        .route-stop.dest::before {
-            background: var(--rose-accent);
-            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
-        }
-
-        .route-stop::after {
-            content: '';
-            position: absolute;
-            left: 11px;
-            top: 18px;
-            width: 2px;
-            height: calc(100% - 6px);
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .route-stop:last-child {
-            padding-bottom: 0;
-        }
-
-        .route-stop:last-child::after {
-            display: none;
-        }
-
-        /* -------------------------------------------------------------
-           Bottom Navigation Dock (Accessible & Thumb-Friendly)
-        ------------------------------------------------------------- */
-        .mobile-bottom-dock {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.94);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border-subtle);
-            padding: 8px 12px calc(8px + var(--safe-bottom));
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1030;
-            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
-        }
-
-        .dock-nav-item {
-            background: none;
-            border: none;
-            color: #64748b;
-            font-size: 0.72rem;
-            font-weight: 600;
+        .quick-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 10px 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 6px 10px;
-            border-radius: 12px;
-            min-width: 62px;
-            min-height: var(--touch-target);
-            transition: all 0.18s ease;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .dock-nav-item i {
-            font-size: 1.25rem;
-            transition: transform 0.18s ease;
-        }
-
-        .dock-nav-item:active {
-            transform: scale(0.92);
-        }
-
-        .dock-nav-item.active {
-            color: #ffffff;
-            background: rgba(56, 189, 248, 0.12);
-        }
-
-        .dock-nav-item.active i {
-            color: var(--cyan-primary);
-            transform: translateY(-2px);
-        }
-
-        .dock-nav-item .dock-badge {
-            position: absolute;
-            top: 2px;
-            right: 14px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--amber-accent);
-            box-shadow: 0 0 0 2px var(--surface-1);
-        }
-
-        /* -------------------------------------------------------------
-           Tabbed Views Management
-        ------------------------------------------------------------- */
-        .driver-tab-view {
-            display: none;
-        }
-        .driver-tab-view.active {
-            display: block;
-            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* -------------------------------------------------------------
-           Mobile Modals (Touch-Friendly Full Bottom Sheet)
-        ------------------------------------------------------------- */
-        .modal-content {
-            background-color: var(--surface-2);
-            color: var(--text-main);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 16px 20px;
-            background: rgba(15, 23, 42, 0.6);
-        }
-
-        .modal-footer {
-            border-top: 1px solid var(--border-subtle);
-            padding: 14px 20px;
-            background: rgba(15, 23, 42, 0.6);
-        }
-
-        /* Large touchable inputs on mobile */
-        .form-control, .form-select {
-            background-color: rgba(15, 23, 42, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            color: #ffffff !important;
-            padding: 12px 14px;
-            font-size: 1rem; /* >=16px prevents iOS Safari automatic page zoom */
-            border-radius: 10px;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--cyan-primary) !important;
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
-        }
-
-        .form-label {
-            font-size: 0.8rem;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.68rem;
             font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-
-        /* Accessible Touch Buttons */
-        .btn-mobile-primary {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: #ffffff;
-            border: none;
-            padding: 14px 20px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            border-radius: 12px;
-            min-height: var(--touch-target);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
+            color: var(--text-secondary);
+            text-decoration: none;
             cursor: pointer;
+            min-height: var(--touch-target);
             transition: all 0.15s ease;
         }
-
-        .btn-mobile-primary:active {
+        .quick-btn:active {
+            background: #f1f5f9;
             transform: scale(0.98);
-            filter: brightness(1.1);
+        }
+        .quick-btn-icon {
+            font-size: 1.1rem;
+            color: var(--brand-primary);
+        }
+        .quick-btn.danger-btn .quick-btn-icon {
+            color: var(--danger);
         }
 
-        .btn-mobile-success {
-            background: linear-gradient(135deg, #059669, #10b981);
+        /* -------------------------------------------------------------
+           Action Buttons (Ergonomic Touch Targets >= 48px)
+        ------------------------------------------------------------- */
+        .btn-driver-primary {
+            background: var(--brand-primary);
             color: #ffffff;
             border: none;
-            padding: 14px 20px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            border-radius: 12px;
+            padding: 13px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-md);
             min-height: var(--touch-target);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             width: 100%;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            text-decoration: none;
+            transition: opacity 0.15s ease;
         }
-
-        .btn-mobile-danger {
-            background: linear-gradient(135deg, #e11d48, #be123c);
+        .btn-driver-primary:active {
+            opacity: 0.9;
+        }
+        .btn-driver-success {
+            background: var(--success);
             color: #ffffff;
             border: none;
-            padding: 14px 20px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            border-radius: 12px;
+            padding: 13px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-md);
             min-height: var(--touch-target);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             width: 100%;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+        .btn-driver-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 11px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: var(--radius-md);
+            min-height: var(--touch-target);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+        }
+        .btn-driver-outline:active {
+            background: #f1f5f9;
         }
 
-        /* Custom Segmented Tab Bar on mobile */
-        .segmented-tabs {
-            background: var(--surface-1);
+        /* -------------------------------------------------------------
+           Segmented View Controller
+        ------------------------------------------------------------- */
+        .nav-segmented {
+            background: #f1f5f9;
             padding: 4px;
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             display: flex;
             gap: 4px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             border: 1px solid var(--border-subtle);
         }
-
-        .segmented-tab {
+        .segmented-item {
             flex: 1;
             padding: 8px 4px;
             font-size: 0.75rem;
             font-weight: 600;
             text-align: center;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             background: none;
             border: none;
-            border-radius: 8px;
-            transition: all 0.15s ease;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            min-height: 38px;
+            transition: all 0.15s ease;
+        }
+        .segmented-item.active {
+            background: #ffffff;
+            color: var(--brand-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
-        .segmented-tab.active {
-            background: var(--surface-2);
-            color: #ffffff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        .tab-panel-view {
+            display: none;
+        }
+        .tab-panel-view.active {
+            display: block;
+        }
+
+        /* -------------------------------------------------------------
+           Bottom Ergonomic Thumb Navigation Dock
+        ------------------------------------------------------------- */
+        .bottom-thumb-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(62px + var(--safe-bottom));
+            background: #ffffff;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 8px var(--safe-bottom);
+            z-index: 1040;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+        }
+        .thumb-nav-btn {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+        .thumb-nav-btn.active {
+            color: var(--brand-primary);
+        }
+        .thumb-nav-btn i {
+            font-size: 1.15rem;
+        }
+        .nav-alert-indicator {
+            position: absolute;
+            top: 8px;
+            right: calc(50% - 16px);
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--warning);
+            border: 2px solid #ffffff;
+        }
+
+        /* Delay & Reason Select Chips */
+        .chip-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .chip-option {
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-subtle);
+            background: #f8fafc;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip-option.selected {
+            background: var(--brand-light);
+            border-color: var(--brand-accent);
+            color: var(--brand-primary);
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
     <!-- -------------------------------------------------------------
-         TOP APP BAR (Sticky Mobile Header)
+         MINIMALIST APP HEADER (Sticky)
     -------------------------------------------------------------- -->
-    <header class="driver-app-bar">
+    <header class="driver-header">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2">
-                <!-- Driver Avatar with Status Ring -->
-                <div class="position-relative">
-                    <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #0284c7); display: grid; place-items: center; font-weight: 800; font-size: 1rem; color: #ffffff; box-shadow: 0 2px 8px rgba(37,99,235,0.4);">
-                        <?= esc(strtoupper(substr($driver['first_name'] ?? 'D', 0, 1) . substr($driver['last_name'] ?? 'R', 0, 1))) ?>
-                    </div>
-                    <span class="position-absolute bottom-0 end-0 p-1 bg-<?= ($driver['status'] ?? 'available') === 'on_trip' ? 'warning' : (($driver['status'] ?? 'available') === 'available' ? 'success' : 'secondary') ?> border border-dark rounded-circle" style="transform: translate(25%, 25%);"></span>
+                <div class="driver-avatar">
+                    <?= esc(strtoupper(substr($driver['first_name'] ?? 'D', 0, 1) . substr($driver['last_name'] ?? 'R', 0, 1))) ?>
                 </div>
-
                 <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h6 class="fw-bold mb-0 text-white" style="font-size: 0.95rem;">
-                            <?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?>
-                        </h6>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 mt-1">
-                        <span class="telemetry-beacon">
-                            <span class="beacon-dot"></span>
-                            <span>GPS Telematics Sync</span>
-                        </span>
+                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.92rem; max-width: 170px;">
+                        <?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?>
+                    </h6>
+                    <div class="small text-muted mono" style="font-size: 0.7rem;">
+                        <?= esc($driver['driver_code'] ?? 'DRV-101') ?> &bull; PIA Motorpool
                     </div>
                 </div>
             </div>
 
-            <!-- Header Quick Actions Dropdown -->
+            <!-- Duty Status & Profile Switcher -->
             <div class="d-flex align-items-center gap-2">
-                <!-- Emergency SOS Quick Button -->
-                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 rounded-pill" data-bs-toggle="modal" data-bs-target="#incidentModal" title="Emergency SOS" aria-label="Emergency SOS Alert">
-                    <i class="fa-solid fa-triangle-exclamation text-danger"></i>
-                    <span class="fw-bold small ms-1 d-none d-sm-inline">SOS</span>
+                <?php $dutyState = $driver['status'] ?? 'available'; ?>
+                <button type="button" class="duty-badge duty-<?= esc($dutyState) ?>" data-bs-toggle="modal" data-bs-target="#dutyModal" title="Change Duty Status">
+                    <span class="status-dot"></span>
+                    <span><?= ucfirst(str_replace('_', ' ', $dutyState)) ?></span>
                 </button>
 
+                <!-- More Options Menu -->
                 <div class="dropdown">
-                    <button class="btn btn-dark btn-sm rounded-circle p-2 border border-secondary border-opacity-50" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Driver Menu">
-                        <i class="fa-solid fa-ellipsis-vertical text-white"></i>
+                    <button class="btn btn-sm btn-light border p-1 rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-ellipsis-vertical text-secondary"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" style="background: #1e293b; min-width: 230px;">
-                        <li class="px-3 py-2 border-bottom border-secondary border-opacity-25">
-                            <strong class="d-block small text-white"><?= esc($driver['first_name'] . ' ' . $driver['last_name']) ?></strong>
-                            <span class="mono text-muted small"><?= esc($driver['driver_code'] ?? 'DRV-101') ?></span>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-1" style="min-width: 220px; font-size: 0.85rem;">
+                        <li class="px-3 py-2 border-bottom">
+                            <span class="d-block text-muted small">Logged in as</span>
+                            <strong class="text-dark"><?= esc($driver['first_name'] . ' ' . $driver['last_name']) ?></strong>
                         </li>
                         <li>
-                            <a class="dropdown-item text-white-50 small py-2" href="#" data-bs-toggle="modal" data-bs-target="#dutyStatusModal">
-                                <i class="fa-solid fa-user-clock me-2 text-info"></i> Change Duty Status (<?= ucfirst($driver['status'] ?? 'available') ?>)
+                            <a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#dutyModal">
+                                <i class="fa-solid fa-user-clock me-2 text-primary"></i> Change Duty Status
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="<?= base_url('tickets') ?>">
+                                <i class="fa-solid fa-file-invoice me-2 text-secondary"></i> All Trip Tickets
                             </a>
                         </li>
                         <?php if (!empty($allDrivers) && count($allDrivers) > 1): ?>
-                            <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
+                            <li><hr class="dropdown-divider my-1"></li>
                             <li class="px-3 py-1 text-muted small text-uppercase mono" style="font-size: 0.65rem;">Switch Driver Profile (Demo)</li>
                             <?php foreach ($allDrivers as $ad): ?>
                                 <li>
-                                    <a class="dropdown-item text-white-50 small py-1 <?= $ad['id'] == ($driver['id'] ?? 0) ? 'fw-bold text-info' : '' ?>" href="<?= base_url('driver/trips?driver_id=' . $ad['id']) ?>">
+                                    <a class="dropdown-item py-1 <?= $ad['id'] == ($driver['id'] ?? 0) ? 'fw-bold text-primary' : 'text-secondary' ?>" href="<?= base_url('driver/trips?driver_id=' . $ad['id']) ?>">
                                         <?= esc($ad['first_name'] . ' ' . $ad['last_name']) ?> <span class="mono small text-muted">(<?= esc($ad['driver_code']) ?>)</span>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
+                        <li><hr class="dropdown-divider my-1"></li>
                         <li>
-                            <a class="dropdown-item text-danger small py-2" href="<?= base_url('logout') ?>">
+                            <a class="dropdown-item text-danger py-2" href="<?= base_url('logout') ?>">
                                 <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Sign Out
                             </a>
                         </li>
@@ -609,578 +560,593 @@
     </header>
 
     <!-- -------------------------------------------------------------
-         MAIN CONTENT CONTAINER
+         MAIN CONTENT AREA
     -------------------------------------------------------------- -->
     <main class="container px-3 pt-3" role="main">
 
-        <!-- Flash Messages (Accessibility Alert Banners) -->
+        <!-- Flash Feedback Banners -->
         <?php if (session()->getFlashdata('success')): ?>
-            <div class="alert alert-success alert-dismissible fade show p-3 rounded-3 mb-3 border-0 d-flex align-items-center" role="alert" style="background: rgba(16, 185, 129, 0.18); color: #34d399; border-left: 4px solid #10b981 !important;">
+            <div class="alert alert-success alert-dismissible fade show p-3 rounded-3 mb-3 border-0 d-flex align-items-center" role="alert" style="background: #ecfdf5; color: #065f46; border-left: 4px solid #059669 !important;">
                 <i class="fa-solid fa-circle-check fs-5 me-2"></i>
-                <div class="small fw-semibold flex-grow-1"><?= session()->getFlashdata('success') ?></div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="small fw-medium flex-grow-1"><?= session()->getFlashdata('success') ?></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
 
         <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger alert-dismissible fade show p-3 rounded-3 mb-3 border-0 d-flex align-items-center" role="alert" style="background: rgba(244, 63, 94, 0.18); color: #fb7185; border-left: 4px solid #f43f5e !important;">
+            <div class="alert alert-danger alert-dismissible fade show p-3 rounded-3 mb-3 border-0 d-flex align-items-center" role="alert" style="background: #fef2f2; color: #991b1b; border-left: 4px solid #dc2626 !important;">
                 <i class="fa-solid fa-triangle-exclamation fs-5 me-2"></i>
-                <div class="small fw-semibold flex-grow-1"><?= session()->getFlashdata('error') ?></div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="small fw-medium flex-grow-1"><?= session()->getFlashdata('error') ?></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
 
-        <!-- ---------------------------------------------------------
-             DRIVER QUICK TELEMETRY HUD
-        ---------------------------------------------------------- -->
-        <div class="hud-grid" aria-label="Driver and Vehicle Telemetry Summary">
-            <!-- Assigned Vehicle Unit -->
-            <div class="hud-tile">
-                <div class="hud-label">
-                    <i class="fa-solid fa-truck-front text-info"></i> Vehicle Unit
-                </div>
-                <div class="hud-value mono text-truncate" title="<?= esc($vehicle['plate_number'] ?? 'Unassigned') ?>">
-                    <?= esc($vehicle['plate_number'] ?? 'NONE') ?>
-                </div>
-                <div class="small text-muted text-truncate" style="font-size: 0.7rem;">
-                    <?= esc(($vehicle['make'] ?? '') . ' ' . ($vehicle['model'] ?? '')) ?>
-                </div>
-            </div>
+        <!-- Quick Action Tap Row (Thumb Ergonomics) -->
+        <div class="quick-actions-row">
+            <!-- 1. Enlarge QR Gate Pass -->
+            <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#qrPassModal">
+                <i class="fa-solid fa-qrcode quick-btn-icon"></i>
+                <span>Gate Pass</span>
+            </button>
 
-            <!-- Fuel Level Gauge -->
-            <div class="hud-tile">
-                <div class="hud-label">
-                    <i class="fa-solid fa-gas-pump text-warning"></i> Fuel Level
-                </div>
-                <?php $fuelPct = (float)($vehicle['current_fuel_level'] ?? 80); ?>
-                <div class="hud-value mono d-flex align-items-baseline gap-1">
-                    <span class="<?= $fuelPct < 25 ? 'text-danger' : ($fuelPct < 50 ? 'text-warning' : 'text-success') ?>">
-                        <?= number_format($fuelPct, 0) ?>%
-                    </span>
-                    <span class="small text-muted" style="font-size: 0.72rem;">Tank</span>
-                </div>
-                <div class="progress mt-1" style="height: 5px; background: rgba(255,255,255,0.1);">
-                    <div class="progress-bar bg-<?= $fuelPct < 25 ? 'danger' : ($fuelPct < 50 ? 'warning' : 'success') ?>" style="width: <?= min(100, $fuelPct) ?>%;"></div>
-                </div>
-            </div>
+            <!-- 2. Refuel Modal -->
+            <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#fuelModal">
+                <i class="fa-solid fa-gas-pump quick-btn-icon" style="color: #059669;"></i>
+                <span>Log Fuel</span>
+            </button>
 
-            <!-- Current Odometer -->
-            <div class="hud-tile">
-                <div class="hud-label">
-                    <i class="fa-solid fa-gauge text-primary"></i> Current Odometer
-                </div>
-                <div class="hud-value mono" style="font-size: 1.05rem;">
-                    <?= number_format((float)($vehicle['odometer_km'] ?? 0), 1) ?>
-                </div>
-                <div class="small text-muted" style="font-size: 0.7rem;">Kilometers</div>
-            </div>
+            <!-- 3. Passenger Delay Logger (FR-4.2) -->
+            <?php if ($activeTicket): ?>
+                <button type="button" class="quick-btn" data-bs-toggle="modal" data-bs-target="#delayModal">
+                    <i class="fa-solid fa-user-clock quick-btn-icon" style="color: #d97706;"></i>
+                    <span>Log Delay</span>
+                </button>
+            <?php else: ?>
+                <a href="<?= base_url('tickets') ?>" class="quick-btn">
+                    <i class="fa-solid fa-ticket quick-btn-icon"></i>
+                    <span>Tickets</span>
+                </a>
+            <?php endif; ?>
 
-            <!-- Driver Safety Rating -->
-            <div class="hud-tile">
-                <div class="hud-label">
-                    <i class="fa-solid fa-shield-heart text-success"></i> Safety Score
-                </div>
-                <div class="hud-value mono text-success">
-                    <?= number_format((float)($driver['safety_score'] ?? 100), 1) ?>%
-                </div>
-                <div class="small text-muted" style="font-size: 0.7rem;">
-                    <span class="badge bg-success bg-opacity-25 text-success p-1" style="font-size: 0.65rem;">LTO CLASS A</span>
-                </div>
-            </div>
+            <!-- 4. Emergency SOS Breakdown (FR-4.3) -->
+            <button type="button" class="quick-btn danger-btn" data-bs-toggle="modal" data-bs-target="#incidentModal">
+                <i class="fa-solid fa-triangle-exclamation quick-btn-icon"></i>
+                <span class="text-danger">SOS Alert</span>
+            </button>
         </div>
 
-        <!-- ---------------------------------------------------------
-             QUICK ACTION TOUCH GRID (Minimum 48px Touch Targets)
-        ---------------------------------------------------------- -->
-        <div class="action-grid" role="group" aria-label="Field Quick Action Controls">
-            <!-- 1. Gate Pass QR Modal Trigger -->
-            <button type="button" class="btn-action-tile" data-bs-toggle="modal" data-bs-target="#qrPassModal">
-                <div class="tile-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
-                    <i class="fa-solid fa-qrcode"></i>
-                </div>
-                <span class="tile-title">Gate Pass QR</span>
+        <!-- Segmented Tab Navigation -->
+        <div class="nav-segmented" role="tablist">
+            <button type="button" class="segmented-item active" data-view="view-active-trip" role="tab" id="tabBtnActive">
+                Active Trip <?= $activeTicket ? '•' : '' ?>
             </button>
-
-            <!-- 2. Refuel & Receipt Capture -->
-            <button type="button" class="btn-action-tile" data-bs-toggle="modal" data-bs-target="#fuelModal">
-                <div class="tile-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-                    <i class="fa-solid fa-gas-pump"></i>
-                </div>
-                <span class="tile-title">Log Refuel</span>
+            <button type="button" class="segmented-item" data-view="view-vehicle" role="tab" id="tabBtnVehicle">
+                Vehicle & Safety
             </button>
-
-            <!-- 3. Report Incident / SOS -->
-            <button type="button" class="btn-action-tile" data-bs-toggle="modal" data-bs-target="#incidentModal">
-                <div class="tile-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <span class="tile-title">Report Issue</span>
+            <button type="button" class="segmented-item" data-view="view-expenses" role="tab" id="tabBtnExpenses">
+                Fuel & Tolls
             </button>
-
-            <!-- 4. Direct Call to Dispatch -->
-            <a href="tel:+639185550200" class="btn-action-tile">
-                <div class="tile-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
-                    <i class="fa-solid fa-phone-volume"></i>
-                </div>
-                <span class="tile-title">Call Dispatch</span>
-            </a>
-        </div>
-
-        <!-- ---------------------------------------------------------
-             SEGMENTED TAB CONTROLLER (Mobile Accessible Tabs)
-        ---------------------------------------------------------- -->
-        <div class="segmented-tabs" role="tablist" aria-label="Driver Operations Views">
-            <button type="button" class="segmented-tab active" data-target="tab-active-duty" role="tab" aria-selected="true" id="btn-tab-duty">
-                <i class="fa-solid fa-id-badge me-1"></i> Duty & Gate
-            </button>
-            <button type="button" class="segmented-tab" data-target="tab-tickets" role="tab" aria-selected="false" id="btn-tab-tickets">
-                <i class="fa-solid fa-ticket me-1"></i> Tickets (<?= count($tripTickets) ?>)
-            </button>
-            <button type="button" class="segmented-tab" data-target="tab-waybills" role="tab" aria-selected="false" id="btn-tab-waybills">
-                <i class="fa-solid fa-truck-ramp-box me-1"></i> Waybills (<?= count($trips) ?>)
-            </button>
-            <button type="button" class="segmented-tab" data-target="tab-profile" role="tab" aria-selected="false" id="btn-tab-profile">
-                <i class="fa-solid fa-user-shield me-1"></i> Profile
+            <button type="button" class="segmented-item" data-view="view-history" role="tab" id="tabBtnHistory">
+                History & Help
             </button>
         </div>
 
         <!-- =========================================================
-             VIEW 1: ACTIVE DUTY & OFFICIAL GATE PASS (DEFAULT)
+             VIEW 1: ACTIVE TRIP (Hero Operational Focus)
         ========================================================== -->
-        <section id="tab-active-duty" class="driver-tab-view active" role="tabpanel" aria-labelledby="btn-tab-duty">
+        <section id="view-active-trip" class="tab-panel-view active">
 
             <?php if ($activeTicket): ?>
-                <!-- ACTIVE TICKET HERO CARD -->
-                <div class="mobile-card card-highlight">
-                    <div class="mobile-card-header">
+                <!-- Hero Assignment Card -->
+                <div class="driver-card card-active-trip">
+                    <div class="driver-card-header">
                         <div>
-                            <span class="small text-info mono fw-bold text-uppercase d-block" style="font-size: 0.7rem;">
-                                <i class="fa-solid fa-certificate me-1"></i> Official Trip Ticket &bull; ADMIN-F-001 rev1
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono px-2 py-1" style="font-size: 0.68rem;">
+                                <?= esc($activeTicket['ticket_serial_no']) ?>
                             </span>
-                            <h5 class="fw-bold mb-0 text-white mono"><?= esc($activeTicket['ticket_serial_no']) ?></h5>
                         </div>
                         <?php
-                            $statusBadge = match($activeTicket['status']) {
-                                'issued'    => ['label' => 'Pending Gate Exit', 'class' => 'bg-warning text-dark'],
-                                'departed'  => ['label' => 'Active In Transit', 'class' => 'bg-primary text-white'],
-                                'returned'  => ['label' => 'Compound Return', 'class' => 'bg-info text-white'],
-                                'completed' => ['label' => 'Reconciled', 'class' => 'bg-success text-white'],
-                                default     => ['label' => ucfirst($activeTicket['status']), 'class' => 'bg-secondary text-white'],
+                            $statusInfo = match($activeTicket['status']) {
+                                'issued'    => ['label' => 'Gate Egress Clearance', 'bg' => '#fef3c7', 'color' => '#92400e', 'icon' => 'fa-id-badge'],
+                                'departed'  => ['label' => 'En Route / On Trip', 'bg' => '#dbeafe', 'color' => '#1e40af', 'icon' => 'fa-car-side'],
+                                'returned'  => ['label' => 'Returned &bull; Pending Report', 'bg' => '#e0e7ff', 'color' => '#3730a3', 'icon' => 'fa-clipboard-check'],
+                                'completed' => ['label' => 'Completed', 'bg' => '#d1fae5', 'color' => '#065f46', 'icon' => 'fa-circle-check'],
+                                default     => ['label' => ucfirst($activeTicket['status']), 'bg' => '#f1f5f9', 'color' => '#475569', 'icon' => 'fa-circle-dot'],
                             };
                         ?>
-                        <span class="badge <?= $statusBadge['class'] ?> px-2 py-1 small">
-                            <?= $statusBadge['label'] ?>
+                        <span class="badge px-2 py-1" style="background: <?= $statusInfo['bg'] ?>; color: <?= $statusInfo['color'] ?>; font-size: 0.72rem; font-weight: 600;">
+                            <i class="fa-solid <?= $statusInfo['icon'] ?> me-1"></i><?= $statusInfo['label'] ?>
                         </span>
                     </div>
 
-                    <!-- Compact Gate QR Visual for Quick Checkpoint Presentment -->
-                    <div class="qr-gate-pass-box">
-                        <div class="small fw-bold text-uppercase mono text-muted" style="font-size: 0.68rem;">
-                            Compound Gate Security QR Pass
+                    <!-- Destination & Route Flow -->
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.68rem;">Authorized Destination</div>
+                        <h5 class="fw-bold text-dark mb-1 d-flex align-items-start justify-content-between">
+                            <span><?= esc($activeTicket['authorized_destination']) ?></span>
+                            <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($activeTicket['authorized_destination']) ?>" target="_blank" class="btn btn-sm btn-light border py-1 px-2 text-primary" title="Open in Google Maps">
+                                <i class="fa-solid fa-location-arrow"></i>
+                            </a>
+                        </h5>
+                        <?php if (!empty($activeTicket['authorized_purpose'])): ?>
+                            <p class="small text-secondary mb-0"><?= esc($activeTicket['authorized_purpose']) ?></p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- BLOWBAGETS Pre-Trip Safety Notice (FR-5.1) -->
+                    <div class="mb-3 p-2 rounded-3 border d-flex align-items-center justify-content-between" style="background: <?= $blowbagetsPassed ? '#ecfdf5' : '#fffbeb' ?>; border-color: <?= $blowbagetsPassed ? '#a7f3d0' : '#fde68a' ?> !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid <?= $blowbagetsPassed ? 'fa-circle-check text-success' : 'fa-shield-halved text-warning' ?> fs-5"></i>
+                            <div>
+                                <strong class="small d-block" style="color: <?= $blowbagetsPassed ? '#065f46' : '#92400e' ?>;">
+                                    <?= $blowbagetsPassed ? 'BLOWBAGETS Safety Cleared' : 'BLOWBAGETS Checklist Required' ?>
+                                </strong>
+                                <span class="text-muted" style="font-size: 0.7rem;">
+                                    <?= $blowbagetsPassed ? 'Inspected & certified for safe travel' : 'Must pass 10-point check before gate exit' ?>
+                                </span>
+                            </div>
                         </div>
-                        <div class="qr-canvas-container my-1">
+                        <?php if (!$blowbagetsPassed): ?>
+                            <a href="<?= base_url('safety/' . $activeTicket['id']) ?>" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1" style="font-size: 0.75rem;">
+                                Inspect
+                            </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- High-Contrast Gate Pass E-QR (Scannable at Compound Gate) -->
+                    <div class="qr-pass-container">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-secondary" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-shield-check text-primary me-1"></i> Compound Gate E-Pass
+                            </span>
+                            <span class="mono small text-muted" style="font-size: 0.7rem;">ADMIN-F-001 rev1</span>
+                        </div>
+
+                        <div class="qr-code-box my-1">
                             <div id="activeTicketQr"></div>
                         </div>
-                        <div class="mono small fw-bold text-dark mt-1" style="font-size: 0.8rem;">
-                            <?= esc($activeTicket['ticket_serial_no']) ?> &bull; <?= esc($activeTicket['plate_number']) ?>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-dark w-100 mt-2 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#qrPassModal">
-                            <i class="fa-solid fa-expand me-1"></i> Enlarge Fullscreen for Guard Scanner
-                        </button>
-                    </div>
 
-                    <!-- Destination & Route -->
-                    <div class="p-2 mb-3 rounded" style="background: rgba(15, 23, 42, 0.6);">
-                        <div class="route-stop pb-2">
-                            <span class="small text-muted d-block" style="font-size: 0.7rem;">Origin (Motorpool)</span>
-                            <strong class="small text-white">PIA Central Compound, Visayas Ave, QC</strong>
-                        </div>
-                        <div class="route-stop dest">
-                            <span class="small text-muted d-block" style="font-size: 0.7rem;">Authorized Destination</span>
-                            <strong class="small text-white"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($activeTicket['authorized_destination']) ?></strong>
+                        <div class="mt-2 text-center">
+                            <div class="mono fw-bold text-dark" style="font-size: 0.85rem;">
+                                <?= esc($activeTicket['plate_number']) ?> &bull; <?= esc($activeTicket['ticket_serial_no']) ?>
+                            </div>
+                            <button type="button" class="btn btn-link btn-sm text-primary text-decoration-none fw-semibold p-0 mt-1" data-bs-toggle="modal" data-bs-target="#qrPassModal">
+                                <i class="fa-solid fa-expand me-1"></i> Tap to Fullscreen for Gate Guard
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Key Details Grid -->
-                    <div class="row g-2 mb-3 small text-white-50">
-                        <div class="col-6">
-                            <span class="d-block text-muted" style="font-size: 0.68rem;">Authorized Departure</span>
-                            <strong class="text-white mono" style="font-size: 0.76rem;">
-                                <?= date('M d, Y h:i A', strtotime($activeTicket['authorized_departure'])) ?>
-                            </strong>
-                        </div>
-                        <div class="col-6">
-                            <span class="d-block text-muted" style="font-size: 0.68rem;">Approving Authority</span>
-                            <strong class="text-white text-truncate d-block" style="font-size: 0.76rem;">
-                                <?= esc($activeTicket['admin_approver_name'] ?? 'Administrative Head') ?>
-                            </strong>
-                        </div>
-                        <div class="col-12">
-                            <span class="d-block text-muted" style="font-size: 0.68rem;">Authorized Passengers</span>
-                            <div class="p-2 rounded bg-black bg-opacity-25 small text-white mono" style="font-size: 0.74rem;">
-                                <?= nl2br(esc($activeTicket['authorized_passengers'] ?? 'Official Coverage Team')) ?>
+                    <!-- Passengers & Schedule Details -->
+                    <div class="bg-light p-3 rounded-3 border mb-3">
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <span class="text-muted d-block" style="font-size: 0.68rem;">Departure Schedule</span>
+                                <strong class="mono text-dark" style="font-size: 0.78rem;">
+                                    <?= date('M d, h:i A', strtotime($activeTicket['authorized_departure'])) ?>
+                                </strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block" style="font-size: 0.68rem;">Approver</span>
+                                <strong class="text-dark text-truncate d-block" style="font-size: 0.78rem;">
+                                    <?= esc($activeTicket['admin_approver_name'] ?? 'Admin Head') ?>
+                                </strong>
+                            </div>
+                            <div class="col-12 mt-2 pt-2 border-top">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="text-muted" style="font-size: 0.68rem;">Authorized Passengers</span>
+                                    <button type="button" class="btn btn-link p-0 text-warning text-decoration-none small fw-semibold" data-bs-toggle="modal" data-bs-target="#delayModal" style="font-size: 0.72rem;">
+                                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Report Delay
+                                    </button>
+                                </div>
+                                <div class="text-dark fw-medium" style="font-size: 0.78rem;">
+                                    <?= nl2br(esc($activeTicket['authorized_passengers'] ?? 'Official Coverage Team')) ?>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Primary Context Action Buttons -->
-                    <div class="d-grid gap-2">
+                    <!-- Passenger Delays Logged (FR-4.2) -->
+                    <?php if (!empty($recentDelays)): ?>
+                        <div class="mb-3 p-2 bg-light rounded-3 border border-warning border-opacity-50">
+                            <span class="small fw-bold text-warning d-block mb-1" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Recorded Pick-up Delays:
+                            </span>
+                            <?php foreach ($recentDelays as $dl): ?>
+                                <div class="small text-secondary d-flex justify-content-between align-items-center py-1 border-bottom border-light">
+                                    <span><?= esc($dl['reason'] ?: 'Passenger boarding delay') ?></span>
+                                    <span class="badge bg-warning bg-opacity-25 text-dark mono">+<?= esc($dl['delay_minutes']) ?> mins</span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Primary Context Action Progression -->
+                    <div>
                         <?php if ($activeTicket['status'] === 'issued'): ?>
-                            <div class="alert alert-warning border-0 p-2 mb-0 small text-center" style="font-size: 0.75rem;">
-                                <i class="fa-solid fa-id-card-clip me-1"></i> Show the QR code above to the Compound Gate Guard at Gate #1 to record your departure egress.
+                            <div class="p-3 bg-light rounded-3 text-center mb-2 border">
+                                <i class="fa-solid fa-shield-halved text-primary fs-4 mb-1"></i>
+                                <div class="small fw-bold text-dark">Ready for Gate Departure</div>
+                                <p class="text-muted small mb-0" style="font-size: 0.72rem;">
+                                    Present the Gate Pass QR code above to the Guard at Gate #1 to record your official departure egress.
+                                </p>
                             </div>
+                            <a href="<?= base_url('tickets/' . $activeTicket['id']) ?>" class="btn-driver-outline">
+                                <i class="fa-solid fa-file-lines me-1"></i> View Full Ticket Document
+                            </a>
                         <?php elseif ($activeTicket['status'] === 'departed'): ?>
-                            <button type="button" class="btn btn-outline-info w-100 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#fuelModal">
-                                <i class="fa-solid fa-gas-pump me-1"></i> Log Official Gas Station Refuel
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn-driver-primary" data-bs-toggle="modal" data-bs-target="#sectionBModal">
+                                    <i class="fa-solid fa-location-dot me-1"></i> Log Arrival or Toll Expense
+                                </button>
+                                <button type="button" class="btn-driver-outline" data-bs-toggle="modal" data-bs-target="#delayModal">
+                                    <i class="fa-solid fa-user-clock me-1"></i> Log 15-Minute Passenger Delay
+                                </button>
+                            </div>
                         <?php elseif ($activeTicket['status'] === 'returned'): ?>
-                            <button type="button" class="btn-mobile-success" data-bs-toggle="modal" data-bs-target="#sectionBModal">
-                                <i class="fa-solid fa-clipboard-check me-1"></i> Accomplish Section B Post-Trip Report
+                            <button type="button" class="btn-driver-success" data-bs-toggle="modal" data-bs-target="#sectionBModal">
+                                <i class="fa-solid fa-clipboard-check me-1"></i> Complete Section B Post-Trip Report
                             </button>
+                        <?php else: ?>
+                            <a href="<?= base_url('tickets/' . $activeTicket['id']) ?>" class="btn-driver-outline">
+                                <i class="fa-solid fa-file-check me-1"></i> View Reconciled Ticket
+                            </a>
                         <?php endif; ?>
-
-                        <!-- Direct link to full official ticket document -->
-                        <a href="<?= base_url('tickets/' . $activeTicket['id']) ?>" class="btn btn-sm btn-outline-light py-2">
-                            <i class="fa-solid fa-file-invoice me-1"></i> Open Full Trip Ticket Document
-                        </a>
                     </div>
                 </div>
             <?php else: ?>
                 <!-- Standby Card (No Active Ticket) -->
-                <div class="mobile-card text-center py-4">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); color: var(--cyan-primary); display: grid; place-items: center; margin: 0 auto 12px; font-size: 1.5rem;">
+                <div class="driver-card text-center py-5">
+                    <div style="width: 52px; height: 52px; border-radius: 50%; background: #eff6ff; color: var(--brand-accent); display: grid; place-items: center; margin: 0 auto 12px; font-size: 1.4rem;">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
-                    <h5 class="fw-bold text-white mb-1">Standby & Ready for Duty</h5>
-                    <p class="text-muted small mb-3 px-3">
-                        No active Vehicle Request Slip or Driver's Trip Ticket currently requires gate clearance.
+                    <h6 class="fw-bold text-dark mb-1">Standby &bull; Available for Dispatch</h6>
+                    <p class="text-muted small mb-3 px-4">
+                        You have no pending gate clearances or active official travel tickets assigned at this moment.
                     </p>
-                    <div class="p-3 mx-2 rounded bg-black bg-opacity-25 text-start small mb-3">
-                        <div class="fw-bold text-info mb-1"><i class="fa-solid fa-list-check me-1"></i> Pre-Trip Readiness Checklist:</div>
-                        <div class="text-white-50"><i class="fa-solid fa-check text-success me-1"></i> Assigned unit: <?= esc($vehicle['plate_number'] ?? 'Assigned') ?></div>
-                        <div class="text-white-50"><i class="fa-solid fa-check text-success me-1"></i> Fuel capacity check: <?= $vehicle['current_fuel_level'] ?? 100 ?>%</div>
-                        <div class="text-white-50"><i class="fa-solid fa-check text-success me-1"></i> Driver LTO license verified active</div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary px-3" onclick="document.getElementById('tabBtnHistory').click();">
+                            <i class="fa-solid fa-history me-1"></i> Ticket Archives
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary px-3" data-bs-toggle="modal" data-bs-target="#dutyModal">
+                            <i class="fa-solid fa-user-clock me-1"></i> Duty Status
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-outline-info btn-sm px-4" onclick="document.getElementById('btn-tab-tickets').click();">
-                        <i class="fa-solid fa-history me-1"></i> Browse Trip Ticket Archives
-                    </button>
                 </div>
             <?php endif; ?>
 
-            <!-- Assigned Vehicle Telematics Panel -->
+            <!-- Assigned Unit Mini Summary -->
             <?php if ($vehicle): ?>
-                <div class="mobile-card">
-                    <div class="mobile-card-header">
-                        <span class="small fw-bold text-white text-uppercase">
-                            <i class="fa-solid fa-truck-pickup text-info me-1"></i> Vehicle Telematics Status
-                        </span>
-                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 small">
+                <div class="driver-card">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <span class="small text-muted d-block" style="font-size: 0.68rem;">Assigned Motorpool Vehicle</span>
+                            <h6 class="fw-bold text-dark mb-0 mono"><?= esc($vehicle['plate_number']) ?></h6>
+                            <span class="small text-secondary"><?= esc(($vehicle['make'] ?? '') . ' ' . ($vehicle['model'] ?? '')) ?></span>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-light text-dark border mono"><?= esc($vehicle['fuel_type'] ?? 'Diesel') ?></span>
+                        </div>
+                    </div>
+
+                    <div class="metric-strip">
+                        <div class="metric-cell">
+                            <div class="metric-label">Odometer</div>
+                            <div class="metric-val mono"><?= number_format((float)($vehicle['odometer_km'] ?? 0), 0) ?> <span class="small text-muted" style="font-size: 0.65rem;">KM</span></div>
+                        </div>
+                        <div class="metric-cell">
+                            <div class="metric-label">Fuel Level</div>
+                            <?php $fuelPct = (float)($vehicle['current_fuel_level'] ?? 80); ?>
+                            <div class="metric-val mono <?= $fuelPct < 25 ? 'text-danger' : ($fuelPct < 50 ? 'text-warning' : 'text-success') ?>">
+                                <?= number_format($fuelPct, 0) ?>%
+                            </div>
+                        </div>
+                        <div class="metric-cell">
+                            <div class="metric-label">Status</div>
+                            <div class="metric-val text-capitalize" style="font-size: 0.85rem; color: #059669;">
+                                <?= esc(str_replace('_', ' ', $vehicle['status'] ?? 'Active')) ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn-driver-outline py-2 flex-grow-1" onclick="document.getElementById('tabBtnVehicle').click();" style="min-height: 40px; font-size: 0.8rem;">
+                            <i class="fa-solid fa-sliders me-1"></i> Vehicle Diagnostics & Toll RFID
+                        </button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+        </section>
+
+        <!-- =========================================================
+             VIEW 2: VEHICLE & SAFETY (Diagnostics & RFID Balances)
+        ========================================================== -->
+        <section id="view-vehicle" class="tab-panel-view">
+
+            <!-- Vehicle Identification -->
+            <?php if ($vehicle): ?>
+                <div class="driver-card">
+                    <div class="driver-card-header">
+                        <span class="card-title-sm"><i class="fa-solid fa-truck-pickup text-primary"></i> Vehicle Specifications</span>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
                             <?= ucfirst($vehicle['status'] ?? 'Active') ?>
                         </span>
                     </div>
 
-                    <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h5 class="fw-bold mb-0 text-white mono"><?= esc($vehicle['plate_number']) ?></h5>
-                            <span class="small text-muted"><?= esc($vehicle['make'] . ' ' . $vehicle['model'] . ' (' . $vehicle['year'] . ')') ?></span>
+                            <h5 class="fw-bold text-dark mb-0 mono"><?= esc($vehicle['plate_number']) ?></h5>
+                            <span class="text-secondary small"><?= esc($vehicle['make'] . ' ' . $vehicle['model'] . ' (' . ($vehicle['year'] ?? date('Y')) . ')') ?></span>
                         </div>
                         <div class="text-end">
-                            <span class="badge bg-primary mono fs-6"><?= esc($vehicle['fuel_type'] ?? 'Diesel') ?></span>
+                            <span class="badge bg-light text-secondary border"><?= esc($vehicle['vehicle_code'] ?? 'UNIT') ?></span>
                         </div>
                     </div>
 
-                    <div class="row g-2 small text-muted">
-                        <div class="col-4 p-2 rounded bg-black bg-opacity-25 text-center">
-                            <span class="d-block text-muted" style="font-size: 0.65rem;">Engine State</span>
-                            <strong class="text-success"><?= esc(ucfirst($vehicle['engine_status'] ?? 'Running')) ?></strong>
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-6 p-2 rounded bg-light border">
+                            <span class="text-muted d-block" style="font-size: 0.65rem;">Engine State</span>
+                            <strong class="text-success"><?= esc(ucfirst($vehicle['engine_status'] ?? 'Good')) ?></strong>
                         </div>
-                        <div class="col-4 p-2 rounded bg-black bg-opacity-25 text-center">
-                            <span class="d-block text-muted" style="font-size: 0.65rem;">Battery</span>
-                            <strong class="text-white mono"><?= esc($vehicle['battery_voltage'] ?? '12.6') ?>V</strong>
+                        <div class="col-6 p-2 rounded bg-light border">
+                            <span class="text-muted d-block" style="font-size: 0.65rem;">Battery Voltage</span>
+                            <strong class="text-dark mono"><?= esc($vehicle['battery_voltage'] ?? '12.6') ?> V</strong>
                         </div>
-                        <div class="col-4 p-2 rounded bg-black bg-opacity-25 text-center">
-                            <span class="d-block text-muted" style="font-size: 0.65rem;">Coolant</span>
-                            <strong class="text-white mono"><?= esc($vehicle['coolant_temp_c'] ?? '85') ?>Â°C</strong>
+                        <div class="col-6 p-2 rounded bg-light border">
+                            <span class="text-muted d-block" style="font-size: 0.65rem;">Coolant Temp</span>
+                            <strong class="text-dark mono"><?= esc($vehicle['coolant_temp_c'] ?? '85') ?> °C</strong>
                         </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-
-        </section>
-
-        <!-- =========================================================
-             VIEW 2: OFFICIAL DRIVER'S TRIP TICKETS (e-DTT)
-        ========================================================== -->
-        <section id="tab-tickets" class="driver-tab-view" role="tabpanel" aria-labelledby="btn-tab-tickets">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="fw-bold mb-0 text-white text-uppercase small">
-                    <i class="fa-solid fa-receipt text-info me-1"></i> Driver's Trip Tickets (<?= count($tripTickets) ?>)
-                </h6>
-                <span class="badge bg-dark border border-secondary text-muted small mono">ADMIN-F-001 rev1</span>
-            </div>
-
-            <?php if (empty($tripTickets)): ?>
-                <div class="mobile-card text-center py-5 text-muted">
-                    <i class="fa-solid fa-ticket fs-1 mb-2 text-secondary opacity-50"></i>
-                    <p class="mb-0">No trip tickets registered under your driver code.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($tripTickets as $tk): ?>
-                    <div class="mobile-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-info mono"><?= esc($tk['ticket_serial_no']) ?></span>
-                            <?php
-                                $tkPill = match($tk['status']) {
-                                    'issued'    => 'bg-warning text-dark',
-                                    'departed'  => 'bg-primary text-white',
-                                    'returned'  => 'bg-info text-white',
-                                    'completed' => 'bg-success text-white',
-                                    default     => 'bg-secondary text-white',
-                                };
-                            ?>
-                            <span class="badge <?= $tkPill ?> px-2 py-1 small">
-                                <?= ucfirst($tk['status']) ?>
-                            </span>
-                        </div>
-
-                        <div class="mb-2">
-                            <div class="small text-muted">Destination:</div>
-                            <strong class="small text-white d-block text-truncate">
-                                <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($tk['authorized_destination']) ?>
-                            </strong>
-                        </div>
-
-                        <div class="bg-black bg-opacity-25 p-2 rounded small text-white-50 mb-3 d-flex justify-content-between mono">
-                            <span>Plate: <strong class="text-white"><?= esc($tk['plate_number']) ?></strong></span>
-                            <span>Distance: <?= number_format((float)$tk['total_distance_km'], 1) ?> km</span>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <a href="<?= base_url('tickets/' . $tk['id']) ?>" class="btn btn-outline-info btn-sm flex-grow-1 py-2">
-                                <i class="fa-solid fa-eye me-1"></i> View Ticket
-                            </a>
-                            <?php if ($tk['status'] === 'returned'): ?>
-                                <button type="button" class="btn btn-success btn-sm flex-grow-1 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#sectionBModal">
-                                    <i class="fa-solid fa-pen-to-square me-1"></i> Section B
-                                </button>
-                            <?php endif; ?>
-                            <a href="<?= base_url('tickets/' . $tk['id'] . '/print') ?>" target="_blank" class="btn btn-outline-secondary btn-sm px-3 py-2" title="Print View">
-                                <i class="fa-solid fa-print"></i>
-                            </a>
+                        <div class="col-6 p-2 rounded bg-light border">
+                            <span class="text-muted d-block" style="font-size: 0.65rem;">Fuel Capacity</span>
+                            <strong class="text-dark mono"><?= esc($vehicle['tank_capacity_l'] ?? '60') ?> L</strong>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </section>
 
-        <!-- =========================================================
-             VIEW 3: FREIGHT & LOGISTICS WAYBILLS
-        ========================================================== -->
-        <section id="tab-waybills" class="driver-tab-view" role="tabpanel" aria-labelledby="btn-tab-waybills">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="fw-bold mb-0 text-white text-uppercase small">
-                    <i class="fa-solid fa-truck-fast text-info me-1"></i> Freight Trips & Waybills (<?= count($trips) ?>)
-                </h6>
-            </div>
-
-            <?php if (empty($trips)): ?>
-                <div class="mobile-card text-center py-5 text-muted">
-                    <i class="fa-solid fa-calendar-check fs-1 mb-2 text-secondary opacity-50"></i>
-                    <p class="mb-0">No active cargo waybills assigned at the moment.</p>
+                    <!-- BLOWBAGETS Pre-Trip Safety Action Button -->
+                    <?php if ($activeTicket): ?>
+                        <a href="<?= base_url('safety/' . $activeTicket['id']) ?>" class="btn-driver-outline py-2 w-100" style="min-height: 42px;">
+                            <i class="fa-solid fa-list-check text-primary me-1"></i> Perform BLOWBAGETS Pre-Trip Inspection
+                        </a>
+                    <?php endif; ?>
                 </div>
-            <?php else: ?>
-                <?php foreach ($trips as $t): ?>
-                    <div class="mobile-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-info mono"><?= esc($t['trip_number']) ?></span>
-                            <span class="badge bg-<?= $t['status'] === 'in_transit' ? 'success' : ($t['status'] === 'completed' ? 'secondary' : 'primary') ?>">
-                                <?= ucfirst(str_replace('_', ' ', $t['status'])) ?>
-                            </span>
+
+                <!-- Tollway RFID Cards (FR-6.1 & FR-6.3) -->
+                <div class="driver-card">
+                    <div class="driver-card-header">
+                        <span class="card-title-sm"><i class="fa-solid fa-id-card-clip text-primary"></i> Tollway RFID Balances</span>
+                        <span class="badge bg-light text-muted border small mono">FR-6.1</span>
+                    </div>
+
+                    <?php if (empty($rfidCards)): ?>
+                        <div class="text-center py-3 text-muted small">
+                            No RFID cards currently linked to vehicle <?= esc($vehicle['plate_number']) ?>.
                         </div>
-
-                        <div class="mb-3">
-                            <div class="route-stop pb-2">
-                                <span class="small text-muted d-block" style="font-size: 0.7rem;">Origin (Pickup)</span>
-                                <strong class="small text-white"><?= esc($t['origin_address']) ?></strong>
-                            </div>
-                            <div class="route-stop dest">
-                                <span class="small text-muted d-block" style="font-size: 0.7rem;">Destination (Delivery)</span>
-                                <strong class="small text-white"><?= esc($t['destination_address']) ?></strong>
-                            </div>
-                        </div>
-
-                        <div class="bg-black bg-opacity-25 p-2 rounded small text-white-50 mb-3 d-flex justify-content-between mono">
-                            <span><strong>Cargo:</strong> <?= esc($t['cargo_type'] ?? 'General') ?></span>
-                            <span><strong>Weight:</strong> <?= number_format($t['cargo_weight_kg'] ?? 0, 0) ?> kg</span>
-                            <span><strong>Dist:</strong> <?= $t['distance_km'] ?? 0 ?> km</span>
-                        </div>
-
-                        <!-- Action buttons based on status -->
-                        <div class="d-grid gap-2">
-                            <?php if ($t['status'] === 'scheduled' || $t['status'] === 'dispatched'): ?>
-                                <form action="<?= base_url('trips/' . $t['id'] . '/status') ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="in_transit">
-                                    <button type="submit" class="btn-mobile-success">
-                                        <i class="fa-solid fa-play me-1"></i> Start Trip (Depart Egress)
-                                    </button>
-                                </form>
-                            <?php elseif ($t['status'] === 'in_transit'): ?>
-                                <button class="btn-mobile-primary" data-bs-toggle="modal" data-bs-target="#completeModal-<?= $t['id'] ?>">
-                                    <i class="fa-solid fa-circle-check me-1"></i> Arrived / Complete Trip
-                                </button>
-
-                                <!-- Complete Trip Modal -->
-                                <div class="modal fade" id="completeModal-<?= $t['id'] ?>" tabindex="-1">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <form action="<?= base_url('trips/' . $t['id'] . '/status') ?>" method="POST">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="status" value="completed">
-                                                <div class="modal-header">
-                                                    <h6 class="modal-title fw-bold text-white">Complete Waybill: <?= esc($t['trip_number']) ?></h6>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Arrival Odometer Reading (KM)</label>
-                                                        <input type="number" step="0.1" name="end_odometer" class="form-control mono" required value="<?= $vehicle['odometer_km'] ?? 0 ?>">
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Confirm Arrival</button>
-                                                </div>
-                                            </form>
+                    <?php else: ?>
+                        <div class="d-flex flex-column gap-2 mb-2">
+                            <?php foreach ($rfidCards as $card): ?>
+                                <?php $isLow = (float)$card['balance'] < (float)($card['low_balance_threshold'] ?? 500); ?>
+                                <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between" style="background: <?= $isLow ? '#fffbeb' : '#f8fafc' ?>; border-color: <?= $isLow ? '#fde68a' : '#e2e8f0' ?> !important;">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong class="text-uppercase text-dark" style="font-size: 0.85rem;">
+                                                <?= esc($card['provider']) ?>
+                                            </strong>
+                                            <?php if ($isLow): ?>
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Low Balance</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="mono small text-muted" style="font-size: 0.72rem;">
+                                            <?= esc($card['card_number']) ?>
                                         </div>
                                     </div>
+                                    <div class="text-end">
+                                        <div class="mono fw-bold fs-6 <?= $isLow ? 'text-warning' : 'text-dark' ?>">
+                                            ₱<?= number_format((float)$card['balance'], 2) ?>
+                                        </div>
+                                        <span class="text-muted" style="font-size: 0.65rem;">Live Balance</span>
+                                    </div>
                                 </div>
-                            <?php else: ?>
-                                <span class="text-center text-muted small py-1"><i class="fa-solid fa-check-double text-success me-1"></i> Completed & Logged</span>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
+
         </section>
 
         <!-- =========================================================
-             VIEW 4: DRIVER PROFILE, COMPLIANCE & SAFETY
+             VIEW 3: FUEL & EXPENSES (Logging & Ledger)
         ========================================================== -->
-        <section id="tab-profile" class="driver-tab-view" role="tabpanel" aria-labelledby="btn-tab-profile">
-            <!-- Driver Credential Card -->
-            <div class="mobile-card">
-                <div class="mobile-card-header">
-                    <span class="small fw-bold text-white text-uppercase">
-                        <i class="fa-solid fa-address-card text-info me-1"></i> Driver License & Compliance
-                    </span>
-                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 small">
-                        VERIFIED LTO
-                    </span>
-                </div>
+        <section id="view-expenses" class="tab-panel-view">
 
-                <div class="mb-3">
-                    <span class="text-muted small d-block">Official Driver Name:</span>
-                    <h6 class="fw-bold text-white mb-0"><?= esc(($driver['first_name'] ?? '') . ' ' . ($driver['last_name'] ?? '')) ?></h6>
-                    <span class="mono text-info small"><?= esc($driver['driver_code'] ?? 'DRV-101') ?></span>
-                </div>
-
-                <div class="row g-2 mb-3 small">
-                    <div class="col-6">
-                        <span class="text-muted d-block">License Number:</span>
-                        <strong class="mono text-white"><?= esc($driver['license_number'] ?? 'N01-19-082914') ?></strong>
+            <!-- Quick Log Refuel Action Button -->
+            <div class="driver-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Fuel & Trip Expenses</h6>
+                        <span class="small text-muted">Official receipts and petroleum logs</span>
                     </div>
-                    <div class="col-6">
-                        <span class="text-muted d-block">License Expiry:</span>
-                        <strong class="mono text-white"><?= esc($driver['license_expiry'] ?? 'Valid') ?></strong>
-                    </div>
-                    <div class="col-12 mt-2">
-                        <span class="text-muted d-block">License Classification:</span>
-                        <div class="p-2 rounded bg-black bg-opacity-25 text-white-50">
-                            <?= esc($driver['license_type'] ?? 'Professional Driver') ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-top border-secondary border-opacity-25 pt-3">
-                    <span class="text-muted small d-block mb-1">Emergency Contact:</span>
-                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-black bg-opacity-25">
-                        <span class="small text-white"><?= esc($driver['emergency_contact'] ?? 'Motorpool Dispatch Desk') ?></span>
-                        <a href="tel:<?= esc($driver['phone'] ?? '+639171112233') ?>" class="btn btn-sm btn-outline-info">
-                            <i class="fa-solid fa-phone"></i>
-                        </a>
-                    </div>
+                    <button type="button" class="btn btn-success btn-sm px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#fuelModal">
+                        <i class="fa-solid fa-plus me-1"></i> Log Fuel
+                    </button>
                 </div>
             </div>
 
             <!-- Recent Fuel Purchases -->
-            <?php if (!empty($recentFuelLogs)): ?>
-                <div class="mobile-card">
-                    <div class="mobile-card-header">
-                        <span class="small fw-bold text-white text-uppercase">
-                            <i class="fa-solid fa-gas-pump text-success me-1"></i> Recent Refuels (<?= count($recentFuelLogs) ?>)
-                        </span>
-                    </div>
-                    <?php foreach ($recentFuelLogs as $fl): ?>
-                        <div class="p-2 mb-2 rounded bg-black bg-opacity-25 small d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold text-white d-block"><?= esc($fl['fuel_station']) ?></span>
-                                <span class="mono text-muted" style="font-size: 0.7rem;"><?= esc($fl['fuel_date']) ?> &bull; <?= number_format($fl['liters'], 1) ?> L</span>
-                            </div>
-                            <div class="text-end mono">
-                                <span class="fw-bold text-success">â‚±<?= number_format($fl['total_cost'], 2) ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+            <div class="driver-card">
+                <div class="driver-card-header">
+                    <span class="card-title-sm"><i class="fa-solid fa-receipt text-primary"></i> Petroleum Logs (<?= count($recentFuelLogs) ?>)</span>
+                    <span class="badge bg-light text-muted border small">Section B</span>
                 </div>
-            <?php endif; ?>
 
-            <!-- Emergency Dispatch Hotline Directory -->
-            <div class="mobile-card">
-                <div class="mobile-card-header">
-                    <span class="small fw-bold text-white text-uppercase">
-                        <i class="fa-solid fa-headset text-warning me-1"></i> Motorpool Emergency Directory
-                    </span>
+                <?php if (empty($recentFuelLogs)): ?>
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fa-solid fa-gas-pump fs-2 text-secondary opacity-50 mb-2"></i>
+                        <p class="mb-0">No fuel purchase receipts logged recently.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="d-flex flex-column gap-2">
+                        <?php foreach ($recentFuelLogs as $fl): ?>
+                            <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
+                                <div>
+                                    <strong class="text-dark d-block"><?= esc($fl['fuel_station']) ?></strong>
+                                    <span class="text-muted mono" style="font-size: 0.7rem;">
+                                        <?= date('M d, Y', strtotime($fl['fuel_date'])) ?> &bull; <?= number_format($fl['liters'], 1) ?> Liters
+                                    </span>
+                                </div>
+                                <div class="text-end mono">
+                                    <strong class="text-dark d-block">₱<?= number_format($fl['total_cost'], 2) ?></strong>
+                                    <span class="text-muted" style="font-size: 0.65rem;">Receipt #<?= esc(substr($fl['receipt_no'] ?? 'REC', -7)) ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        </section>
+
+        <!-- =========================================================
+             VIEW 4: HISTORY & HELP (Archives & Emergency Contacts)
+        ========================================================== -->
+        <section id="view-history" class="tab-panel-view">
+
+            <!-- Driver License Card -->
+            <div class="driver-card">
+                <div class="driver-card-header">
+                    <span class="card-title-sm"><i class="fa-solid fa-address-card text-primary"></i> Driver Credentials</span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">Verified</span>
+                </div>
+                <div class="row g-2 small">
+                    <div class="col-6">
+                        <span class="text-muted d-block" style="font-size: 0.65rem;">License Number</span>
+                        <strong class="mono text-dark"><?= esc($driver['license_number'] ?? 'N01-19-082914') ?></strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted d-block" style="font-size: 0.65rem;">License Expiry</span>
+                        <strong class="mono text-dark"><?= esc($driver['license_expiry'] ?? 'Valid') ?></strong>
+                    </div>
+                    <div class="col-12 mt-1">
+                        <span class="text-muted d-block" style="font-size: 0.65rem;">License Type</span>
+                        <span class="text-dark"><?= esc($driver['license_type'] ?? 'Professional Driver') ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trip Ticket Archives -->
+            <div class="driver-card">
+                <div class="driver-card-header">
+                    <span class="card-title-sm"><i class="fa-solid fa-ticket text-primary"></i> Assigned Trip Tickets (<?= count($tripTickets) ?>)</span>
+                    <span class="badge bg-light text-muted border small mono">ADMIN-F-001</span>
+                </div>
+
+                <?php if (empty($tripTickets)): ?>
+                    <div class="text-center py-4 text-muted small">
+                        No trip tickets found in your driver profile.
+                    </div>
+                <?php else: ?>
+                    <div class="d-flex flex-column gap-2">
+                        <?php foreach ($tripTickets as $tk): ?>
+                            <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
+                                <div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <strong class="mono text-primary"><?= esc($tk['ticket_serial_no']) ?></strong>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size: 0.65rem;">
+                                            <?= ucfirst($tk['status']) ?>
+                                        </span>
+                                    </div>
+                                    <span class="text-muted text-truncate d-block" style="max-width: 190px; font-size: 0.7rem;">
+                                        <?= esc($tk['authorized_destination']) ?>
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="<?= base_url('tickets/' . $tk['id']) ?>" class="btn btn-sm btn-light border py-1 px-2" title="View">
+                                        <i class="fa-solid fa-eye text-secondary"></i>
+                                    </a>
+                                    <a href="<?= base_url('tickets/' . $tk['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-light border py-1 px-2" title="Print">
+                                        <i class="fa-solid fa-print text-secondary"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Emergency Motorpool Contacts -->
+            <div class="driver-card">
+                <div class="driver-card-header">
+                    <span class="card-title-sm"><i class="fa-solid fa-headset text-primary"></i> Motorpool Emergency Contacts</span>
                 </div>
                 <div class="d-flex flex-column gap-2 small">
-                    <a href="tel:+639185550200" class="p-2 rounded bg-black bg-opacity-25 text-decoration-none text-white d-flex justify-content-between align-items-center">
+                    <a href="tel:+639185550200" class="p-2 rounded bg-light border text-decoration-none text-dark d-flex justify-content-between align-items-center">
                         <div>
                             <strong class="d-block">Motorpool Dispatch Console</strong>
-                            <span class="text-muted" style="font-size: 0.72rem;">Engr. Roberto D. Tan</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">Engr. Roberto D. Tan</span>
                         </div>
-                        <span class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-phone me-1"></i> Call</span>
+                        <span class="btn btn-sm btn-outline-primary py-1 px-2"><i class="fa-solid fa-phone me-1"></i> Call</span>
                     </a>
-                    <a href="tel:+639185550400" class="p-2 rounded bg-black bg-opacity-25 text-decoration-none text-white d-flex justify-content-between align-items-center">
+                    <a href="tel:+639185550400" class="p-2 rounded bg-light border text-decoration-none text-dark d-flex justify-content-between align-items-center">
                         <div>
                             <strong class="d-block">Compound Security Gate #1</strong>
-                            <span class="text-muted" style="font-size: 0.72rem;">Sgt. Danilo Ramos</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">Sgt. Danilo Ramos</span>
                         </div>
-                        <span class="btn btn-sm btn-outline-info"><i class="fa-solid fa-phone me-1"></i> Call</span>
+                        <span class="btn btn-sm btn-outline-secondary py-1 px-2"><i class="fa-solid fa-phone me-1"></i> Call</span>
                     </a>
                 </div>
             </div>
+
         </section>
 
     </main>
 
     <!-- -------------------------------------------------------------
-         FULLSCREEN GATE PASS QR MODAL (For Guard Scanner)
+         BOTTOM ERGONOMIC THUMB NAVIGATION DOCK
     -------------------------------------------------------------- -->
+    <nav class="bottom-thumb-dock" role="navigation" aria-label="Bottom Navigation">
+        <button type="button" class="thumb-nav-btn active" data-view="view-active-trip" id="dockBtnTrip">
+            <i class="fa-solid fa-car"></i>
+            <span>Active Trip</span>
+            <?php if ($activeTicket && in_array($activeTicket['status'], ['issued', 'departed', 'returned'])): ?>
+                <span class="nav-alert-indicator"></span>
+            <?php endif; ?>
+        </button>
+
+        <button type="button" class="thumb-nav-btn" data-view="view-vehicle" id="dockBtnVehicle">
+            <i class="fa-solid fa-truck-front"></i>
+            <span>Vehicle</span>
+        </button>
+
+        <button type="button" class="thumb-nav-btn" data-view="view-expenses" id="dockBtnExpenses">
+            <i class="fa-solid fa-gas-pump"></i>
+            <span>Fuel & Tolls</span>
+        </button>
+
+        <button type="button" class="thumb-nav-btn" data-view="view-history" id="dockBtnHistory">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>History</span>
+        </button>
+    </nav>
+
+    <!-- =============================================================
+         MODALS (Clean Minimalist Ergonomic Design)
+    ============================================================== -->
+
+    <!-- 1. FULLSCREEN GATE PASS QR MODAL (Scanner Ready) -->
     <div class="modal fade" id="qrPassModal" tabindex="-1" aria-labelledby="qrPassModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background: #ffffff; color: #0b1324;">
-                <div class="modal-header border-0 pb-0 justify-content-between align-items-center">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
                     <div>
-                        <span class="badge bg-primary mono text-uppercase">ADMIN-F-001 rev1</span>
-                        <h6 class="modal-title fw-bold text-dark mt-1" id="qrPassModalLabel">Official Gate Security Pass</h6>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono">ADMIN-F-001 rev1</span>
+                        <h6 class="modal-title fw-bold text-dark mt-1" id="qrPassModalLabel">Gate Security Clearance Pass</h6>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="small text-muted mb-2">Present this digital token to the Compound Guard Checkpoint Scanner.</p>
-
-                    <!-- High Resolution QR Canvas -->
-                    <div class="p-3 bg-white border rounded-3 d-inline-block shadow-sm my-2" style="width: 240px; height: 240px;">
+                    <p class="text-muted small mb-3">Present this code directly to Compound Gate Guard Checkpoint Scanner.</p>
+                    
+                    <div class="p-3 bg-white border rounded-3 d-inline-block shadow-sm my-1" style="width: 240px; height: 240px;">
                         <div id="modalQrCanvas" class="d-flex align-items-center justify-content-center h-100"></div>
                     </div>
 
@@ -1190,8 +1156,9 @@
                     <div class="small text-muted mono">
                         Unit: <strong class="text-dark"><?= esc($vehicle['plate_number'] ?? 'N/A') ?></strong> &bull; Driver: <strong class="text-dark"><?= esc($driver['driver_code'] ?? 'DRV-101') ?></strong>
                     </div>
-                    <div class="alert alert-info border-0 p-2 mt-3 mb-0 small text-start">
-                        <i class="fa-solid fa-shield-halved text-success me-1"></i> HMAC-SHA256 Cryptographic Pass Token. Valid for official motorpool egress and ingress verification.
+
+                    <div class="p-2 mt-3 bg-light rounded text-muted small" style="font-size: 0.72rem;">
+                        <i class="fa-solid fa-shield-check text-success me-1"></i> HMAC-SHA256 Cryptographic Gate Clearance Token
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -1201,88 +1168,46 @@
         </div>
     </div>
 
-    <!-- -------------------------------------------------------------
-         SECTION B POST-TRIP EXECUTION MODAL (ADMIN-F-001 rev1)
-    -------------------------------------------------------------- -->
+    <!-- 2. PASSENGER DELAY LOGGER MODAL (FR-4.2) -->
     <?php if ($activeTicket): ?>
-    <div class="modal fade" id="sectionBModal" tabindex="-1" aria-labelledby="sectionBModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <form action="<?= base_url('tickets/' . $activeTicket['id'] . '/update') ?>" method="POST" id="sectionBForm">
-                    <?= csrf_field() ?>
-                    <div class="modal-header">
+    <div class="modal fade" id="delayModal" tabindex="-1" aria-labelledby="delayModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form action="<?= base_url('tickets/' . $activeTicket['id'] . '/delay') ?>" method="POST">
+                    <?= !is_cli() ? csrf_field() : '' ?>
+                    <div class="modal-header border-0 pb-0">
                         <div>
-                            <span class="badge bg-info text-white mono mb-1">ADMIN-F-001 rev1</span>
-                            <h6 class="modal-title fw-bold text-white" id="sectionBModalLabel">Section B: Post-Trip & Fuel Accounting Report</h6>
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">FR-4.2 Protocol</span>
+                            <h6 class="modal-title fw-bold text-dark mt-1" id="delayModalLabel">Log Passenger Pick-up Delay</h6>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-3">
-                        <p class="small text-muted mb-3">Enforces official government post-trip audit formula and digital driver certification.</p>
+                        <p class="text-muted small mb-3">
+                            Delays of 15 minutes or longer automatically notify Motorpool Dispatch to adjust fleet schedules.
+                        </p>
 
-                        <!-- Trip Odometers -->
-                        <div class="fw-bold text-info small text-uppercase mb-2 pb-1 border-bottom border-secondary border-opacity-25">
-                            <i class="fa-solid fa-gauge me-1"></i> 1. Odometer Readings
+                        <label class="form-label small fw-semibold text-secondary">Delay Duration</label>
+                        <div class="chip-group" id="delayMinutesChips">
+                            <button type="button" class="chip-option" data-val="10">+10 mins</button>
+                            <button type="button" class="chip-option selected" data-val="15">+15 mins (Standard)</button>
+                            <button type="button" class="chip-option" data-val="30">+30 mins</button>
+                            <button type="button" class="chip-option" data-val="45">+45 mins</button>
                         </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Start Odometer (KM)</label>
-                                <input type="number" step="0.1" name="start_odometer" id="m_start_odo" class="form-control mono" value="<?= (float)($activeTicket['start_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Return Odometer (KM)</label>
-                                <input type="number" step="0.1" name="return_odometer" id="m_return_odo" class="form-control mono" value="<?= (float)($activeTicket['return_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="p-2 rounded bg-black bg-opacity-25 d-flex justify-content-between align-items-center small">
-                                    <span class="text-muted">Total Distance Travelled:</span>
-                                    <span class="mono fw-bold fs-6 text-info" id="m_calcDistance"><?= number_format((float)($activeTicket['total_distance_km'] ?? 0), 1) ?> KM</span>
-                                </div>
-                            </div>
-                        </div>
+                        <input type="hidden" name="delay_minutes" id="inputDelayMinutes" value="15">
 
-                        <!-- Fuel Accounting Formula -->
-                        <div class="fw-bold text-info small text-uppercase mb-2 pb-1 border-bottom border-secondary border-opacity-25">
-                            <i class="fa-solid fa-gas-pump me-1"></i> 2. Fuel Balance Formula
+                        <label class="form-label small fw-semibold text-secondary">Reason / Delay Category</label>
+                        <div class="chip-group" id="delayReasonChips">
+                            <button type="button" class="chip-option selected" data-reason="Passengers still in conference/meeting">In Meeting</button>
+                            <button type="button" class="chip-option" data-reason="Awaiting security clearance / briefing">Security Hold</button>
+                            <button type="button" class="chip-option" data-reason="Lobby / Building departure hold">Lobby Wait</button>
+                            <button type="button" class="chip-option" data-reason="Heavy road congestion en route to pick-up">Traffic Jam</button>
                         </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Start Balance (L)</label>
-                                <input type="number" step="0.01" name="fuel_balance_start_liters" id="m_fuel_start" class="form-control mono" value="<?= (float)($activeTicket['fuel_balance_start_liters'] ?? 40) ?>" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Stock Issued (L)</label>
-                                <input type="number" step="0.01" name="fuel_issued_stock_liters" id="m_fuel_issued" class="form-control mono" value="<?= (float)($activeTicket['fuel_issued_stock_liters'] ?? 0) ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Purchased on Trip (L)</label>
-                                <input type="number" step="0.01" name="fuel_purchased_liters" id="m_fuel_purchased" class="form-control mono" value="<?= (float)($activeTicket['fuel_purchased_liters'] ?? 0) ?>">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Total Fuel Used (L)</label>
-                                <input type="number" step="0.01" name="fuel_used_liters" id="m_fuel_used" class="form-control mono" value="<?= (float)($activeTicket['fuel_used_liters'] ?? 0) ?>" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="p-2 rounded bg-black bg-opacity-25 d-flex justify-content-between align-items-center small">
-                                    <span class="text-muted">Calculated Ending Fuel Balance:</span>
-                                    <span class="mono fw-bold text-success" id="m_calcEndFuel"><?= number_format((float)($activeTicket['fuel_balance_end_liters'] ?? 40), 2) ?> Liters</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Driver Certification Checkbox -->
-                        <div class="p-3 rounded bg-black bg-opacity-25 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="driver_certified" value="1" id="m_driverCert" <?= !empty($activeTicket['driver_certified']) ? 'checked' : '' ?> required>
-                                <label class="form-check-label small text-white" for="m_driverCert">
-                                    <strong>I hereby certify on official honor</strong> that the above trip route, distance, and fuel consumption are true and correct as accomplished.
-                                </label>
-                            </div>
-                        </div>
+                        <input type="text" name="reason" id="inputDelayReason" class="form-control form-control-sm" value="Passengers still in conference/meeting" placeholder="Or type custom reason..." required>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Submit Section B Report</button>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning fw-bold text-dark">Submit Delay Log</button>
                     </div>
                 </form>
             </div>
@@ -1290,48 +1215,46 @@
     </div>
     <?php endif; ?>
 
-    <!-- -------------------------------------------------------------
-         REFUEL & RECEIPT LOGGING MODAL
-    -------------------------------------------------------------- -->
+    <!-- 3. REFUEL & RECEIPT LOGGING MODAL -->
     <div class="modal fade" id="fuelModal" tabindex="-1" aria-labelledby="fuelModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <form action="<?= base_url('api/v1/driver/fuel') ?>" method="POST" enctype="multipart/form-data">
-                    <?= csrf_field() ?>
+                    <?= !is_cli() ? csrf_field() : '' ?>
                     <input type="hidden" name="vehicle_id" value="<?= $vehicle['id'] ?? 1 ?>">
                     <input type="hidden" name="driver_id" value="<?= $driver['id'] ?? 1 ?>">
-                    <div class="modal-header">
-                        <h6 class="modal-title fw-bold text-white" id="fuelModalLabel">
-                            <i class="fa-solid fa-gas-pump text-success me-2"></i> Log Fuel & Receipt
+                    <div class="modal-header border-0 pb-0">
+                        <h6 class="modal-title fw-bold text-dark" id="fuelModalLabel">
+                            <i class="fa-solid fa-gas-pump text-success me-2"></i> Log Official Gas Station Refuel
                         </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3">
                         <div class="mb-3">
-                            <label class="form-label">Capture Photo of Receipt</label>
-                            <input type="file" name="receipt_image" accept="image/*" class="form-control" capture="environment">
+                            <label class="form-label small fw-semibold text-secondary">Gas Station / Vendor</label>
+                            <input type="text" name="fuel_station" class="form-control" placeholder="e.g. Petron Philam, Shell Visayas Ave" required>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label class="form-label">Volume (Liters)</label>
+                                <label class="form-label small fw-semibold text-secondary">Volume (Liters)</label>
                                 <input type="number" step="0.01" name="liters" class="form-control mono" required placeholder="0.00">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Total Cost (â‚±)</label>
+                                <label class="form-label small fw-semibold text-secondary">Total Cost (₱)</label>
                                 <input type="number" step="0.01" name="total_cost" class="form-control mono" required placeholder="0.00">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Current Odometer (KM)</label>
+                            <label class="form-label small fw-semibold text-secondary">Current Odometer (KM)</label>
                             <input type="number" step="0.1" name="odometer_km" class="form-control mono" value="<?= $vehicle['odometer_km'] ?? 0 ?>" required>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Gas Station</label>
-                            <input type="text" name="fuel_station" class="form-control" placeholder="e.g. Petron Philam, Shell Visayas Ave" required>
+                            <label class="form-label small fw-semibold text-secondary">Receipt Photo (Optional)</label>
+                            <input type="file" name="receipt_image" accept="image/*" class="form-control form-control-sm" capture="environment">
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-success fw-bold">Submit Fuel Log</button>
                     </div>
                 </form>
@@ -1339,215 +1262,337 @@
         </div>
     </div>
 
-    <!-- -------------------------------------------------------------
-         REPORT INCIDENT / EMERGENCY SOS MODAL
-    -------------------------------------------------------------- -->
+    <!-- 4. REPORT INCIDENT / EMERGENCY SOS MODAL (FR-4.3) -->
     <div class="modal fade" id="incidentModal" tabindex="-1" aria-labelledby="incidentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <form action="<?= base_url('driver/incident') ?>" method="POST">
-                    <?= csrf_field() ?>
+                    <?= !is_cli() ? csrf_field() : '' ?>
                     <input type="hidden" name="vehicle_id" value="<?= $vehicle['id'] ?? 1 ?>">
                     <input type="hidden" name="driver_id" value="<?= $driver['id'] ?? 1 ?>">
-                    <input type="hidden" name="trip_id" value="<?= $activeTicket['id'] ?? ($trips[0]['id'] ?? '') ?>">
-                    <div class="modal-header">
+                    <input type="hidden" name="trip_id" value="<?= $activeTicket['id'] ?? '' ?>">
+                    <div class="modal-header border-0 pb-0">
                         <h6 class="modal-title fw-bold text-danger" id="incidentModalLabel">
-                            <i class="fa-solid fa-triangle-exclamation me-2"></i> Report Road Incident / SOS
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i> Report Breakdown / Emergency SOS
                         </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3">
+                        <div class="alert alert-danger border-0 p-2 small mb-3" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-circle-info me-1"></i> Reporting a breakdown automatically sets the vehicle to <strong>Disabled/Breakdown</strong> and routes a Pre-Repair Inspection Report (PIR) to the mechanic queue.
+                        </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select name="type" class="form-select" required>
-                                <option value="Mechanical Breakdown">Mechanical Breakdown</option>
+                            <label class="form-label small fw-semibold text-secondary">Incident Category</label>
+                            <select name="type" class="form-select form-select-sm" required>
+                                <option value="Mechanical Breakdown">Mechanical Breakdown (Engine / Transmission)</option>
                                 <option value="Tire Puncture / Flat">Tire Puncture / Flat</option>
-                                <option value="Accident / Collision">Minor Collision / Accident</option>
-                                <option value="Traffic Gridlock / Delay">Severe Traffic / Road Closure</option>
+                                <option value="Brake Malfunction">Brake Malfunction</option>
+                                <option value="Electrical Failure">Electrical / Battery Failure</option>
+                                <option value="Accident / Collision">Accident / Collision</option>
                                 <option value="Medical Emergency">Driver Medical Issue</option>
                             </select>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Severity Level</label>
-                            <select name="severity" class="form-select" required>
-                                <option value="minor">Minor (Vehicle moving, slight delay)</option>
-                                <option value="moderate" selected>Moderate (Requires roadside assistance)</option>
-                                <option value="severe">Severe (Immobilized / Towing required)</option>
+                            <label class="form-label small fw-semibold text-secondary">Severity Level</label>
+                            <select name="severity" class="form-select form-select-sm" required>
+                                <option value="minor">Minor (Vehicle operable, slight delay)</option>
+                                <option value="moderate" selected>Moderate (Roadside assistance required)</option>
+                                <option value="severe">Severe (Vehicle immobilized / Towing required)</option>
                                 <option value="critical">Critical (Immediate Emergency SOS)</option>
                             </select>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Location / Landmark</label>
-                            <div class="input-group">
+                            <label class="form-label small fw-semibold text-secondary">Location / Landmark</label>
+                            <div class="input-group input-group-sm">
                                 <input type="text" name="location" id="incidentLocationInput" class="form-control" placeholder="e.g. EDSA Northbound near Quezon Ave" required>
-                                <button class="btn btn-outline-info" type="button" id="btnGetGps" title="Detect GPS Location">
+                                <button class="btn btn-outline-primary" type="button" id="btnGetGps" title="Detect GPS Location">
                                     <i class="fa-solid fa-location-crosshairs"></i>
                                 </button>
                             </div>
                         </div>
+
                         <div class="mb-2">
-                            <label class="form-label">Brief Description</label>
-                            <textarea name="description" rows="3" class="form-control" placeholder="Describe the situation and immediate assistance needed..." required></textarea>
+                            <label class="form-label small fw-semibold text-secondary">Description & Assistance Needed</label>
+                            <textarea name="description" rows="3" class="form-control form-control-sm" placeholder="Provide details of the vehicle condition and assistance needed..." required></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn-mobile-danger">
-                            <i class="fa-solid fa-paper-plane me-1"></i> Transmit Alert to Dispatch
-                        </button>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger fw-bold">Transmit Alert to Dispatch</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- -------------------------------------------------------------
-         DUTY STATUS MODAL
-    -------------------------------------------------------------- -->
-    <div class="modal fade" id="dutyStatusModal" tabindex="-1">
+    <!-- 5. DUTY STATUS MODAL -->
+    <div class="modal fade" id="dutyModal" tabindex="-1" aria-labelledby="dutyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <form action="<?= base_url('driver/status') ?>" method="POST">
-                    <?= csrf_field() ?>
+                    <?= !is_cli() ? csrf_field() : '' ?>
                     <input type="hidden" name="driver_id" value="<?= $driver['id'] ?? 1 ?>">
-                    <div class="modal-header">
-                        <h6 class="modal-title fw-bold text-white">Update Duty Status</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <div class="modal-header border-0 pb-0">
+                        <h6 class="modal-title fw-bold text-dark" id="dutyModalLabel">Update Duty Status</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3">
-                        <div class="mb-3">
-                            <label class="form-label">Select Current Status</label>
-                            <select name="status" class="form-select">
-                                <option value="available" <?= ($driver['status'] ?? '') === 'available' ? 'selected' : '' ?>>Available / Ready for Dispatch</option>
-                                <option value="on_trip" <?= ($driver['status'] ?? '') === 'on_trip' ? 'selected' : '' ?>>On Trip / In Transit</option>
-                                <option value="off_duty" <?= ($driver['status'] ?? '') === 'off_duty' ? 'selected' : '' ?>>Off Duty / Rest Period</option>
-                            </select>
+                        <p class="text-muted small mb-3">Select your operational status for dispatch availability:</p>
+
+                        <div class="d-flex flex-column gap-2">
+                            <label class="p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" style="background: #f8fafc;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="status" value="available" <?= ($driver['status'] ?? '') === 'available' ? 'checked' : '' ?> class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="text-success d-block small">Available</strong>
+                                        <span class="text-muted" style="font-size: 0.72rem;">On standby and ready for trip assignment</span>
+                                    </div>
+                                </div>
+                                <span class="status-dot" style="background: #059669; width: 10px; height: 10px;"></span>
+                            </label>
+
+                            <label class="p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" style="background: #f8fafc;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="status" value="on_trip" <?= ($driver['status'] ?? '') === 'on_trip' ? 'checked' : '' ?> class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="text-warning d-block small">On Trip / In Transit</strong>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Currently deployed on active mission</span>
+                                    </div>
+                                </div>
+                                <span class="status-dot" style="background: #d97706; width: 10px; height: 10px;"></span>
+                            </label>
+
+                            <label class="p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" style="background: #f8fafc;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="status" value="off_duty" <?= ($driver['status'] ?? '') === 'off_duty' ? 'checked' : '' ?> class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="text-secondary d-block small">Off Duty</strong>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Shift ended or mandatory rest period</span>
+                                    </div>
+                                </div>
+                                <span class="status-dot" style="background: #94a3b8; width: 10px; height: 10px;"></span>
+                            </label>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update Status</button>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Update Status</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- -------------------------------------------------------------
-         MOBILE BOTTOM NAVIGATION DOCK (Thumb Ergonomics)
-    -------------------------------------------------------------- -->
-    <nav class="mobile-bottom-dock" role="navigation" aria-label="Bottom Navigation Dock">
-        <button type="button" class="dock-nav-item active" data-target="tab-active-duty" aria-label="Duty Home Tab">
-            <i class="fa-solid fa-house-chimney"></i>
-            <span>Duty</span>
-        </button>
+    <!-- 6. SECTION B POST-TRIP EXECUTION MODAL (ADMIN-F-001 rev1) -->
+    <?php if ($activeTicket): ?>
+    <div class="modal fade" id="sectionBModal" tabindex="-1" aria-labelledby="sectionBModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <form action="<?= base_url('tickets/' . $activeTicket['id'] . '/update') ?>" method="POST" id="sectionBForm">
+                    <?= !is_cli() ? csrf_field() : '' ?>
+                    <div class="modal-header border-0 pb-0">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono">ADMIN-F-001 rev1</span>
+                            <h6 class="modal-title fw-bold text-dark mt-1" id="sectionBModalLabel">Section B: Post-Trip & Fuel Accounting Report</h6>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <p class="text-muted small mb-3">
+                            Official post-trip audit formula and digital driver certification for <?= esc($activeTicket['ticket_serial_no']) ?>.
+                        </p>
 
-        <button type="button" class="dock-nav-item" data-target="tab-tickets" aria-label="Trip Tickets Tab">
-            <?php if (!empty($activeTicket)): ?>
-                <span class="dock-badge"></span>
-            <?php endif; ?>
-            <i class="fa-solid fa-ticket"></i>
-            <span>Tickets</span>
-        </button>
+                        <!-- Trip Odometers -->
+                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
+                            <i class="fa-solid fa-gauge text-primary me-1"></i> 1. Odometer Readings
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Start Odometer (KM)</label>
+                                <input type="number" step="0.1" name="start_odometer" id="m_start_odo" class="form-control mono" value="<?= (float)($activeTicket['start_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Return Odometer (KM)</label>
+                                <input type="number" step="0.1" name="return_odometer" id="m_return_odo" class="form-control mono" value="<?= (float)($activeTicket['return_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
+                                    <span class="text-muted">Total Distance Travelled:</span>
+                                    <strong class="mono text-primary fs-6" id="m_calcDistance"><?= number_format((float)($activeTicket['total_distance_km'] ?? 0), 1) ?> KM</strong>
+                                </div>
+                            </div>
+                        </div>
 
-        <button type="button" class="dock-nav-item" data-target="tab-waybills" aria-label="Freight Waybills Tab">
-            <i class="fa-solid fa-truck-ramp-box"></i>
-            <span>Waybills</span>
-        </button>
+                        <!-- Fuel Accounting Formula -->
+                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
+                            <i class="fa-solid fa-gas-pump text-primary me-1"></i> 2. Fuel Balance Formula
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Start Balance (L)</label>
+                                <input type="number" step="0.01" name="fuel_balance_start_liters" id="m_fuel_start" class="form-control mono" value="<?= (float)($activeTicket['fuel_balance_start_liters'] ?? 40) ?>" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Stock Issued (L)</label>
+                                <input type="number" step="0.01" name="fuel_issued_stock_liters" id="m_fuel_issued" class="form-control mono" value="<?= (float)($activeTicket['fuel_issued_stock_liters'] ?? 0) ?>">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Purchased on Trip (L)</label>
+                                <input type="number" step="0.01" name="fuel_purchased_liters" id="m_fuel_purchased" class="form-control mono" value="<?= (float)($activeTicket['fuel_purchased_liters'] ?? 0) ?>">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Total Fuel Used (L)</label>
+                                <input type="number" step="0.01" name="fuel_used_liters" id="m_fuel_used" class="form-control mono" value="<?= (float)($activeTicket['fuel_used_liters'] ?? 0) ?>" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
+                                    <span class="text-muted">Calculated Ending Balance:</span>
+                                    <strong class="mono text-success" id="m_calcEndFuel"><?= number_format((float)($activeTicket['fuel_balance_end_liters'] ?? 40), 2) ?> Liters</strong>
+                                </div>
+                            </div>
+                        </div>
 
-        <button type="button" class="dock-nav-item" data-bs-toggle="modal" data-bs-target="#fuelModal" aria-label="Refuel Action">
-            <i class="fa-solid fa-gas-pump text-success"></i>
-            <span>Refuel</span>
-        </button>
+                        <!-- Toll Expense Capture (FR-4.1 & FR-6.2) -->
+                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
+                            <i class="fa-solid fa-road text-primary me-1"></i> 3. Tollways & Expenses
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Toll Amount (₱)</label>
+                                <input type="number" step="0.01" name="toll_expense" class="form-control mono" value="<?= (float)($activeTicket['toll_expense'] ?? 0) ?>" placeholder="0.00">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary">Toll Provider / Payment</label>
+                                <select name="toll_provider" class="form-select form-select-sm">
+                                    <option value="">None / No Toll</option>
+                                    <option value="autosweep" <?= ($activeTicket['toll_provider'] ?? '') === 'autosweep' ? 'selected' : '' ?>>AutoSweep (SLEX/Skyway)</option>
+                                    <option value="easytrip" <?= ($activeTicket['toll_provider'] ?? '') === 'easytrip' ? 'selected' : '' ?>>EasyTrip (NLEX/SCTEX)</option>
+                                    <option value="cash" <?= ($activeTicket['toll_provider'] ?? '') === 'cash' ? 'selected' : '' ?>>Cash Reimbursable</option>
+                                </select>
+                            </div>
+                        </div>
 
-        <button type="button" class="dock-nav-item" data-target="tab-profile" aria-label="Driver Profile Tab">
-            <i class="fa-solid fa-id-card"></i>
-            <span>Profile</span>
-        </button>
-    </nav>
+                        <!-- Driver Certification Checkbox -->
+                        <div class="p-3 rounded bg-light border mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="driver_certified" value="1" id="m_driverCert" <?= !empty($activeTicket['driver_certified']) ? 'checked' : '' ?> required>
+                                <label class="form-check-label small text-dark" for="m_driverCert">
+                                    <strong>I hereby certify on official honor</strong> that the above trip route, distance, and fuel consumption are true and correct as accomplished.
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Submit Section B</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Interactive Client Scripts -->
+    <!-- Client Scripts for Tabs, QR Code & Forms -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Tab Switching Engine
-        const tabButtons = document.querySelectorAll('.dock-nav-item[data-target], .segmented-tab[data-target]');
-        const tabViews   = document.querySelectorAll('.driver-tab-view');
+        // 1. Tab & View Switcher Engine
+        const segButtons = document.querySelectorAll('.segmented-item[data-view]');
+        const dockButtons = document.querySelectorAll('.thumb-nav-btn[data-view]');
+        const tabViews = document.querySelectorAll('.tab-panel-view');
 
-        function switchTab(targetId) {
+        function switchView(targetViewId) {
             tabViews.forEach(v => {
-                if (v.id === targetId) {
+                if (v.id === targetViewId) {
                     v.classList.add('active');
                 } else {
                     v.classList.remove('active');
                 }
             });
 
-            // Update bottom dock active state
-            document.querySelectorAll('.dock-nav-item[data-target]').forEach(b => {
-                if (b.getAttribute('data-target') === targetId) {
-                    b.classList.add('active');
+            segButtons.forEach(btn => {
+                if (btn.getAttribute('data-view') === targetViewId) {
+                    btn.classList.add('active');
                 } else {
-                    b.classList.remove('active');
+                    btn.classList.remove('active');
                 }
             });
 
-            // Update segmented top tabs active state
-            document.querySelectorAll('.segmented-tab[data-target]').forEach(b => {
-                if (b.getAttribute('data-target') === targetId) {
-                    b.classList.add('active');
-                    b.setAttribute('aria-selected', 'true');
+            dockButtons.forEach(btn => {
+                if (btn.getAttribute('data-view') === targetViewId) {
+                    btn.classList.add('active');
                 } else {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
+                    btn.classList.remove('active');
                 }
             });
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        tabButtons.forEach(btn => {
+        [...segButtons, ...dockButtons].forEach(btn => {
             btn.addEventListener('click', function (e) {
-                const target = this.getAttribute('data-target');
+                const target = this.getAttribute('data-view');
                 if (target) {
                     e.preventDefault();
-                    switchTab(target);
+                    switchView(target);
                 }
             });
         });
 
-        // 2. Dynamic QR Code Rendering for Compound Gate Checkpoint
-        const qrToken = <?= json_encode($activeTicket['qr_crypt_token'] ?? ($activeTicket['ticket_serial_no'] ?? ($vehicle['plate_number'] ?? 'FLEETPULSE-TOKEN'))) ?>;
+        // 2. High-Contrast QR Code Rendering for Checkpoint
+        const qrToken = <?= json_encode($activeTicket['qr_crypt_token'] ?? ($activeTicket['ticket_serial_no'] ?? ($vehicle['plate_number'] ?? 'PIA-TOKEN-DEMO'))) ?>;
 
-        // Compact in-card QR
-        const cardQrContainer = document.getElementById('activeTicketQr');
-        if (cardQrContainer && qrToken) {
-            new QRCode(cardQrContainer, {
+        const cardQr = document.getElementById('activeTicketQr');
+        if (cardQr && qrToken) {
+            new QRCode(cardQr, {
                 text: qrToken,
-                width: 140,
-                height: 140,
-                colorDark: "#0A2540",
+                width: 130,
+                height: 130,
+                colorDark: "#0f172a",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.M
             });
         }
 
-        // Fullscreen Modal QR
-        const modalQrContainer = document.getElementById('modalQrCanvas');
-        if (modalQrContainer && qrToken) {
-            new QRCode(modalQrContainer, {
+        const modalQr = document.getElementById('modalQrCanvas');
+        if (modalQr && qrToken) {
+            new QRCode(modalQr, {
                 text: qrToken,
-                width: 220,
-                height: 220,
-                colorDark: "#0A2540",
+                width: 210,
+                height: 210,
+                colorDark: "#0f172a",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
         }
 
-        // 3. Section B Fuel & Odometer Live Calculator
+        // 3. Passenger Delay Chips Interactive Selector
+        const delayChips = document.querySelectorAll('#delayMinutesChips .chip-option');
+        const delayInput = document.getElementById('inputDelayMinutes');
+        delayChips.forEach(chip => {
+            chip.addEventListener('click', function () {
+                delayChips.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                if (delayInput) delayInput.value = this.getAttribute('data-val');
+            });
+        });
+
+        const reasonChips = document.querySelectorAll('#delayReasonChips .chip-option');
+        const reasonInput = document.getElementById('inputDelayReason');
+        reasonChips.forEach(chip => {
+            chip.addEventListener('click', function () {
+                reasonChips.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                if (reasonInput) reasonInput.value = this.getAttribute('data-reason');
+            });
+        });
+
+        // 4. Section B Live Calculator
         const sOdo = document.getElementById('m_start_odo');
         const rOdo = document.getElementById('m_return_odo');
         const calcDist = document.getElementById('m_calcDistance');
@@ -1560,20 +1605,19 @@
 
         function recalcSectionB() {
             if (sOdo && rOdo && calcDist) {
-                const start = parseFloat(sOdo.value) || 0;
-                const ret = parseFloat(rOdo.value) || 0;
-                const d = Math.max(0, ret - start);
+                const s = parseFloat(sOdo.value) || 0;
+                const r = parseFloat(rOdo.value) || 0;
+                const d = Math.max(0, r - s);
                 calcDist.innerText = d.toFixed(1) + ' KM';
             }
 
             if (fStart && calcEnd) {
-                const startFuel = parseFloat(fStart.value) || 0;
-                const issuedFuel = parseFloat(fIssued ? fIssued.value : 0) || 0;
-                const purchFuel = parseFloat(fPurch ? fPurch.value : 0) || 0;
-                const usedFuel = parseFloat(fUsed ? fUsed.value : 0) || 0;
-
-                const ending = (startFuel + issuedFuel + purchFuel) - usedFuel;
-                calcEnd.innerText = ending.toFixed(2) + ' Liters';
+                const sF = parseFloat(fStart.value) || 0;
+                const iF = parseFloat(fIssued ? fIssued.value : 0) || 0;
+                const pF = parseFloat(fPurch ? fPurch.value : 0) || 0;
+                const uF = parseFloat(fUsed ? fUsed.value : 0) || 0;
+                const end = (sF + iF + pF) - uF;
+                calcEnd.innerText = end.toFixed(2) + ' Liters';
             }
         }
 
@@ -1581,7 +1625,7 @@
             if (inp) inp.addEventListener('input', recalcSectionB);
         });
 
-        // 4. HTML5 GPS Locator for Incident Reporting
+        // 5. GPS Locator for Incident Reporting
         const btnGps = document.getElementById('btnGetGps');
         const locInput = document.getElementById('incidentLocationInput');
         if (btnGps && locInput) {
@@ -1595,14 +1639,12 @@
                             locInput.value = 'GPS: ' + lat + ', ' + lng;
                             btnGps.innerHTML = '<i class="fa-solid fa-check text-success"></i>';
                         },
-                        function (error) {
-                            alert('Could not retrieve current GPS coordinates. Please type landmark manually.');
+                        function (err) {
+                            alert('Could not detect GPS location automatically. Please type landmark manually.');
                             btnGps.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
                         },
-                        { timeout: 10000, enableHighAccuracy: true }
+                        { timeout: 8000, enableHighAccuracy: true }
                     );
-                } else {
-                    alert('Geolocation is not supported by your mobile browser.');
                 }
             });
         }

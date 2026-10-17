@@ -392,8 +392,8 @@ class UserController extends BaseController
     public function flowchart()
     {
         $role = session()->get('user_role');
-        if (!in_array($role, ['admin', 'dispatcher'], true)) {
-            return redirect()->to('/')->with('error', 'Access Restricted: Flowchart viewing is limited to Administrators and Dispatchers.');
+        if (!in_array($role, ['admin', 'dispatcher', 'approver_admin'], true)) {
+            return redirect()->to('/')->with('error', 'Access Restricted: Flowchart viewing is limited to Administrators, Division Heads, and Dispatchers.');
         }
 
         return view('admin/flowchart', [

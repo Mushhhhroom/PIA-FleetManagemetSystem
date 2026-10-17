@@ -83,16 +83,58 @@ class GateSecurityController extends BaseController
         }
 
         // Determine recommended action (Egress or Ingress)
-        $isEgress = in_array($ticket['status'], ['issued']);
+        $ticketId = (int)$ticket['id'];
+        $safetyModel = new \App\Models\SafetyCheckModel();
+        $hasPassedSafety = $safetyModel->hasPassedCheck($ticketId);
+        $latestSafety = $safetyModel->latestForTicket($ticketId);
+
+        $isEgress  = in_array($ticket['status'], ['issued']);
         $isIngress = in_array($ticket['status'], ['departed', 'arrived_dest', 'departed_dest']);
         $eventType = $isEgress ? 'egress' : ($isIngress ? 'ingress' : 'review');
 
+        // High-visibility verdict determination
+        $verdict = 'pass';
+        $flagReason = '';
+        $canAction = false;
+
+        if ($ticket['status'] === 'cancelled') {
+            $verdict = 'reject';
+            $flagReason = 'Ticket Cancelled due to BLOWBAGETS Failure or Admin Revocation.';
+            $canAction = false;
+        } elseif ($isEgress) {
+            if (!$hasPassedSafety) {
+                $verdict = 'reject';
+                $detail = $latestSafety
+                    ? 'Latest check: ' . strtoupper($latestSafety['result'])
+                    : 'No checklist on file';
+                $flagReason = 'Ticket Denied due to BLOWBAGETS Safety Checklist Failure (' . $detail . ').';
+                $canAction = false;
+            } elseif (!empty($ticket['authorized_return']) && strtotime($ticket['authorized_return']) < (time() - 3600)) {
+                $verdict = 'reject';
+                $flagReason = 'Expired Authorization: Scheduled return window passed on ' . date('M d, H:i', strtotime($ticket['authorized_return'])) . '.';
+                $canAction = false;
+            } else {
+                $verdict = 'pass';
+                $canAction = true;
+            }
+        } elseif ($isIngress) {
+            $verdict = 'pass';
+            $canAction = true;
+        } else {
+            $verdict = 'review';
+            $flagReason = 'Trip status is already ' . strtoupper($ticket['status']) . '. Gate clearance already processed.';
+            $canAction = false;
+        }
+
         return $this->response->setJSON([
-            'status'     => 'success',
-            'ticket'     => $ticket,
-            'event_type' => $eventType,
-            'action_label' => $isEgress ? 'Authorize Departure (Egress)' : ($isIngress ? 'Authorize Return (Ingress)' : 'Inspect Completed Ticket'),
-            'can_action' => $isEgress || $isIngress,
+            'status'            => 'success',
+            'verdict'           => $verdict,
+            'flag_reason'       => $flagReason,
+            'ticket'            => $ticket,
+            'has_passed_safety' => $hasPassedSafety,
+            'event_type'        => $eventType,
+            'action_label'      => $isEgress ? 'Authorize Departure (Egress)' : ($isIngress ? 'Authorize Return (Ingress)' : 'Inspect Completed Ticket'),
+            'can_action'        => $canAction,
         ]);
     }
 

@@ -22,7 +22,12 @@
                         <div class="mono" style="font-size: 0.68rem; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.08em;">
                             Republic of the Philippines &bull; Philippine Information Agency
                         </div>
-                        <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.15rem;">VEHICLE REQUEST SLIP (VRS)</h4>
+                        <h4 class="mb-0 fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 1.15rem;">
+                            VEHICLE REQUEST SLIP (VRS)
+                            <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Vehicle Request Slip (ADMIN-F-018 rev2)</strong><br>The official requisition voucher required by PIA Fleet Management and COA Circular No. 75-6 before any government vehicle may be scheduled or dispatched." tabindex="0" role="button">
+                                ADMIN-F-018 rev2 <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                            </span>
+                        </h4>
                         <div class="text-muted" style="font-size: 0.75rem;">Document Code: ADMIN-F-018 rev2</div>
                     </div>
                 </div>
@@ -41,7 +46,11 @@
                 <div class="alert alert-info border-info-subtle p-3 mb-4 rounded-3 d-flex align-items-start gap-3">
                     <i class="fa-solid fa-circle-info text-info mt-1"></i>
                     <div class="small">
-                        <strong>Official Business Restriction (BR-04):</strong> Under CSC and COA guidelines, government vehicles are dedicated exclusively to official state business. Non-official trips, unauthorized detours, or unauthorized passengers are strictly prohibited.
+                        <strong>Official Business Restriction 
+                            <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Business Rule 04 (COA / CSC Rule)</strong><br>Strict prohibition on non-official vehicle usage, unauthorized civilian/family passengers, and personal deviations under Civil Service Commission and COA regulations." tabindex="0" role="button">
+                                BR-04 <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                            </span>:
+                        </strong> Under CSC and COA guidelines, government vehicles are dedicated exclusively to official state business. Non-official trips, unauthorized detours, or unauthorized passengers are strictly prohibited.
                     </div>
                 </div>
 
@@ -112,9 +121,12 @@
 
                 <!-- Emergency Justification Gate (BR-03) - Shown when <24 hours notice -->
                 <div id="rushGateSection" class="p-3 mb-4 rounded-3 border border-danger bg-danger bg-opacity-10 d-none">
-                    <div class="d-flex align-items-center gap-2 text-danger fw-bold mb-2">
+                    <div class="d-flex align-items-center flex-wrap gap-2 text-danger fw-bold mb-2">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>EMERGENCY JUSTIFICATION REQUIRED (BR-03)</span>
+                        <span>EMERGENCY JUSTIFICATION REQUIRED</span>
+                        <span class="policy-badge policy-badge-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Business Rule 03 (Same-Day / Rush Policy)</strong><br>Deployments within 24 hours strictly require an approved emergency memo or advisory to prevent motorpool backlog." tabindex="0" role="button">
+                            BR-03 <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                        </span>
                     </div>
                     <p class="small text-danger mb-3" style="font-size: 0.8rem;">
                         This request is scheduled for departure within 24 hours of submission. Under Section 3 (BR-03) of the PIA Fleet Policy, same-day deployments strictly require an official emergency memo / justification document to prevent administrative backlog.
@@ -168,7 +180,12 @@
                 <div class="pt-3 border-top d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                     <div class="small text-muted d-flex align-items-center gap-2">
                         <i class="fa-solid fa-clock text-primary"></i>
-                        <span>Submission starts the mandatory 4-hour escalation SLA clock (24-hour final expiry).</span>
+                        <span>Submission starts the mandatory 
+                            <span class="policy-badge policy-badge-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Service Level Agreement (4 Hours)</strong><br>Under PIA Administrative Guidelines, vehicle requests not actioned by the approving authority within 4 hours automatically escalate to the Division Chief for expedited clearance." tabindex="0" role="button">
+                                4-Hour SLA Escalation Clock <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                            </span> 
+                            (24-hour final expiry).
+                        </span>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="<?= base_url('requests') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
@@ -222,7 +239,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="alert alert-danger border-danger-subtle p-2 px-3 rounded-2 d-flex align-items-center gap-2 small">
                     <i class="fa-solid fa-bolt text-danger"></i>
                     <div>
-                        <strong>Notice:</strong> Departure is within <strong>${Math.max(0, diffHours.toFixed(1))} hours</strong>. Emergency justification memo and file attachment required below (BR-03).
+                        <strong>Notice:</strong> Departure is within <strong>${Math.max(0, diffHours.toFixed(1))} hours</strong>. Emergency justification memo and file attachment required below 
+                        <span class="policy-badge policy-badge-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Business Rule 03 (Same-Day / Rush Policy)</strong><br>Deployments within 24 hours strictly require an approved emergency memo or advisory to prevent motorpool backlog." tabindex="0" role="button">
+                            BR-03 <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                        </span>.
                     </div>
                 </div>
             `;
@@ -235,7 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="alert alert-success border-success-subtle p-2 px-3 rounded-2 d-flex align-items-center gap-2 small">
                     <i class="fa-solid fa-circle-check text-success"></i>
                     <div>
-                        <strong>Standard Notice (BR-01):</strong> Departure is in <strong>${diffHours.toFixed(0)} hours</strong> (Complies with 24-hour advance submission policy).
+                        <strong>Standard Notice:</strong> Departure is in <strong>${diffHours.toFixed(0)} hours</strong> 
+                        <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Business Rule 01 (24-Hour Notice Policy)</strong><br>Standard processing window. Requests filed at least 24 hours prior to travel receive routine motorpool routing." tabindex="0" role="button">
+                            BR-01 <i class="fa-solid fa-circle-question policy-info-icon"></i>
+                        </span> 
+                        (Complies with 24-hour advance submission policy).
                     </div>
                 </div>
             `;
@@ -243,6 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
             justNotes.removeAttribute('required');
             justFile.removeAttribute('required');
         }
+
+        // Re-initialize tooltips for newly rendered elements
+        alertBox.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el, { container: 'body', html: true });
+        });
     }
 
     depInput.addEventListener('change', evaluateAdvanceNotice);

@@ -70,11 +70,26 @@ class TripTicketController extends BaseController
         // Fetch gate logs for this ticket
         $gateLogs = $this->gateLogModel->where('trip_ticket_id', $id)->orderBy('id', 'ASC')->findAll();
 
+        // Fetch any secondary merged requests for this consolidated ticket
+        $mergedRequests = [];
+        if (!empty($ticket['merged_request_ids'])) {
+            $mergedIds = json_decode($ticket['merged_request_ids'], true);
+            if (!empty($mergedIds) && is_array($mergedIds)) {
+                $mergedRequests = $this->requestModel
+                    ->select('trip_requests.*, offices.office_name, departments.department_name')
+                    ->join('offices', 'offices.id = trip_requests.office_id', 'left')
+                    ->join('departments', 'departments.id = trip_requests.department_id', 'left')
+                    ->whereIn('trip_requests.id', $mergedIds)
+                    ->findAll();
+            }
+        }
+
         $data = [
-            'title'    => "Driver's Trip Ticket: {$ticket['ticket_serial_no']}",
-            'ticket'   => $ticket,
-            'gateLogs' => $gateLogs,
-            'userRole' => session()->get('user_role'),
+            'title'          => "Driver's Trip Ticket: {$ticket['ticket_serial_no']}",
+            'ticket'         => $ticket,
+            'gateLogs'       => $gateLogs,
+            'mergedRequests' => $mergedRequests,
+            'userRole'       => session()->get('user_role'),
         ];
 
         return view('tickets/show', $data);

@@ -49,7 +49,27 @@
     </div>
 <?php endif; ?>
 
-<?php if (!empty($pendingDispatchCount) && $pendingDispatchCount > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
+<!-- Tier 2 VRS Action Alert for Admin Division Head -->
+<?php if (!empty($pendingAdminCount) && $pendingAdminCount > 0 && in_array(session()->get('user_role'), ['admin', 'approver_admin'])): ?>
+    <div class="alert alert-primary border-primary-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: rgba(37, 99, 235, 0.08);">
+        <div class="d-flex align-items-center gap-3">
+            <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                <i class="fa-solid fa-stamp"></i>
+            </span>
+            <div>
+                <strong class="text-dark d-block">Tier 2 Clearance Queue: <?= $pendingAdminCount ?> Endorsed Request(s) Awaiting Final Head Authorization</strong>
+                <span class="small text-muted">Endorsed by Motorpool Dispatcher. Grant administrative clearance to authorize vehicle and driver allocation.</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary px-3 fw-semibold">
+                <i class="fa-solid fa-stamp me-1"></i> Authorize Requests (Approvals)
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($pendingDispatchCount) && $pendingDispatchCount > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher', 'approver_admin'])): ?>
     <div class="alert alert-info border-info-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
             <span class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">

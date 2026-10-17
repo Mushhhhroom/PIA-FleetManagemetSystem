@@ -8,6 +8,9 @@ use App\Models\TripModel;
 use App\Models\IncidentModel;
 use App\Models\TripTicketModel;
 use App\Models\FuelLogModel;
+use App\Models\RfidCardModel;
+use App\Models\SafetyCheckModel;
+use App\Models\PassengerDelayModel;
 
 class DriverController extends BaseController
 {
@@ -30,6 +33,9 @@ class DriverController extends BaseController
         $vehicleModel  = new VehicleModel();
         $incidentModel = new IncidentModel();
         $fuelLogModel  = new FuelLogModel();
+        $rfidCardModel = new RfidCardModel();
+        $safetyModel   = new SafetyCheckModel();
+        $delayModel    = new PassengerDelayModel();
 
         $driverId = $this->request->getGet('driver_id');
 
@@ -110,7 +116,21 @@ class DriverController extends BaseController
             }
         }
 
-        // 3. Fuel Logs for this driver or vehicle
+        // 3. Tollway RFID Cards for vehicle
+        $rfidCards = [];
+        if ($vehicle) {
+            $rfidCards = $rfidCardModel->where('vehicle_id', $vehicle['id'])->findAll();
+        }
+
+        // 4. BLOWBAGETS Pre-Trip Safety Check status for active ticket
+        $blowbagetsPassed = false;
+        $recentDelays = [];
+        if ($activeTicket) {
+            $blowbagetsPassed = $safetyModel->hasPassedCheck((int) $activeTicket['id']);
+            $recentDelays = $delayModel->getForTicket((int) $activeTicket['id']);
+        }
+
+        // 5. Fuel Logs for this driver or vehicle
         $recentFuelLogs = [];
         if ($driver) {
             $recentFuelLogs = $fuelLogModel->where('driver_id', $driver['id'])->orderBy('id', 'DESC')->findAll(10);
@@ -119,7 +139,7 @@ class DriverController extends BaseController
             }
         }
 
-        // 4. Incidents reported
+        // 6. Incidents reported
         $recentIncidents = [];
         if ($driver) {
             $recentIncidents = $incidentModel->where('driver_id', $driver['id'])->orderBy('id', 'DESC')->findAll(10);
@@ -129,14 +149,17 @@ class DriverController extends BaseController
         $allDrivers = $driverModel->findAll();
 
         return view('driver/trips', [
-            'driver'          => $driver,
-            'vehicle'         => $vehicle,
-            'trips'           => $trips,
-            'tripTickets'     => $tripTickets,
-            'activeTicket'    => $activeTicket,
-            'recentFuelLogs'  => $recentFuelLogs,
-            'recentIncidents' => $recentIncidents,
-            'allDrivers'      => $allDrivers,
+            'driver'           => $driver,
+            'vehicle'          => $vehicle,
+            'trips'            => $trips,
+            'tripTickets'      => $tripTickets,
+            'activeTicket'     => $activeTicket,
+            'rfidCards'        => $rfidCards,
+            'blowbagetsPassed' => $blowbagetsPassed,
+            'recentDelays'     => $recentDelays,
+            'recentFuelLogs'   => $recentFuelLogs,
+            'recentIncidents'  => $recentIncidents,
+            'allDrivers'       => $allDrivers,
         ]);
     }
 

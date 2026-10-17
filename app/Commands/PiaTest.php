@@ -172,6 +172,15 @@ class PiaTest extends BaseCommand
         $reqModel->update($newReqId, ['status' => 'dispatched']);
         $assertTest("5.4: e-DTT generated ({$dttSerial}) with Section A and signed QR token", $newTicketId > 0);
 
+        // 5.4.1 Gate Checkpoint Resolution Verification (QR Token, Serial, and 6-Digit PIN Fallback)
+        $resolvedByToken  = $ticketModel->findByTokenOrSerial($dttQrToken);
+        $resolvedBySerial = $ticketModel->findByTokenOrSerial($dttSerial);
+        $pin6 = sprintf('%06d', $newTicketId);
+        $resolvedByPin    = $ticketModel->findByTokenOrSerial($pin6);
+        $assertTest("5.4.1: Gate QR checkpoint resolves ticket by HMAC token", !empty($resolvedByToken) && (int)$resolvedByToken['id'] === $newTicketId);
+        $assertTest("5.4.2: Gate checkpoint resolves ticket by Serial No ({$dttSerial})", !empty($resolvedBySerial) && (int)$resolvedBySerial['id'] === $newTicketId);
+        $assertTest("5.4.3: Gate checkpoint resolves ticket by 6-digit PIN fallback ({$pin6})", !empty($resolvedByPin) && (int)$resolvedByPin['id'] === $newTicketId);
+
         // 5.5 Compound Gate Security Egress Scan (Departure)
         $departureOdo = (float)$hiace->odometer_km;
         $gateModel->insert([

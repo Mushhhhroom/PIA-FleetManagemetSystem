@@ -91,6 +91,27 @@
                     <span class="text-muted small d-block">Authorized Passengers:</span>
                     <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($ticket['authorized_passengers'])) ?></div>
                 </div>
+                <?php if (!empty($mergedRequests)): ?>
+                    <div class="mb-3">
+                        <span class="text-muted small d-block mb-1">
+                            <i class="fa-solid fa-code-merge text-primary me-1"></i> Consolidated Carpool Requests (<?= count($mergedRequests) ?>):
+                        </span>
+                        <div class="list-group list-group-flush border rounded">
+                            <?php foreach ($mergedRequests as $mr): ?>
+                                <div class="list-group-item p-2 small bg-light bg-opacity-50">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <a href="<?= base_url('requests/' . $mr['id']) ?>" class="mono fw-bold text-decoration-none">
+                                            <?= esc($mr['request_number']) ?>
+                                        </a>
+                                        <span class="badge bg-secondary" style="font-size: 0.65rem;"><?= esc($mr['passenger_count']) ?> pax</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.72rem;"><?= esc($mr['office_name'] ?? 'PIA') ?> &bull; <?= esc($mr['requestor_name']) ?></div>
+                                    <div class="text-dark" style="font-size: 0.72rem;"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($mr['destination']) ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="pt-2 border-top">
                     <span class="text-muted small d-block">Approving Authority:</span>
                     <strong class="text-dark"><?= esc($ticket['admin_approver_name'] ?? 'Atty. Julius S. De Peralta') ?></strong>

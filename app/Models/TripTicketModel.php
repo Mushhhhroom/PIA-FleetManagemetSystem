@@ -11,7 +11,7 @@ class TripTicketModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $allowedFields    = [
-        'ticket_serial_no', 'request_id', 'vehicle_id', 'driver_id', 'qr_crypt_token',
+        'ticket_serial_no', 'request_id', 'merged_request_ids', 'vehicle_id', 'driver_id', 'qr_crypt_token',
         'status', 'authorized_departure', 'authorized_return', 'authorized_passengers',
         'authorized_destination', 'authorized_purpose', 'admin_approver_name',
         'departure_time', 'arrival_dest_time', 'departure_dest_time', 'arrival_back_time',
@@ -77,20 +77,40 @@ class TripTicketModel extends Model
 
     public function findByTokenOrSerial($identifier)
     {
-        return $this->select('trip_tickets.*,
+        $cleanId = trim((string)$identifier);
+        if ($cleanId === '') {
+            return null;
+        }
+
+        $builder = $this->select('trip_tickets.*,
                               vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.odometer_km AS vehicle_current_odometer,
                               drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
+                              drivers.license_number, drivers.license_type,
                               trip_requests.request_number, trip_requests.purpose, trip_requests.passenger_names,
                               offices.office_name')
                     ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                     ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
                     ->join('trip_requests', 'trip_requests.id = trip_tickets.request_id', 'left')
-                    ->join('offices', 'offices.id = trip_requests.office_id', 'left')
-                    ->groupStart()
-                        ->where('trip_tickets.qr_crypt_token', $identifier)
-                        ->orWhere('trip_tickets.ticket_serial_no', $identifier)
-                    ->groupEnd()
-                    ->first();
+                    ->join('offices', 'offices.id = trip_requests.office_id', 'left');
+
+        if (ctype_digit($cleanId)) {
+            $numId = (int)$cleanId;
+            $builder->groupStart()
+                        ->where('trip_tickets.id', $numId)
+                        ->orWhere('trip_tickets.qr_crypt_token', $cleanId)
+                        ->orWhere('trip_tickets.ticket_serial_no', $cleanId)
+                        ->orWhere('trip_tickets.ticket_serial_no LIKE', "%-{$cleanId}")
+                        ->orWhere('trip_tickets.ticket_serial_no LIKE', '%-' . sprintf('%04d', $numId))
+                    ->groupEnd();
+        } else {
+            $builder->groupStart()
+                        ->where('trip_tickets.qr_crypt_token', $cleanId)
+                        ->orWhere('trip_tickets.ticket_serial_no', $cleanId)
+                        ->orWhere('trip_tickets.ticket_serial_no LIKE', "%{$cleanId}%")
+                    ->groupEnd();
+        }
+
+        return $builder->first();
     }
 
     /**
