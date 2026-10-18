@@ -50,8 +50,8 @@
 <div class="tab-content" id="approvalTabsContent">
     <!-- Tier 1 Pane (Motorpool Dispatcher Endorsements) -->
     <div class="tab-pane fade show active" id="tier1-pane" role="tabpanel">
-        <div class="card-panel border shadow-sm">
-            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel">
+            <div class="card-panel-header bg-white d-flex align-items-center justify-content-between">
                 <div>
                     <h6 class="mb-0 fw-bold text-dark small text-uppercase">Tier 1: Motorpool Dispatcher Review Queue</h6>
                     <div class="text-muted" style="font-size: 0.72rem;">Tier-1 endorsement or rejection escalates to Tier 2 after <strong>4 hours</strong> (FR-1.4); requests expire after 24 hours.</div>
@@ -112,17 +112,18 @@
                                             <i class="fa-solid fa-stopwatch me-1"></i><?= $r['sla_info']['text'] ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
-                                        <?php if (empty($canActTier1)): ?>
-                                            <span class="badge bg-secondary py-1 px-2" title="Tier 1 approval authority rests with the Motorpool Dispatcher.">
-                                                <i class="fa-solid fa-eye me-1"></i> View Only
-                                            </span>
-                                        <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-primary py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#actionModal<?= $r['id'] ?>">
-                                            <i class="fa-solid fa-gavel me-1"></i> Review &amp; Act
-                                        </button>
-                                        <?php endif; ?>
-
+                                    <td class="text-end table-action-cell">
+                                        <div class="table-actions">
+                                            <?php if (empty($canActTier1)): ?>
+                                                <span class="badge bg-secondary py-1 px-2" title="Tier 1 approval authority rests with the Motorpool Dispatcher.">
+                                                    <i class="fa-solid fa-eye me-1"></i> View Only
+                                                </span>
+                                            <?php else: ?>
+                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#actionModal<?= $r['id'] ?>">
+                                                    <i class="fa-solid fa-gavel me-1"></i> Review &amp; Act
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -135,8 +136,8 @@
 
     <!-- Tier 2 Pane (Admin Head Authorization) -->
     <div class="tab-pane fade" id="tier2-pane" role="tabpanel">
-        <div class="card-panel border shadow-sm">
-            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel">
+            <div class="card-panel-header bg-white d-flex align-items-center justify-content-between">
                 <div>
                     <h6 class="mb-0 fw-bold text-dark small text-uppercase">Tier 2: Administrative Division Head Authorization Queue</h6>
                     <div class="text-muted" style="font-size: 0.72rem;">Final travel authorization by Atty. Julius S. De Peralta. Approval automatically generates Section A of Driver's Trip Ticket.</div>
@@ -207,25 +208,26 @@
                                             <i class="fa-solid fa-stopwatch me-1"></i><?= $r['sla_info']['text'] ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
-                                        <?php if (empty($canActTier2)): ?>
-                                            <span class="badge bg-secondary py-1 px-2" title="Tier 2 authorization rests with the Administrative Division Head.">
-                                                <i class="fa-solid fa-eye me-1"></i> View Only
-                                            </span>
-                                        <?php elseif ((int) $r['requestor_id'] === (int) ($userId ?? 0)): ?>
-                                            <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you cannot act on a VRS you filed.">
-                                                <i class="fa-solid fa-user-lock me-1"></i> Own Request
-                                            </span>
-                                        <?php elseif (($r['dispatcher_action'] ?? null) === 'approved' && (int) ($r['dispatcher_approver_id'] ?? 0) === (int) ($userId ?? 0)): ?>
-                                            <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you endorsed this VRS at Tier 1.">
-                                                <i class="fa-solid fa-user-lock me-1"></i> You Endorsed (Tier 1)
-                                            </span>
-                                        <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-success py-1 px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#adminModal<?= $r['id'] ?>">
-                                            <i class="fa-solid fa-stamp me-1"></i> Authorize Trip
-                                        </button>
-                                        <?php endif; ?>
-
+                                    <td class="text-end table-action-cell">
+                                        <div class="table-actions">
+                                            <?php if (empty($canActTier2)): ?>
+                                                <span class="badge bg-secondary py-1 px-2" title="Tier 2 authorization rests with the Administrative Division Head.">
+                                                    <i class="fa-solid fa-eye me-1"></i> View Only
+                                                </span>
+                                            <?php elseif ((int) $r['requestor_id'] === (int) ($userId ?? 0)): ?>
+                                                <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you cannot act on a VRS you filed.">
+                                                    <i class="fa-solid fa-user-lock me-1"></i> Own Request
+                                                </span>
+                                            <?php elseif (($r['dispatcher_action'] ?? null) === 'approved' && (int) ($r['dispatcher_approver_id'] ?? 0) === (int) ($userId ?? 0)): ?>
+                                                <span class="badge bg-secondary py-1 px-2" title="Segregation of duties: you endorsed this VRS at Tier 1.">
+                                                    <i class="fa-solid fa-user-lock me-1"></i> You Endorsed (Tier 1)
+                                                </span>
+                                            <?php else: ?>
+                                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#adminModal<?= $r['id'] ?>">
+                                                    <i class="fa-solid fa-stamp me-1"></i> Authorize Trip
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -238,8 +240,8 @@
 
     <!-- Recently Approved Pane -->
     <div class="tab-pane fade" id="history-pane" role="tabpanel">
-        <div class="card-panel border shadow-sm">
-            <div class="p-3 border-bottom bg-light">
+        <div class="card-panel">
+            <div class="card-panel-header bg-white">
                 <h6 class="mb-0 fw-bold text-dark small text-uppercase">Recently Authorized Requests</h6>
             </div>
             <div class="table-responsive">
@@ -267,10 +269,12 @@
                                     <td class="small fw-medium"><?= esc($r['destination']) ?></td>
                                     <td class="small"><?= esc($r['admin_approver_name'] ?? 'Admin Head') ?></td>
                                     <td class="mono small text-muted"><?= $r['admin_action_at'] ? date('M d, Y h:i A', strtotime($r['admin_action_at'])) : date('M d, Y', strtotime($r['updated_at'])) ?></td>
-                                    <td class="text-end">
-                                        <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-secondary py-1 px-2">
-                                            <i class="fa-solid fa-eye me-1"></i> View
-                                        </a>
+                                    <td class="text-end table-action-cell">
+                                        <div class="table-actions">
+                                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

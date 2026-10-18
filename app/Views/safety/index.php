@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">BLOWBAGETS Safety Check Registry</h1>
         <p class="text-muted small mb-0">Complete audit of all pre-trip safety inspections, failures and vehicle safety locks.</p>
     </div>
-    <a href="<?= base_url('pir') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('pir') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-screwdriver-wrench me-1"></i> Mechanic PIR Queue
     </a>
 </div>

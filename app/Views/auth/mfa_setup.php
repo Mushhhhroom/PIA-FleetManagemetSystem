@@ -13,7 +13,7 @@
             (Argon2id + TOTP MFA) and RA 10173 data privacy safeguards.
         </p>
     </div>
-    <a href="<?= base_url('/') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('/') ?>" class="btn btn-secondary text-decoration-none">
         <i class="fa-solid fa-arrow-left me-1"></i> Back to Portal
     </a>
 </div>
@@ -31,7 +31,7 @@
         </p>
         <form action="<?= base_url('mfa/disable') ?>" method="POST" onsubmit="return confirm('Disable multi-factor authentication? Your account will be protected by password only.');">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-outline-danger rounded-pill fw-semibold">
+            <button type="submit" class="btn btn-outline-danger fw-semibold">
                 <i class="fa-solid fa-toggle-off me-1"></i> Disable MFA
             </button>
         </form>
@@ -76,7 +76,7 @@
                                    style="letter-spacing: 0.4rem; font-weight: 600;">
                         </div>
                         <div class="col-sm-6">
-                            <button type="submit" class="btn-corp btn-corp-primary w-100">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="fa-solid fa-shield-halved me-1"></i> Enable MFA
                             </button>
                         </div>

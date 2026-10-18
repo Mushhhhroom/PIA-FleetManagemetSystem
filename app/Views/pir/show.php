@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">PIR Ticket <?= esc($pir['pir_number']) ?></h1>
         <p class="text-muted small mb-0">Pre-inspection findings and post-repair evaluation are both mandatory before release.</p>
     </div>
-    <a href="<?= base_url('pir') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('pir') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-arrow-left me-1"></i> Back to Queue
     </a>
 </div>
@@ -141,25 +141,25 @@
 
                     <div class="d-grid gap-2">
                         <?php if ($pir['status'] === 'pending'): ?>
-                            <button type="submit" name="action" value="inspect" class="btn-corp btn-corp-primary">
+                            <button type="submit" name="action" value="inspect" class="btn btn-primary">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i> Start Inspection (record findings)
                             </button>
                         <?php endif; ?>
 
                         <?php if (in_array($pir['status'], ['pending', 'in_inspection'], true)): ?>
-                            <button type="submit" name="action" value="repair" class="btn-corp btn-corp-secondary">
+                            <button type="submit" name="action" value="repair" class="btn btn-secondary">
                                 <i class="fa-solid fa-gear me-1"></i> Begin Repair
                             </button>
                         <?php endif; ?>
 
                         <?php if (in_array($pir['status'], ['in_inspection', 'in_repair'], true)): ?>
-                            <button type="submit" name="action" value="ready" class="btn btn-outline-warning rounded-pill fw-semibold">
+                            <button type="submit" name="action" value="ready" class="btn btn-outline-warning">
                                 <i class="fa-solid fa-flag-checkered me-1"></i> Mark Ready for Release (post-repair eval required)
                             </button>
                         <?php endif; ?>
 
                         <?php if (in_array($pir['status'], ['ready_for_release', 'in_repair'], true)): ?>
-                            <button type="submit" name="action" value="release" class="btn btn-success rounded-pill fw-semibold"
+                            <button type="submit" name="action" value="release" class="btn btn-success"
                                     onclick="return confirm('Restore this vehicle to AVAILABLE status? Both evaluations are mandatory (FR-5.3).');">
                                 <i class="fa-solid fa-unlock me-1"></i> Release Vehicle to Available Status
                             </button>

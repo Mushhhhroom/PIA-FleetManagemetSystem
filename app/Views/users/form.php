@@ -29,7 +29,7 @@
                 : 'Create a sign-in identity and assign the appropriate RBAC role profile for the new user.' ?>
         </p>
     </div>
-    <a href="<?= base_url('users') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('users') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-arrow-left me-1"></i> Return to Directory
     </a>
 </div>
@@ -149,8 +149,8 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-                <a href="<?= base_url('users') ?>" class="btn-corp btn-corp-secondary text-decoration-none">Cancel</a>
-                <button type="submit" class="btn-corp btn-corp-primary">
+                <a href="<?= base_url('users') ?>" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
                     <i class="fa-solid <?= $editing ? 'fa-floppy-disk' : 'fa-user-plus' ?> me-1"></i>
                     <?= $editing ? 'Save Account Changes' : 'Provision Account' ?>
                 </button>

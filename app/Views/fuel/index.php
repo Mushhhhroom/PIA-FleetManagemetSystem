@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">Fuel & Energy Records</h1>
         <p class="text-muted small mb-0">Monitor commercial fueling transactions, fuel economy rates, and station vendor billing.</p>
     </div>
-    <a href="<?= base_url('fuel/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+    <a href="<?= base_url('fuel/new') ?>" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i> Record Fuel Purchase
     </a>
 </div>

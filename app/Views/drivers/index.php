@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">Driver Personnel</h1>
         <p class="text-muted small mb-0">Certified commercial operators, compliance licensing, safety metrics, and trip history.</p>
     </div>
-    <a href="<?= base_url('drivers/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+    <a href="<?= base_url('drivers/new') ?>" class="btn btn-primary text-decoration-none">
         <i class="fa-solid fa-user-plus me-1"></i> Register Operator
     </a>
 </div>
@@ -76,12 +76,12 @@
                                     <?= ucfirst(str_replace('_', ' ', esc($d['status']))) ?>
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <a href="<?= base_url('drivers/' . $d['id']) ?>" class="btn-corp btn-corp-secondary text-decoration-none" title="View Scorecard">
+                            <td class="text-end table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('drivers/' . $d['id']) ?>" class="btn btn-icon-sm btn-outline-secondary" title="View Scorecard">
                                         <i class="fa-solid fa-id-badge"></i>
                                     </a>
-                                    <a href="<?= base_url('drivers/' . $d['id'] . '/edit') ?>" class="btn-corp btn-corp-secondary text-decoration-none" title="Edit Profile">
+                                    <a href="<?= base_url('drivers/' . $d['id'] . '/edit') ?>" class="btn btn-icon-sm btn-outline-secondary" title="Edit Profile">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
                                 </div>

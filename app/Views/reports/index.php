@@ -11,7 +11,7 @@
         <p class="text-muted small mb-0">Aggregate operational expenditure, asset utilization rates, and regulatory data exports.</p>
     </div>
     <div class="dropdown">
-        <button class="btn-corp btn-corp-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-file-csv"></i>
             <span>Export Ledgers (CSV)</span>
         </button>

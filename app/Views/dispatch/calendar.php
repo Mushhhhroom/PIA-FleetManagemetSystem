@@ -13,16 +13,16 @@
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">
-        <a href="<?= base_url('dispatch') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+        <a href="<?= base_url('dispatch') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-table-list me-1"></i> Dispatch Board
         </a>
-        <a href="<?= base_url('dispatch/calendar?month=' . esc($prevMonth)) ?>" class="btn btn-sm btn-outline-secondary" title="Previous Month">
+        <a href="<?= base_url('dispatch/calendar?month=' . esc($prevMonth)) ?>" class="btn-icon-sm btn-outline-secondary" title="Previous Month">
             <i class="fa-solid fa-chevron-left"></i>
         </a>
-        <a href="<?= base_url('dispatch/calendar?month=' . date('Y-m')) ?>" class="btn btn-sm btn-outline-primary" title="Jump to Current Month">
+        <a href="<?= base_url('dispatch/calendar?month=' . date('Y-m')) ?>" class="btn btn-sm btn-outline-secondary" title="Jump to Current Month">
             <i class="fa-solid fa-calendar-day me-1"></i> Today
         </a>
-        <a href="<?= base_url('dispatch/calendar?month=' . esc($nextMonth)) ?>" class="btn btn-sm btn-outline-secondary" title="Next Month">
+        <a href="<?= base_url('dispatch/calendar?month=' . esc($nextMonth)) ?>" class="btn-icon-sm btn-outline-secondary" title="Next Month">
             <i class="fa-solid fa-chevron-right"></i>
         </a>
         <form action="<?= base_url('dispatch/calendar') ?>" method="GET" class="d-inline-flex m-0">

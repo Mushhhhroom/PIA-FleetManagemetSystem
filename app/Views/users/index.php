@@ -24,10 +24,10 @@
         <p class="text-muted small mb-0">Provision and govern sign-in accounts for every role in the fleet system. All actions are recorded in the immutable audit trail (NFR-3).</p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?= base_url('admin/flowchart') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+        <a href="<?= base_url('admin/flowchart') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-diagram-project me-1 text-primary"></i> System Flowchart &amp; Nav
         </a>
-        <a href="<?= base_url('users/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+        <a href="<?= base_url('users/new') ?>" class="btn btn-primary">
             <i class="fa-solid fa-user-plus me-1"></i> Provision New Account
         </a>
     </div>
@@ -102,8 +102,8 @@
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn-corp btn-corp-secondary btn-sm flex-fill"><i class="fa-solid fa-filter me-1"></i> Apply</button>
-                <a href="<?= base_url('users') ?>" class="btn-corp btn-corp-secondary btn-sm flex-fill text-decoration-none text-center">Clear</a>
+                <button type="submit" class="btn btn-sm btn-secondary flex-fill"><i class="fa-solid fa-filter me-1"></i> Apply</button>
+                <a href="<?= base_url('users') ?>" class="btn btn-sm btn-outline-secondary flex-fill text-center">Clear</a>
             </div>
         </form>
     </div>
@@ -177,20 +177,20 @@
                             <td>
                                 <span class="mono text-muted" style="font-size: 0.72rem;"><?= $u['created_at'] ? date('M d, Y', strtotime($u['created_at'])) : '—' ?></span>
                             </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <a href="<?= base_url('users/' . $u['id'] . '/edit') ?>" class="btn-corp btn-corp-secondary btn-sm text-decoration-none" title="Edit account">
+                            <td class="text-end table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('users/' . $u['id'] . '/edit') ?>" class="btn btn-sm btn-outline-secondary" title="Edit account">
                                         <i class="fa-solid fa-pen-to-square me-1"></i> Edit
                                     </a>
                                     <?php if ((int) $u['id'] !== $selfId): ?>
                                         <?php $confirmMsg = $u['status'] === 'active'
                                             ? 'Deactivate ' . $u['name'] . "\u{2019}" . 's account? Sign-in will be blocked.'
                                             : 'Reactivate ' . $u['name'] . "\u{2019}" . 's account?'; ?>
-                                        <form method="POST" action="<?= base_url('users/' . $u['id'] . '/toggle') ?>" class="d-inline"
+                                        <form method="POST" action="<?= base_url('users/' . $u['id'] . '/toggle') ?>" class="d-inline m-0"
                                               data-confirm="<?= esc($confirmMsg, 'attr') ?>">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-corp btn-sm <?= $u['status'] === 'active' ? 'btn-corp-secondary' : 'btn-corp-primary' ?>" title="<?= $u['status'] === 'active' ? 'Deactivate account' : 'Reactivate account' ?>">
-                                                <i class="fa-solid <?= $u['status'] === 'active' ? 'fa-ban text-danger' : 'fa-circle-check text-success' ?>"></i>
+                                            <button type="submit" class="btn btn-icon-sm <?= $u['status'] === 'active' ? 'btn-outline-danger' : 'btn-outline-success' ?>" title="<?= $u['status'] === 'active' ? 'Deactivate account' : 'Reactivate account' ?>">
+                                                <i class="fa-solid <?= $u['status'] === 'active' ? 'fa-ban' : 'fa-circle-check' ?>"></i>
                                             </button>
                                         </form>
                                     <?php endif; ?>

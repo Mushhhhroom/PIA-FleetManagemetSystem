@@ -11,29 +11,28 @@
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <!-- Form Container Card -->
-        <div class="card-panel border shadow-sm">
+        <div class="card-panel">
             <!-- Government Header Banner -->
-            <div class="p-3 border-bottom bg-light rounded-top d-flex align-items-center justify-content-between">
+            <div class="card-panel-header bg-white d-flex align-items-center justify-content-between py-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                        <i class="fa-solid fa-landmark fa-lg"></i>
+                    <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                        <i class="fa-solid fa-landmark"></i>
                     </div>
                     <div>
                         <div class="mono" style="font-size: 0.68rem; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.08em;">
                             Republic of the Philippines &bull; Philippine Information Agency
                         </div>
-                        <h4 class="mb-0 fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 1.15rem;">
+                        <h4 class="mb-0 fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 1.1rem;">
                             VEHICLE REQUEST SLIP (VRS)
                             <span class="policy-badge policy-badge-info" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Vehicle Request Slip (ADMIN-F-018 rev2)</strong><br>The official requisition voucher required by PIA Fleet Management and COA Circular No. 75-6 before any government vehicle may be scheduled or dispatched." tabindex="0" role="button">
                                 ADMIN-F-018 rev2 <i class="fa-solid fa-circle-question policy-info-icon"></i>
                             </span>
                         </h4>
-                        <div class="text-muted" style="font-size: 0.75rem;">Document Code: ADMIN-F-018 rev2</div>
                     </div>
                 </div>
                 <div class="text-end d-none d-md-block">
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2 py-1 small">
-                        <i class="fa-solid fa-shield-halved me-1"></i> Official Business Only
+                    <span class="badge bg-light text-secondary border px-2 py-1 small">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i> Official Business Only
                     </span>
                 </div>
             </div>
@@ -177,9 +176,9 @@
                 </div>
 
                 <!-- Approval SLA Reminder & Submit Bar -->
-                <div class="pt-3 border-top d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="pt-4 mt-3 border-top d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="small text-muted d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-clock text-primary"></i>
+                        <i class="fa-solid fa-clock text-primary flex-shrink-0"></i>
                         <span>Submission starts the mandatory 
                             <span class="policy-badge policy-badge-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="<strong>Service Level Agreement (4 Hours)</strong><br>Under PIA Administrative Guidelines, vehicle requests not actioned by the approving authority within 4 hours automatically escalate to the Division Chief for expedited clearance." tabindex="0" role="button">
                                 4-Hour SLA Escalation Clock <i class="fa-solid fa-circle-question policy-info-icon"></i>
@@ -187,11 +186,11 @@
                             (24-hour final expiry).
                         </span>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="<?= base_url('requests') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <a href="<?= base_url('requests') ?>" class="btn btn-outline-secondary">
                             Cancel
                         </a>
-                        <button type="submit" class="btn-corp btn-corp-primary px-4 shadow-sm" id="submitBtn">
+                        <button type="submit" class="btn btn-primary px-4" id="submitBtn">
                             <i class="fa-solid fa-paper-plane me-1"></i> Submit Vehicle Request Slip
                         </button>
                     </div>

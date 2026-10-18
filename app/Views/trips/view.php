@@ -24,7 +24,7 @@
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?= base_url('trips') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+        <a href="<?= base_url('trips') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left me-1"></i> All Dispatches
         </a>
     </div>
@@ -113,7 +113,7 @@
                         <input type="number" step="0.1" name="end_odometer" class="form-control mono" placeholder="Current km" value="<?= old('end_odometer', $trip['end_odometer'] ?? ($trip['start_odometer'] + $trip['distance_km'])) ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
 
-                    <button type="submit" class="btn-corp btn-corp-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100">
                         <i class="fa-solid fa-check me-1"></i> Apply Status Update
                     </button>
                 </form>
@@ -146,7 +146,7 @@
                 </div>
 
                 <div class="mt-3">
-                    <a href="<?= base_url('vehicles/' . $trip['vehicle_id']) ?>" class="btn-corp btn-corp-secondary w-100 text-center text-decoration-none d-block">
+                    <a href="<?= base_url('vehicles/' . $trip['vehicle_id']) ?>" class="btn btn-secondary w-100 text-center d-block">
                         Inspect Asset Profile &rarr;
                     </a>
                 </div>
@@ -163,7 +163,7 @@
                 <div class="mono text-muted mb-2" style="font-size: 0.75rem;"><i class="fa-solid fa-phone me-1"></i> <?= esc($trip['driver_phone']) ?></div>
                 <div class="small text-muted mb-3">License: <span class="mono text-dark fw-medium"><?= esc($trip['license_number']) ?></span></div>
                 <div>
-                    <a href="<?= base_url('drivers/' . $trip['driver_id']) ?>" class="btn-corp btn-corp-secondary w-100 text-center text-decoration-none d-block">
+                    <a href="<?= base_url('drivers/' . $trip['driver_id']) ?>" class="btn btn-secondary w-100 text-center d-block">
                         View Operator Scorecard &rarr;
                     </a>
                 </div>

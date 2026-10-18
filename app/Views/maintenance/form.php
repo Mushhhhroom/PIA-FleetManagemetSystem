@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1"><?= esc($title) ?></h1>
         <p class="text-muted small mb-0">Record preventative PMS cycles, mechanical repairs, or pre-trip safety defect work orders.</p>
     </div>
-    <a href="<?= base_url('maintenance') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('maintenance') ?>" class="btn btn-secondary text-decoration-none">
         <i class="fa-solid fa-arrow-left me-1"></i> Return to Ledger
     </a>
 </div>
@@ -99,8 +99,8 @@
 
             <!-- Form Actions -->
             <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                <a href="<?= base_url('maintenance') ?>" class="btn-corp btn-corp-secondary text-decoration-none">Cancel</a>
-                <button type="submit" class="btn-corp btn-corp-primary">
+                <a href="<?= base_url('maintenance') ?>" class="btn btn-secondary text-decoration-none">Cancel</a>
+                <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-wrench me-1"></i> Issue Work Order
                 </button>
             </div>

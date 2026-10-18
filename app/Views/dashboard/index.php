@@ -11,15 +11,15 @@
         <p class="text-muted small mb-0">High-level telemetry overview, active dispatches, and fleet health.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <a href="<?= base_url('tracking') ?>" class="btn btn-corp btn-corp-secondary">
+        <a href="<?= base_url('tracking') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-satellite me-1 text-primary"></i> Live Radar
         </a>
         <?php if (session()->get('user_role') !== 'maintenance'): ?>
-            <a href="<?= base_url('trips/new') ?>" class="btn btn-corp btn-corp-primary">
+            <a href="<?= base_url('trips/new') ?>" class="btn btn-primary">
                 <i class="fa-solid fa-plus me-1"></i> New Dispatch
             </a>
         <?php else: ?>
-            <a href="<?= base_url('maintenance/new') ?>" class="btn btn-corp btn-corp-primary">
+            <a href="<?= base_url('maintenance/new') ?>" class="btn btn-primary">
                 <i class="fa-solid fa-plus me-1"></i> New Work Order
             </a>
         <?php endif; ?>
@@ -28,7 +28,7 @@
 
 <!-- Tier 1 VRS & Dispatch Action Alerts for Dispatcher & Admin -->
 <?php if (!empty($pendingTier1Count) && $pendingTier1Count > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
-    <div class="alert alert-warning border-warning-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div class="alert alert-warning border-warning-subtle p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
             <span class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
                 <i class="fa-solid fa-file-circle-exclamation"></i>
@@ -39,10 +39,10 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary px-3 fw-semibold">
+            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary">
                 <i class="fa-solid fa-gavel me-1"></i> Review &amp; Act (Approvals Portal)
             </a>
-            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-outline-secondary px-3">
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-outline-secondary">
                 <i class="fa-solid fa-truck-fast me-1"></i> Dispatch Console
             </a>
         </div>
@@ -51,7 +51,7 @@
 
 <!-- Tier 2 VRS Action Alert for Admin Division Head -->
 <?php if (!empty($pendingAdminCount) && $pendingAdminCount > 0 && in_array(session()->get('user_role'), ['admin', 'approver_admin'])): ?>
-    <div class="alert alert-primary border-primary-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: rgba(37, 99, 235, 0.08);">
+    <div class="alert alert-primary border-primary-subtle p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style="background: rgba(37, 99, 235, 0.08);">
         <div class="d-flex align-items-center gap-3">
             <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
                 <i class="fa-solid fa-stamp"></i>
@@ -62,7 +62,7 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary px-3 fw-semibold">
+            <a href="<?= base_url('approvals') ?>" class="btn btn-sm btn-primary">
                 <i class="fa-solid fa-stamp me-1"></i> Authorize Requests (Approvals)
             </a>
         </div>
@@ -70,7 +70,7 @@
 <?php endif; ?>
 
 <?php if (!empty($pendingDispatchCount) && $pendingDispatchCount > 0 && in_array(session()->get('user_role'), ['admin', 'dispatcher', 'approver_admin'])): ?>
-    <div class="alert alert-info border-info-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div class="alert alert-info border-info-subtle p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
             <span class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
                 <i class="fa-solid fa-truck-fast"></i>
@@ -81,7 +81,7 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-success px-3 fw-semibold">
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-sm btn-success">
                 <i class="fa-solid fa-van-shuttle me-1"></i> Open Dispatch Console
             </a>
         </div>
@@ -162,7 +162,7 @@
                     <h6>Active Dispatches & Waybills</h6>
                 </div>
                 <?php if (session()->get('user_role') !== 'maintenance'): ?>
-                    <a href="<?= base_url('trips') ?>" class="btn btn-corp btn-corp-secondary py-1 px-2" style="font-size: 0.75rem;">View All Trips</a>
+                    <a href="<?= base_url('trips') ?>" class="btn btn-sm btn-outline-secondary">View All Trips</a>
                 <?php endif; ?>
             </div>
             <div class="table-responsive">
@@ -175,7 +175,7 @@
                             <th>Route Corridor</th>
                             <th>Cargo</th>
                             <th>Status</th>
-                            <th class="text-end">Action</th>
+                            <th class="text-end" style="width: 1%;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -213,10 +213,12 @@
                                             <?= ucfirst(str_replace('_', ' ', $trip['status'])) ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
-                                        <a href="<?= base_url('trips/' . $trip['id']) ?>" class="btn btn-corp btn-corp-secondary py-1 px-2" style="font-size: 0.75rem;">
-                                            Inspect &rarr;
-                                        </a>
+                                    <td class="table-action-cell">
+                                        <div class="table-actions">
+                                            <a href="<?= base_url('trips/' . $trip['id']) ?>" class="btn btn-xs btn-outline-secondary">
+                                                Inspect &rarr;
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

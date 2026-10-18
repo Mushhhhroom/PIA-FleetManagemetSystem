@@ -12,13 +12,13 @@
             <p class="text-muted small mb-0">High-level architectural visualization, end-to-end official travel workflows, and quick-navigation directory of all modules.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" download="PIA-AFMS_System_Entire_Flowchart.png" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
+            <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" download="PIA-AFMS_System_Entire_Flowchart.png" class="btn btn-primary text-decoration-none">
                 <i class="fa-solid fa-download me-1 text-success"></i> Download Flowchart Image (PNG)
             </a>
-            <a href="<?= base_url('dashboard') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+            <a href="<?= base_url('dashboard') ?>" class="btn btn-secondary text-decoration-none">
                 <i class="fa-solid fa-chart-line me-1"></i> Command Center
             </a>
-            <a href="<?= base_url('users') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+            <a href="<?= base_url('users') ?>" class="btn btn-secondary text-decoration-none">
                 <i class="fa-solid fa-users-gear me-1"></i> Manage Accounts
             </a>
         </div>
@@ -538,10 +538,10 @@
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" target="_blank" class="btn-corp btn-corp-secondary text-decoration-none">
+                <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" target="_blank" class="btn btn-secondary text-decoration-none">
                     <i class="fa-solid fa-up-right-and-down-left-from-center me-1"></i> View Full Resolution
                 </a>
-                <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" download="PIA-AFMS_System_Entire_Flowchart.png" class="btn-corp btn-corp-primary text-decoration-none">
+                <a href="<?= base_url('assets/images/system_entire_flowchart.png') ?>" download="PIA-AFMS_System_Entire_Flowchart.png" class="btn btn-primary text-decoration-none">
                     <i class="fa-solid fa-download me-1 text-success"></i> Download Flowchart Image
                 </a>
             </div>

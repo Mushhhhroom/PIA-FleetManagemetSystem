@@ -17,7 +17,7 @@
         <?php if ($unread > 0): ?>
             <form action="<?= base_url('notifications/read-all') ?>" method="POST" class="d-inline">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn-corp btn-corp-secondary text-decoration-none">
+                <button type="submit" class="btn btn-secondary text-decoration-none">
                     <i class="fa-solid fa-check-double me-1"></i> Mark all as read
                 </button>
             </form>
@@ -27,11 +27,11 @@
 
 <!-- Filter tabs -->
 <div class="d-flex flex-wrap gap-2 mb-3">
-    <a href="<?= base_url('notifications') ?>" class="btn btn-sm <?= $filter === '' ? 'btn-primary' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('notifications') ?>" class="btn btn-sm <?= $filter === '' ? 'btn-primary' : 'btn-secondary' ?>">
         All
     </a>
-    <a href="<?= base_url('notifications?filter=unread') ?>" class="btn btn-sm <?= $filter === 'unread' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
-        <i class="fa-solid fa-circle me-1" style="font-size: 0.5rem;"></i> Unread
+    <a href="<?= base_url('notifications?filter=unread') ?>" class="btn btn-sm <?= $filter === 'unread' ? 'btn-primary' : 'btn-secondary' ?>">
+        <i class="fa-solid fa-circle me-1" style="font-size: 0.5rem; color: #f59e0b;"></i> Unread
         <span class="badge bg-dark ms-1"><?= $unread ?></span>
     </a>
 </div>
@@ -73,14 +73,14 @@
 
                     <div class="d-flex gap-1 flex-shrink-0">
                         <?php if (!empty($n['link'])): ?>
-                            <a href="<?= esc($n['link']) ?>" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" title="Open">
+                            <a href="<?= esc($n['link']) ?>" class="btn-icon-xs btn-secondary text-decoration-none" title="Open">
                                 <i class="fa-solid fa-arrow-right"></i>
                             </a>
                         <?php endif; ?>
                         <?php if ($isUnread): ?>
                             <form action="<?= base_url('notifications/' . $n['id'] . '/read') ?>" method="POST" class="d-inline">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2" title="Mark as read">
+                                <button type="submit" class="btn-icon-xs btn-secondary" title="Mark as read">
                                     <i class="fa-solid fa-check"></i>
                                 </button>
                             </form>

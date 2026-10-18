@@ -11,7 +11,7 @@
         <p class="text-muted small mb-0">Official travel authorization, Section B trip execution logs, fuel balance accounting, and dual certifications.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?= base_url('dispatch') ?>" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
+        <a href="<?= base_url('dispatch') ?>" class="btn btn-primary">
             <i class="fa-solid fa-van-shuttle me-1"></i> Motorpool Dispatch Queue
         </a>
     </div>
@@ -19,19 +19,19 @@
 
 <!-- Filter Tabs -->
 <div class="d-flex flex-wrap gap-2 mb-3">
-    <a href="<?= base_url('tickets') ?>" class="btn btn-sm <?= empty($activeFilter) || $activeFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('tickets') ?>" class="btn btn-sm <?= empty($activeFilter) || $activeFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary' ?>">
         All Tickets
     </a>
-    <a href="<?= base_url('tickets?status=issued') ?>" class="btn btn-sm <?= $activeFilter === 'issued' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('tickets?status=issued') ?>" class="btn btn-sm <?= $activeFilter === 'issued' ? 'btn-warning text-dark' : 'btn-outline-secondary' ?>">
         <i class="fa-solid fa-ticket me-1"></i> Issued (Pending Departure)
     </a>
-    <a href="<?= base_url('tickets?status=departed') ?>" class="btn btn-sm <?= $activeFilter === 'departed' ? 'btn-primary' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('tickets?status=departed') ?>" class="btn btn-sm <?= $activeFilter === 'departed' ? 'btn-primary' : 'btn-outline-secondary' ?>">
         <i class="fa-solid fa-route me-1"></i> Departed (Active Transit)
     </a>
-    <a href="<?= base_url('tickets?status=returned') ?>" class="btn btn-sm <?= $activeFilter === 'returned' ? 'btn-info text-white' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('tickets?status=returned') ?>" class="btn btn-sm <?= $activeFilter === 'returned' ? 'btn-info text-white' : 'btn-outline-secondary' ?>">
         <i class="fa-solid fa-warehouse me-1"></i> Returned (Pending Section B Audit)
     </a>
-    <a href="<?= base_url('tickets?status=completed') ?>" class="btn btn-sm <?= $activeFilter === 'completed' ? 'btn-success' : 'btn-outline-secondary' ?> py-1 px-3 rounded-pill">
+    <a href="<?= base_url('tickets?status=completed') ?>" class="btn btn-sm <?= $activeFilter === 'completed' ? 'btn-success' : 'btn-outline-secondary' ?>">
         <i class="fa-solid fa-circle-check me-1"></i> Reconciled & Audited
     </a>
 </div>
@@ -115,12 +115,12 @@
                                     <?= $st['label'] ?>
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-1">
-                                    <a href="<?= base_url('tickets/' . $t['id']) ?>" class="btn btn-sm btn-outline-secondary py-1 px-2" title="View e-DTT">
+                            <td class="text-end table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('tickets/' . $t['id']) ?>" class="btn btn-icon-sm btn-outline-secondary" title="View e-DTT">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
-                                    <a href="<?= base_url('tickets/' . $t['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-outline-dark py-1 px-2" title="Print ADMIN-F-001 rev1">
+                                    <a href="<?= base_url('tickets/' . $t['id'] . '/print') ?>" target="_blank" class="btn btn-icon-sm btn-outline-secondary" title="Print ADMIN-F-001 rev1">
                                         <i class="fa-solid fa-print"></i>
                                     </a>
                                 </div>

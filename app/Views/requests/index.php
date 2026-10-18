@@ -11,14 +11,14 @@
         <p class="text-muted small mb-0">Official travel authorization requests, multi-tier approvals, 4-hour escalation and 24-hour expiry SLA tracking.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?= base_url('requests/new') ?>" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
+        <a href="<?= base_url('requests/new') ?>" class="btn btn-primary text-decoration-none">
             <i class="fa-solid fa-plus me-1"></i> File New Vehicle Request
         </a>
     </div>
 </div>
 
 <!-- SLA & Policy Info Banner -->
-<div class="alert bg-white border border-primary-subtle shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+<div class="alert bg-white border border-primary-subtle p-3 mb-4 rounded-2 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
     <div class="d-flex align-items-center gap-3">
         <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
             <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
@@ -161,21 +161,22 @@
                                     <?= $st['label'] ?>
                                 </span>
                             </td>
-                            <td class="text-end text-nowrap">
-                                <?php if ($r['status'] === 'pending_dispatcher' && in_array($userRole, ['admin', 'dispatcher'])): ?>
-                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2 shadow-sm text-decoration-none me-1" style="font-size: 0.75rem;" title="Review documents and endorse/disapprove" data-bs-toggle="modal" data-bs-target="#reqTier1Modal<?= $r['id'] ?>">
-                                        <i class="fa-solid fa-file-circle-check me-1"></i> Review &amp; Endorse
-                                    </button>
-                                <?php elseif ($r['status'] === 'pending_admin' && in_array($userRole, ['admin', 'approver_admin'])): ?>
-                                    <button type="button" class="btn btn-sm btn-success py-1 px-2 shadow-sm text-decoration-none me-1" style="font-size: 0.75rem;" title="Authorize official travel" data-bs-toggle="modal" data-bs-target="#reqAdminModal<?= $r['id'] ?>">
-                                        <i class="fa-solid fa-stamp me-1"></i> Authorize
-                                    </button>
-                                <?php endif; ?>
-                                <div class="dropdown d-inline-block">
-                                    <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown">
-                                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                            <td class="text-end table-action-cell">
+                                <div class="table-actions">
+                                    <?php if ($r['status'] === 'pending_dispatcher' && in_array($userRole, ['admin', 'dispatcher'])): ?>
+                                        <button type="button" class="btn btn-sm btn-primary" title="Review documents and endorse/disapprove" data-bs-toggle="modal" data-bs-target="#reqTier1Modal<?= $r['id'] ?>">
+                                            <i class="fa-solid fa-file-circle-check me-1"></i> Review &amp; Endorse
+                                        </button>
+                                    <?php elseif ($r['status'] === 'pending_admin' && in_array($userRole, ['admin', 'approver_admin'])): ?>
+                                        <button type="button" class="btn btn-sm btn-success" title="Authorize official travel" data-bs-toggle="modal" data-bs-target="#reqAdminModal<?= $r['id'] ?>">
+                                            <i class="fa-solid fa-stamp me-1"></i> Authorize
+                                        </button>
+                                    <?php endif; ?>
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-icon-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-label="More actions">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
                                         <li>
                                             <a class="dropdown-item small" href="<?= base_url('requests/' . $r['id']) ?>">
                                                 <i class="fa-solid fa-eye me-2 text-primary"></i> View Slip Details

@@ -54,10 +54,10 @@
 
 <?php if (!empty($pendingTier1)): ?>
 <!-- Tier 1: VRS Review & Document Check Queue (Motorpool Dispatcher Authority) -->
-<div class="card-panel border border-warning shadow-sm mb-4" id="tier1-section">
-    <div class="p-3 border-bottom bg-warning bg-opacity-10 d-flex align-items-center justify-content-between">
+<div class="card-panel mb-4" id="tier1-section">
+    <div class="card-panel-header bg-white d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
         <div class="d-flex align-items-center gap-2">
-            <span class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; font-size: 0.75rem;">
+            <span class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
                 <i class="fa-solid fa-file-circle-check"></i>
             </span>
             <div>
@@ -70,7 +70,7 @@
                 <div class="text-muted" style="font-size: 0.72rem;">Assigned to Motorpool Dispatcher &bull; Check travel documents, passenger specifications, and endorse for Tier 2 administrative clearance.</div>
             </div>
         </div>
-        <span class="badge bg-warning text-dark rounded-pill small"><?= count($pendingTier1) ?> Pending Review</span>
+        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning-subtle rounded-pill small"><?= count($pendingTier1) ?> Pending Review</span>
     </div>
     <div class="table-responsive">
         <table class="table-minimal">
@@ -124,7 +124,7 @@
                         </td>
                         <td>
                             <?php if (!empty($r['justification_file'])): ?>
-                                <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;">
+                                <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.72rem;">
                                     <i class="fa-solid fa-paperclip me-1"></i> Inspect File
                                 </a>
                             <?php else: ?>
@@ -136,17 +136,17 @@
                                 <i class="fa-solid fa-stopwatch me-1"></i><?= $r['sla_info']['text'] ?>
                             </span>
                         </td>
-                        <td class="text-end">
-                            <div class="d-flex align-items-center justify-content-end gap-1">
+                        <td class="text-end table-action-cell">
+                            <div class="table-actions">
                                 <?php if (!empty($r['driver_conflict'])): ?>
-                                    <form action="<?= base_url('dispatch/deny-driver-conflict/' . $r['id']) ?>" method="POST" class="d-inline" onsubmit="return confirm('Auto-deny this request due to driver unavailability?');">
+                                    <form action="<?= base_url('dispatch/deny-driver-conflict/' . $r['id']) ?>" method="POST" class="d-inline m-0" onsubmit="return confirm('Auto-deny this request due to driver unavailability?');">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2 fw-semibold" title="Deny request due to driver conflict">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Deny request due to driver conflict">
                                             <i class="fa-solid fa-user-slash me-1"></i> Deny
                                         </button>
                                     </form>
                                 <?php endif; ?>
-                                <button type="button" class="btn btn-sm btn-primary py-1 px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#dispatchTier1Modal<?= $r['id'] ?>">
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#dispatchTier1Modal<?= $r['id'] ?>">
                                     <i class="fa-solid fa-gavel me-1"></i> Review &amp; Endorse
                                 </button>
                             </div>
@@ -162,19 +162,19 @@
 <!-- Pending Dispatch Queue (Priority Action) -->
 <form id="batchMergeForm" action="<?= base_url('dispatch/merge-batch') ?>" method="POST" class="m-0">
     <?= !is_cli() ? csrf_field() : '' ?>
-    <div class="card-panel border shadow-sm mb-4">
-        <div class="p-3 border-bottom bg-light d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+    <div class="card-panel mb-4">
+        <div class="card-panel-header bg-white d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-2">
-                <span class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.75rem;">
+                <span class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
                     <i class="fa-solid fa-truck-fast"></i>
                 </span>
                 <span class="fw-bold text-dark small text-uppercase">Authorized Requests Awaiting Vehicle &amp; Driver Assignment</span>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <button type="submit" id="mergeBatchBtn" class="btn btn-sm btn-outline-primary py-1 px-3 fw-semibold shadow-sm" disabled title="Select 2 or more requests with matching destinations or schedules to merge into a single vehicle dispatch">
+                <button type="submit" id="mergeBatchBtn" class="btn btn-sm btn-outline-primary" disabled title="Select 2 or more requests with matching destinations or schedules to merge into a single vehicle dispatch">
                     <i class="fa-solid fa-code-merge me-1"></i> Merge &amp; Dispatch Selected (<span id="selectedCount">0</span>)
                 </button>
-                <span class="badge bg-primary rounded-pill small"><?= count($pendingDispatch) ?> Requests</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill small"><?= count($pendingDispatch) ?> Requests</span>
             </div>
         </div>
         <div class="table-responsive">
@@ -258,14 +258,14 @@
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-end">
-                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                <td class="text-end table-action-cell">
+                                    <div class="table-actions">
                                         <?php if (!empty($r['driver_conflict'])): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 fw-semibold" title="Auto-deny this request due to driver conflict" onclick="submitSingleDeny(<?= $r['id'] ?>)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Auto-deny this request due to driver conflict" onclick="submitSingleDeny(<?= $r['id'] ?>)">
                                                 <i class="fa-solid fa-user-slash me-1"></i> Deny
                                             </button>
                                         <?php endif; ?>
-                                        <a href="<?= base_url('dispatch/assign/' . $r['id']) ?>" class="btn btn-sm btn-primary py-1 px-3 shadow-sm fw-semibold text-nowrap">
+                                        <a href="<?= base_url('dispatch/assign/' . $r['id']) ?>" class="btn btn-sm btn-primary text-nowrap">
                                             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Pair &amp; e-DTT
                                         </a>
                                     </div>
@@ -283,12 +283,12 @@
 <div class="row g-4">
     <!-- Vehicles with PMS Health -->
     <div class="col-lg-7">
-        <div class="card-panel border shadow-sm h-100">
-            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel h-100">
+            <div class="card-panel-header bg-white d-flex align-items-center justify-content-between">
                 <span class="fw-bold text-dark small text-uppercase">
-                    <i class="fa-solid fa-truck me-1 text-primary"></i> Vehicle Fleet & 5,000 KM PMS Radar
+                    <i class="fa-solid fa-truck me-1 text-primary"></i> Vehicle Fleet &amp; 5,000 KM PMS Radar
                 </span>
-                <span class="badge bg-white text-muted border small"><?= count($vehicles) ?> Units</span>
+                <span class="badge bg-light text-muted border small"><?= count($vehicles) ?> Units</span>
             </div>
             <div class="table-responsive">
                 <table class="table-minimal">
@@ -355,12 +355,12 @@
 
     <!-- Certified Drivers Pool -->
     <div class="col-lg-5">
-        <div class="card-panel border shadow-sm h-100">
-            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel h-100">
+            <div class="card-panel-header bg-white d-flex align-items-center justify-content-between">
                 <span class="fw-bold text-dark small text-uppercase">
                     <i class="fa-solid fa-id-card me-1 text-primary"></i> Certified Driver Pool
                 </span>
-                <span class="badge bg-white text-muted border small"><?= count($drivers) ?> Drivers</span>
+                <span class="badge bg-light text-muted border small"><?= count($drivers) ?> Drivers</span>
             </div>
             <div class="p-3">
                 <?php foreach ($drivers as $d): ?>

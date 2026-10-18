@@ -23,7 +23,7 @@
         <form action="<?= base_url('compliance') ?>" method="GET" class="d-flex gap-2">
             <input type="month" name="month" class="form-control" value="<?= esc($month) ?>" onchange="this.form.submit()">
         </form>
-        <a href="<?= base_url('compliance/form-b?month=' . urlencode($month)) ?>" class="btn-corp btn-corp-primary text-decoration-none">
+        <a href="<?= base_url('compliance/form-b?month=' . urlencode($month)) ?>" class="btn btn-primary">
             <i class="fa-solid fa-file-csv me-1"></i> COA Form B
         </a>
     </div>
@@ -37,7 +37,7 @@
         </h2>
         <form action="<?= base_url('compliance/expiry-alerts') ?>" method="POST" class="d-inline">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
                 <i class="fa-solid fa-bullhorn me-1"></i> Send Alerts Now
             </button>
         </form>
@@ -163,7 +163,7 @@
                 fuel consumed, destination addresses and passenger lists.
             </p>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="<?= base_url('compliance/form-b?month=' . urlencode($month)) ?>" class="btn-corp btn-corp-primary text-decoration-none" target="_blank">
+                <a href="<?= base_url('compliance/form-b?month=' . urlencode($month)) ?>" class="btn btn-primary" target="_blank">
                     <i class="fa-solid fa-print me-1"></i> Generate Form B — <?= esc(date('M Y', strtotime($month . '-01'))) ?>
                 </a>
                 <span class="badge bg-light text-dark border p-2 align-self-center"><?= count($formB) ?> trip record(s)</span>
@@ -202,7 +202,7 @@
                 <form action="<?= base_url('compliance/non-usage') ?>" method="POST">
                     <?= csrf_field() ?>
                     <input type="hidden" name="month" value="<?= esc($month) ?>">
-                    <button type="submit" class="btn-corp btn-corp-secondary"
+                    <button type="submit" class="btn btn-secondary"
                             onclick="return confirm('Generate Certificates of Non-Usage for all idle vehicles this month?');">
                         <i class="fa-solid fa-certificate me-1"></i> Generate Certificates
                     </button>
@@ -219,7 +219,7 @@
                                 <span class="mono fw-semibold"><?= esc($cert['certificate_no']) ?></span>
                                 <span class="text-muted">— <?= esc($cert['plate_number'] ?? '?') ?></span>
                             </span>
-                            <a href="<?= base_url('compliance/non-usage/' . $cert['id']) ?>" class="btn btn-sm btn-outline-secondary rounded-pill" target="_blank">
+                            <a href="<?= base_url('compliance/non-usage/' . $cert['id']) ?>" class="btn-icon-sm btn-outline-secondary" target="_blank" title="Print Certificate">
                                 <i class="fa-solid fa-print"></i>
                             </a>
                         </li>

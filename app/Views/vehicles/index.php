@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">Vehicle Fleet Registry</h1>
         <p class="text-muted small mb-0">Commercial transport units, VIN registrations, telematics status, and driver assignments.</p>
     </div>
-    <a href="<?= base_url('vehicles/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+    <a href="<?= base_url('vehicles/new') ?>" class="btn btn-primary text-decoration-none">
         <i class="fa-solid fa-plus me-1"></i> Register Transport Unit
     </a>
 </div>
@@ -109,12 +109,12 @@
                                     <span class="mono text-muted" style="font-size: 0.66rem; font-style: italic;">No LTO/GSIS dates on file</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <a href="<?= base_url('vehicles/' . $v['id']) ?>" class="btn-corp btn-corp-secondary text-decoration-none" title="Vehicle Profile">
+                            <td class="text-end table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('vehicles/' . $v['id']) ?>" class="btn btn-icon-sm btn-outline-secondary" title="Vehicle Profile">
                                         <i class="fa-solid fa-chart-simple"></i>
                                     </a>
-                                    <a href="<?= base_url('vehicles/' . $v['id'] . '/edit') ?>" class="btn-corp btn-corp-secondary text-decoration-none" title="Edit Vehicle">
+                                    <a href="<?= base_url('vehicles/' . $v['id'] . '/edit') ?>" class="btn btn-icon-sm btn-outline-secondary" title="Edit Vehicle">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
                                 </div>

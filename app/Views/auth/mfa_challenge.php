@@ -21,14 +21,14 @@
         .card-shell {
             background: #fff;
             border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.10);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             width: 100%;
             max-width: 420px;
             padding: 34px 32px;
         }
-        .brand-dot { width: 44px; height: 44px; border-radius: 12px; background: #2563eb; color: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+        .brand-dot { width: 42px; height: 42px; border-radius: 8px; background: #0f172a; color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; }
         h1 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
         .muted { font-size: 0.85rem; color: #64748b; }
         .code-input {
@@ -37,11 +37,13 @@
             font-size: 1.5rem;
             font-weight: 600;
             text-align: center;
-            padding: 12px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
         }
-        .btn-primary { background: #2563eb; border-color: #2563eb; font-weight: 600; padding: 11px; border-radius: 8px; }
-        .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
-        .alert { font-size: 0.85rem; border-radius: 8px; }
+        .btn-primary { background: #0f172a; border-color: #0f172a; font-weight: 600; padding: 10px; border-radius: 7px; }
+        .btn-primary:hover { background: #1e293b; border-color: #1e293b; }
+        .alert { font-size: 0.85rem; border-radius: 7px; }
     </style>
 </head>
 <body>

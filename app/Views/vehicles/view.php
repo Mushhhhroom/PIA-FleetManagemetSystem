@@ -17,13 +17,13 @@
             <?= esc($vehicle['make']) ?> <?= esc($vehicle['model']) ?> (<?= esc($vehicle['year']) ?>) &bull; Plate: <span class="mono fw-semibold text-dark"><?= esc($vehicle['plate_number']) ?></span> &bull; VIN: <span class="mono text-muted"><?= esc($vehicle['vin']) ?></span>
         </p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="<?= base_url('vehicles/' . $vehicle['id'] . '/edit') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <div class="d-flex align-items-center gap-2">
+        <a href="<?= base_url('vehicles/' . $vehicle['id'] . '/edit') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-pen me-1"></i> Edit Specifications
         </a>
         <form action="<?= base_url('vehicles/' . $vehicle['id'] . '/delete') ?>" method="POST" onsubmit="return confirm('Are you sure you want to permanently decommission this vehicle asset?');" class="m-0">
             <?= csrf_field() ?>
-            <button type="submit" class="btn-corp btn-corp-secondary" style="color: #991b1b; border-color: #fecaca; background: #fff;">
+            <button type="submit" class="btn btn-outline-danger">
                 <i class="fa-solid fa-trash me-1"></i> Decommission
             </button>
         </form>
@@ -120,8 +120,10 @@
                                     <td class="mono"><?= number_format($t['distance_km'], 1) ?> km</td>
                                     <td><?= esc($t['cargo_type']) ?> (<?= number_format($t['cargo_weight_kg'], 0) ?> kg)</td>
                                     <td><span class="status-badge status-<?= esc($t['status']) ?>"><?= ucfirst(str_replace('_', ' ', $t['status'])) ?></span></td>
-                                    <td class="text-end">
-                                        <a href="<?= base_url('trips/' . $t['id']) ?>" class="btn-corp btn-corp-secondary text-decoration-none">View &rarr;</a>
+                                    <td class="table-action-cell">
+                                        <div class="table-actions">
+                                            <a href="<?= base_url('trips/' . $t['id']) ?>" class="btn btn-xs btn-outline-secondary">View &rarr;</a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

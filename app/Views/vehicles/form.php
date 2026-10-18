@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1"><?= esc($title) ?></h1>
         <p class="text-muted small mb-0">Vehicle identification specifications, powertrain calibration, and default operator assignment.</p>
     </div>
-    <a href="<?= base_url('vehicles') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('vehicles') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-arrow-left me-1"></i> Return to Registry
     </a>
 </div>
@@ -183,8 +183,8 @@
 
             <!-- Form Actions -->
             <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                <a href="<?= base_url('vehicles') ?>" class="btn-corp btn-corp-secondary text-decoration-none">Cancel</a>
-                <button type="submit" class="btn-corp btn-corp-primary">
+                <a href="<?= base_url('vehicles') ?>" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Vehicle Record
                 </button>
             </div>

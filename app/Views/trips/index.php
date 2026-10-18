@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">Trip Dispatches</h1>
         <p class="text-muted small mb-0">Active transit manifests, transport allocations, and real-time delivery status.</p>
     </div>
-    <a href="<?= base_url('trips/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+    <a href="<?= base_url('trips/new') ?>" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i> New Dispatch Manifest
     </a>
 </div>
@@ -28,7 +28,7 @@
                     <th>Freight & Payload</th>
                     <th>Departure</th>
                     <th>Status</th>
-                    <th class="text-end">Action</th>
+                    <th class="text-end" style="width: 1%;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,10 +85,12 @@
                                     <?= ucfirst(str_replace('_', ' ', esc($t['status']))) ?>
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <a href="<?= base_url('trips/' . $t['id']) ?>" class="btn-corp btn-corp-secondary text-decoration-none">
-                                    Manage &rarr;
-                                </a>
+                            <td class="table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('trips/' . $t['id']) ?>" class="btn btn-xs btn-outline-secondary">
+                                        Manage &rarr;
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -13,7 +13,7 @@
             <strong>Under Maintenance</strong> and routes a Pre-Repair Inspection Report (PIR) to the mechanic queue (FR-5.2).
         </p>
     </div>
-    <a href="<?= base_url('tickets/' . $ticket['id']) ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('tickets/' . $ticket['id']) ?>" class="btn btn-secondary">
         <i class="fa-solid fa-arrow-left me-1"></i> Back to Trip Ticket
     </a>
 </div>
@@ -105,7 +105,7 @@
                 A failed item automatically cancels this trip, locks the vehicle state to
                 <strong>Under Maintenance</strong>, and creates a PIR ticket for the mechanic queue.
             </div>
-            <button type="submit" class="btn-corp btn-corp-primary">
+            <button type="submit" class="btn btn-primary">
                 <i class="fa-solid fa-check me-1"></i> Submit Safety Check
             </button>
         </div>

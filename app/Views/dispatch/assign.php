@@ -11,8 +11,8 @@
 <div class="row justify-content-center">
     <div class="col-lg-10">
         <!-- Header Panel -->
-        <div class="card-panel border shadow-sm mb-4">
-            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel mb-4">
+            <div class="card-panel-header d-flex align-items-center justify-content-between">
                 <div>
                     <div class="mono" style="font-size: 0.68rem; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.08em;">
                         Heuristic Allocation Engine &bull; SDD §4.2
@@ -267,11 +267,11 @@
                         <i class="fa-solid fa-qrcode text-primary fa-lg"></i>
                         <span>Confirming dispatch generates the official e-DTT (ADMIN-F-001 rev1) and HMAC-SHA256 QR security code.</span>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="<?= base_url('dispatch') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <a href="<?= base_url('dispatch') ?>" class="btn btn-secondary">
                             Cancel
                         </a>
-                        <button type="submit" id="finalizeDispatchBtn" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm" <?= !$recommendations['has_available_match'] ? 'disabled' : '' ?>>
+                        <button type="submit" id="finalizeDispatchBtn" class="btn btn-primary" <?= !$recommendations['has_available_match'] ? 'disabled' : '' ?>>
                             <i class="fa-solid fa-paper-plane me-1"></i> Finalize Dispatch &amp; Generate e-DTT
                         </button>
                     </div>

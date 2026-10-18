@@ -13,7 +13,7 @@
             Entries are append-only and cannot be edited or deleted through the application.
         </p>
     </div>
-    <a href="<?= base_url('audit') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('audit') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-chart-pie me-1"></i> Audit Dashboard
     </a>
 </div>
@@ -35,8 +35,8 @@
             <input type="text" name="q" class="form-control form-control-sm" value="<?= esc($search) ?>" placeholder="e.g. EMERGENCY OVERRIDE, 192.168.">
         </div>
         <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn-corp btn-corp-primary btn-sm flex-fill"><i class="fa-solid fa-filter me-1"></i> Filter</button>
-            <a href="<?= base_url('audit/logs') ?>" class="btn btn-sm btn-outline-secondary rounded-pill flex-fill text-center text-decoration-none">Reset</a>
+            <button type="submit" class="btn btn-primary btn-sm flex-fill"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+            <a href="<?= base_url('audit/logs') ?>" class="btn btn-sm btn-outline-secondary flex-fill text-center">Reset</a>
         </div>
     </form>
 </div>

@@ -93,19 +93,24 @@ APPLIED FIXES:
 
 /* Quick-Dial Keypad */
 .keypad-btn {
-    height: 56px;
-    font-size: 1.35rem;
+    height: 50px;
+    font-size: 1.25rem;
     font-weight: 700;
-    border-radius: 10px;
+    border-radius: 8px;
     transition: all 0.1s ease-in-out;
     background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    color: #0f172a;
+    border: 1px solid var(--border-strong);
+    color: var(--text-heading);
+}
+.keypad-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
 }
 .keypad-btn:active {
-    transform: scale(0.94);
-    background: #0284c7 !important;
+    transform: scale(0.96);
+    background: #2563eb !important;
     color: #fff !important;
+    border-color: #2563eb !important;
 }
 .pin-display-cell {
     width: 44px;
@@ -177,8 +182,8 @@ APPLIED FIXES:
     <!-- Left Column: Scanner & Keypad Interface -->
     <div class="col-lg-5">
         <!-- Interactive Scanner Card -->
-        <div class="card-panel border shadow-sm mb-4">
-            <div class="p-2 border-bottom bg-light d-flex align-items-center justify-content-between">
+        <div class="card-panel mb-4">
+            <div class="card-panel-header bg-white p-2 d-flex align-items-center justify-content-between">
                 <!-- Mode Switcher Tabs -->
                 <ul class="nav nav-pills nav-fill flex-grow-1" id="scannerModeTabs">
                     <li class="nav-item">
@@ -301,7 +306,7 @@ APPLIED FIXES:
         </div>
 
         <!-- Compound In/Out Stats -->
-        <div class="card-panel border shadow-sm p-3">
+        <div class="card-panel p-3">
             <div class="row g-2 text-center">
                 <div class="col-6">
                     <div class="p-3 rounded bg-primary bg-opacity-10 border border-primary-subtle">

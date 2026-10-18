@@ -14,45 +14,45 @@
     <!-- Top Telematics Control Toolbar -->
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <!-- Google Maps Settings / Engine Trigger -->
-        <button type="button" class="btn-corp btn-corp-secondary" data-bs-toggle="modal" data-bs-target="#googleMapsModal" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#googleMapsModal">
             <i class="fa-brands fa-google text-danger"></i>
             <span id="mapEngineStatus">Google Maps</span>
             <i class="fa-solid fa-gear text-muted" style="font-size: 0.7rem;"></i>
         </button>
 
         <!-- Google Live Traffic Layer Toggle -->
-        <button id="btnTrafficToggle" type="button" class="btn-corp btn-corp-secondary" style="display: inline-flex; align-items: center; gap: 6px;" title="Toggle Real-Time Google Traffic Congestion">
+        <button id="btnTrafficToggle" type="button" class="btn btn-sm btn-secondary" title="Toggle Real-Time Google Traffic Congestion">
             <i class="fa-solid fa-traffic-light text-warning" id="trafficIcon"></i>
             <span id="trafficLabel">Traffic: OFF</span>
         </button>
 
         <!-- Google Map Type Selector -->
         <div class="btn-group btn-group-sm" role="group" aria-label="Google Map View">
-            <button type="button" class="btn btn-sm btn-corp-secondary active" id="btnMapRoad" onclick="setGoogleMapType('roadmap')">Road</button>
-            <button type="button" class="btn btn-sm btn-corp-secondary" id="btnMapSat" onclick="setGoogleMapType('satellite')">Satellite</button>
-            <button type="button" class="btn btn-sm btn-corp-secondary" id="btnMapHybrid" onclick="setGoogleMapType('hybrid')">Hybrid</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnMapRoad" onclick="setGoogleMapType('roadmap')">Road</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapSat" onclick="setGoogleMapType('satellite')">Satellite</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapHybrid" onclick="setGoogleMapType('hybrid')">Hybrid</button>
         </div>
 
         <!-- Auto-Stream Telemetry Toggle -->
-        <button id="btnAutoStream" type="button" class="btn-corp btn-corp-secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button id="btnAutoStream" type="button" class="btn btn-sm btn-secondary">
             <i class="fa-solid fa-tower-broadcast text-success" id="streamIcon"></i>
             <span id="streamLabel">Stream: ON (5s)</span>
         </button>
 
         <!-- Fit Fleet Bounds -->
-        <button id="btnFitBounds" type="button" class="btn-corp btn-corp-secondary" style="display: inline-flex; align-items: center; gap: 6px;" title="Fit entire fleet into viewport">
+        <button id="btnFitBounds" type="button" class="btn btn-sm btn-secondary" title="Fit entire fleet into viewport">
             <i class="fa-solid fa-crosshairs text-muted"></i>
             <span>Fit Fleet</span>
         </button>
 
         <!-- Simulate Step -->
-        <button id="btnSimulate" type="button" class="btn-corp btn-corp-secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button id="btnSimulate" type="button" class="btn btn-sm btn-secondary">
             <i class="fa-solid fa-satellite text-primary"></i>
             <span>Simulate Step</span>
         </button>
 
         <!-- Sync Button -->
-        <button id="btnRefresh" type="button" class="btn-corp btn-corp-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button id="btnRefresh" type="button" class="btn btn-sm btn-primary">
             <i class="fa-solid fa-arrows-rotate"></i>
             <span>Sync</span>
         </button>
@@ -83,10 +83,10 @@
             <!-- Filter Pills -->
             <div class="p-2 border-bottom bg-light">
                 <div class="btn-group w-100 btn-group-sm" role="group">
-                    <button type="button" class="btn btn-sm btn-corp-secondary active btn-filter" data-filter="all" style="padding: 3px 6px; font-size: 0.72rem;">All</button>
-                    <button type="button" class="btn btn-sm btn-corp-secondary btn-filter" data-filter="in_transit" style="padding: 3px 6px; font-size: 0.72rem;">Transit</button>
-                    <button type="button" class="btn btn-sm btn-corp-secondary btn-filter" data-filter="active" style="padding: 3px 6px; font-size: 0.72rem;">Active</button>
-                    <button type="button" class="btn btn-sm btn-corp-secondary btn-filter" data-filter="maintenance" style="padding: 3px 6px; font-size: 0.72rem;">Maint</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary active btn-filter" data-filter="all" style="padding: 3px 6px; font-size: 0.72rem;">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-filter" data-filter="in_transit" style="padding: 3px 6px; font-size: 0.72rem;">Transit</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-filter" data-filter="active" style="padding: 3px 6px; font-size: 0.72rem;">Active</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-filter" data-filter="maintenance" style="padding: 3px 6px; font-size: 0.72rem;">Maint</button>
                 </div>
             </div>
 
@@ -214,8 +214,8 @@
                 </div>
             </div>
             <div class="modal-footer pt-2 border-top">
-                <button type="button" class="btn btn-sm btn-corp-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-sm btn-corp-primary" id="btnSaveGoogleMapsConfig">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btnSaveGoogleMapsConfig">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Apply & Save Settings
                 </button>
             </div>
@@ -421,10 +421,10 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button onclick="loadVehicleTrail(${v.id})" class="btn-corp btn-corp-primary flex-grow-1 text-center" style="font-size: 0.72rem; padding: 4px 6px;">
+                        <button onclick="loadVehicleTrail(${v.id})" class="btn btn-xs btn-primary flex-grow-1 text-center">
                             <i class="fa-solid fa-route me-1"></i> Trail
                         </button>
-                        <a href="<?= base_url('vehicles/') ?>/${v.id}" class="btn-corp btn-corp-secondary flex-grow-1 text-center text-decoration-none" style="font-size: 0.72rem; padding: 4px 6px;">
+                        <a href="<?= base_url('vehicles/') ?>/${v.id}" class="btn btn-xs btn-secondary flex-grow-1 text-center text-decoration-none">
                             Ledger &rarr;
                         </a>
                     </div>

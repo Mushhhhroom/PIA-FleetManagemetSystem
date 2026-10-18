@@ -13,7 +13,7 @@
             Record pre-inspection findings and post-repair evaluations before restoring a vehicle to Available status.
         </p>
     </div>
-    <a href="<?= base_url('safety') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+    <a href="<?= base_url('safety') ?>" class="btn btn-secondary">
         <i class="fa-solid fa-clipboard-check me-1"></i> Safety Registry
     </a>
 </div>
@@ -32,8 +32,7 @@
     ?>
     <?php foreach ($filters as $key => $label): ?>
         <li class="nav-item">
-            <a class="nav-link py-1 px-3 rounded-pill small <?= ($activeFilter === ($key ?: 'open') || ($key === '' && $activeFilter === 'open')) ? 'active' : '' ?>"
-               style="<?= ($activeFilter === ($key ?: 'open') || ($key === '' && $activeFilter === 'open')) ? '' : 'background:#eef2f7;color:#334155;' ?>"
+            <a class="nav-link py-1 px-3 small <?= ($activeFilter === ($key ?: 'open') || ($key === '' && $activeFilter === 'open')) ? 'active' : '' ?>"
                href="<?= base_url('pir' . ($key ? '?status=' . $key : '')) ?>">
                 <?= $label ?>
             </a>
@@ -55,7 +54,7 @@
                     <th>Mechanic</th>
                     <th>Vehicle State</th>
                     <th>Date Filed</th>
-                    <th></th>
+                    <th class="text-end" style="width: 1%;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -104,10 +103,12 @@
                             <td style="font-size: 0.8rem;"><?= esc($p['mechanic_name'] ?? 'Unassigned') ?></td>
                             <td><span class="badge <?= $vehicleBadge ?>"><?= esc(str_replace('_', ' ', ucfirst($p['vehicle_status'] ?? 'unknown'))) ?></span></td>
                             <td class="mono text-muted" style="font-size: 0.75rem;"><?= esc($p['created_at']) ?></td>
-                            <td>
-                                <a href="<?= base_url('pir/' . $p['id']) ?>" class="btn btn-sm btn-outline-primary rounded-pill">
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
+                            <td class="table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('pir/' . $p['id']) ?>" class="btn-icon-sm btn-outline-secondary" title="View Ticket">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

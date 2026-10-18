@@ -20,25 +20,25 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?= base_url('requests/' . $request['id'] . '/print') ?>" target="_blank" class="btn-corp btn-corp-secondary text-decoration-none shadow-sm">
+        <a href="<?= base_url('requests/' . $request['id'] . '/print') ?>" target="_blank" class="btn btn-secondary">
             <i class="fa-solid fa-print me-1"></i> Print Official VRS
         </a>
         <?php if ($request['status'] === 'pending_dispatcher' && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
-            <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#showTier1Modal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#showTier1Modal">
                 <i class="fa-solid fa-file-circle-check me-1"></i> Review &amp; Endorse (Tier 1)
             </button>
         <?php elseif ($request['status'] === 'pending_admin' && in_array(session()->get('user_role'), ['admin', 'approver_admin'])): ?>
-            <button type="button" class="btn btn-success btn-sm px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#showTier2Modal">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#showTier2Modal">
                 <i class="fa-solid fa-stamp me-1"></i> Authorize Travel (Tier 2)
             </button>
         <?php endif; ?>
         <?php if ($request['status'] === 'approved' && in_array(session()->get('user_role'), ['admin', 'dispatcher'])): ?>
-            <a href="<?= base_url('dispatch/assign/' . $request['id']) ?>" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
+            <a href="<?= base_url('dispatch/assign/' . $request['id']) ?>" class="btn btn-primary">
                 <i class="fa-solid fa-van-shuttle me-1"></i> Dispatch Vehicle & Driver
             </a>
         <?php endif; ?>
         <?php if (!empty($request['ticket_id'])): ?>
-            <a href="<?= base_url('tickets/' . $request['ticket_id']) ?>" class="btn btn-outline-primary btn-sm px-3 shadow-sm">
+            <a href="<?= base_url('tickets/' . $request['ticket_id']) ?>" class="btn btn-outline-primary">
                 <i class="fa-solid fa-ticket me-1"></i> View Driver's Trip Ticket
             </a>
         <?php endif; ?>

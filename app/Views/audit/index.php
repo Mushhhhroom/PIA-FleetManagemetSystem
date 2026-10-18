@@ -11,10 +11,10 @@
         <p class="text-muted small mb-0">Statutory audit trails, approval SLA metrics (4h escalation / 24h expiry), fuel consumption variances, and PMS adherence.</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?= base_url('audit/logs') ?>" class="btn-corp btn-corp-secondary text-decoration-none">
+        <a href="<?= base_url('audit/logs') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-clock-rotate-left me-1"></i> System Audit Trail (NFR-3)
         </a>
-        <a href="<?= base_url('audit/export') ?>" class="btn-corp btn-corp-primary text-decoration-none shadow-sm">
+        <a href="<?= base_url('audit/export') ?>" class="btn btn-primary">
             <i class="fa-solid fa-file-csv me-1"></i> Export Official COA Audit CSV
         </a>
     </div>
@@ -24,7 +24,7 @@
 <div class="row g-3 mb-4">
     <!-- 24h SLA Compliance -->
     <div class="col-md-3">
-        <div class="card-panel border shadow-sm p-3 h-100">
+        <div class="card-panel p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small fw-semibold text-uppercase mono" style="font-size: 0.7rem;">SLA Turnaround Rate</span>
                 <span class="rounded-circle bg-success bg-opacity-10 text-success p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -40,7 +40,7 @@
 
     <!-- Rush vs Advance Notice -->
     <div class="col-md-3">
-        <div class="card-panel border shadow-sm p-3 h-100">
+        <div class="card-panel p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small fw-semibold text-uppercase mono" style="font-size: 0.7rem;">Emergency Rush Ratio</span>
                 <span class="rounded-circle bg-danger bg-opacity-10 text-danger p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -58,7 +58,7 @@
 
     <!-- Fuel Variance Anomalies -->
     <div class="col-md-3">
-        <div class="card-panel border shadow-sm p-3 h-100">
+        <div class="card-panel p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small fw-semibold text-uppercase mono" style="font-size: 0.7rem;">Fuel Anomalies (>20%)</span>
                 <span class="rounded-circle bg-warning bg-opacity-10 text-warning p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -74,7 +74,7 @@
 
     <!-- PMS Compliance -->
     <div class="col-md-3">
-        <div class="card-panel border shadow-sm p-3 h-100">
+        <div class="card-panel p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="text-muted small fw-semibold text-uppercase mono" style="font-size: 0.7rem;">PMS Safety Status</span>
                 <span class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -96,8 +96,8 @@
 </div>
 
 <!-- COA Official Audit Trail Table -->
-<div class="card-panel border shadow-sm mb-4">
-    <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+<div class="card-panel mb-4">
+    <div class="card-panel-header d-flex align-items-center justify-content-between">
         <div>
             <h6 class="mb-0 fw-bold text-dark small text-uppercase">Statutory Trip & Fuel Audit Ledger</h6>
             <div class="text-muted" style="font-size: 0.72rem;">Comprehensive verification of Section A authorization, gate timestamps, odometers, fuel reconciliation, and dual certifications.</div>
@@ -116,7 +116,7 @@
                     <th>Fuel Ledger (Start + Buy - Used = End)</th>
                     <th>Efficiency</th>
                     <th>Dual Cert</th>
-                    <th class="text-end">Print</th>
+                    <th class="text-end" style="width: 1%;">Print</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,10 +171,12 @@
                                     Pax: <?= (int)$t['passenger_certified'] === 1 ? '<i class="fa-solid fa-check text-success"></i>' : '<i class="fa-solid fa-xmark text-danger"></i>' ?>
                                 </div>
                             </td>
-                            <td class="text-end">
-                                <a href="<?= base_url('tickets/' . $t['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-outline-dark py-1 px-2" title="Print ADMIN-F-001 rev1">
-                                    <i class="fa-solid fa-print"></i>
-                                </a>
+                            <td class="table-action-cell">
+                                <div class="table-actions">
+                                    <a href="<?= base_url('tickets/' . $t['id'] . '/print') ?>" target="_blank" class="btn-icon-sm btn-outline-secondary" title="Print ADMIN-F-001 rev1">
+                                        <i class="fa-solid fa-print"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -27,10 +27,10 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <a href="<?= base_url('tickets/' . $ticket['id'] . '/print') ?>" target="_blank" class="btn-corp btn-corp-secondary text-decoration-none shadow-sm">
+        <a href="<?= base_url('tickets/' . $ticket['id'] . '/print') ?>" target="_blank" class="btn btn-secondary">
             <i class="fa-solid fa-print me-1"></i> Print Official DTT (ADMIN-F-001 rev1)
         </a>
-        <a href="<?= base_url('requests/' . $ticket['request_id']) ?>" class="btn btn-outline-secondary btn-sm px-3">
+        <a href="<?= base_url('requests/' . $ticket['request_id']) ?>" class="btn btn-outline-secondary">
             <i class="fa-solid fa-file-lines me-1"></i> View VRS (ADMIN-F-018)
         </a>
     </div>
@@ -40,13 +40,13 @@
     <!-- Left Column: Section A & QR Code -->
     <div class="col-lg-4">
         <!-- Cryptographic QR Code Card -->
-        <div class="card-panel border shadow-sm mb-4 text-center p-4">
+        <div class="card-panel mb-4 text-center p-4">
             <div class="small fw-bold text-dark text-uppercase mono mb-2" style="font-size: 0.75rem;">
                 <i class="fa-solid fa-qrcode text-primary me-1"></i> Cryptographic Gate QR Token
             </div>
 
             <!-- Dynamic QR Code Container (Rendered via secure SVG / JS generator) -->
-            <div class="p-3 bg-white border rounded-3 d-inline-block shadow-sm my-2" style="width: 220px; height: 220px;">
+            <div class="p-3 bg-white border rounded-3 d-inline-block my-2" style="width: 220px; height: 220px;">
                 <div id="qrcodeCanvas" class="d-flex align-items-center justify-content-center h-100"></div>
             </div>
 

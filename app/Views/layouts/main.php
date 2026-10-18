@@ -350,20 +350,34 @@
         }
 
         .top-header {
-            min-height: 60px;      /* grows instead of clipping wrapped items */
-            height: auto;
+            height: 60px;
+            min-height: 60px;
             background: #ffffff;
             border-bottom: 1px solid var(--border-subtle);
-            padding: 8px 32px;
+            padding: 0 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            row-gap: 8px;
-            column-gap: 16px;
+            gap: 16px;
             position: sticky;
             top: 0;
             z-index: 900;
+        }
+
+        .top-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .top-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .telemetry-pulse {
@@ -712,40 +726,229 @@
             background-color: #f8fafc;
         }
 
-        /* Clean action buttons — one height, hairline borders, no shadows */
-        .btn-corp {
+        /* -------------------------------------------------------------
+           Unified Minimalist Button System & Interaction Tokens
+        ------------------------------------------------------------- */
+        .btn, .btn-corp {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-sans);
+            font-weight: 500;
             font-size: 0.82rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            padding: 8px 16px;
-            border-radius: 8px;
-            box-shadow: none !important;
+            line-height: 1;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 7px;
             white-space: nowrap;
-            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            vertical-align: middle;
+            gap: 6px;
+            border: 1px solid transparent;
+            text-decoration: none !important;
+            box-shadow: none !important;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            user-select: none;
         }
 
-        .btn-corp-primary {
-            background: var(--text-heading);
-            color: #ffffff;
-            border: 1px solid var(--text-heading);
+        .btn-sm, .btn-corp-sm {
+            height: 30px;
+            padding: 0 10px;
+            font-size: 0.76rem;
+            border-radius: 6px;
+            gap: 5px;
         }
 
-        .btn-corp-primary:hover {
+        .btn-xs {
+            height: 24px;
+            padding: 0 7px;
+            font-size: 0.7rem;
+            border-radius: 5px;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0 !important;
+        }
+
+        .btn-icon-sm {
+            width: 30px;
+            height: 30px;
+            padding: 0 !important;
+            font-size: 0.78rem;
+        }
+
+        .btn-icon-xs {
+            width: 24px;
+            height: 24px;
+            padding: 0 !important;
+            font-size: 0.7rem;
+        }
+
+        /* Color variants */
+        .btn-primary, .btn-corp-primary {
+            background: #0f172a;
+            color: #ffffff !important;
+            border-color: #0f172a;
+        }
+        .btn-primary:hover, .btn-corp-primary:hover {
             background: #1e293b;
             border-color: #1e293b;
-            color: #ffffff;
+            color: #ffffff !important;
+        }
+        .btn-primary:active, .btn-corp-primary:active {
+            background: #334155;
+            border-color: #334155;
         }
 
-        .btn-corp-secondary {
+        .btn-secondary, .btn-corp-secondary {
             background: #ffffff;
-            color: var(--text-body);
-            border: 1px solid var(--border-strong);
+            color: #334155 !important;
+            border-color: var(--border-strong);
+        }
+        .btn-secondary:hover, .btn-corp-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a !important;
         }
 
-        .btn-corp-secondary:hover {
-            background: #f8fafc;
-            border-color: var(--text-heading);
+        .btn-outline-secondary {
+            background: #ffffff;
+            color: #475569 !important;
+            border-color: var(--border-strong);
+        }
+        .btn-outline-secondary:hover {
+            background: #f1f5f9;
+            color: #0f172a !important;
+            border-color: #94a3b8;
+        }
+
+        .btn-outline-primary {
+            background: #ffffff;
+            color: #2563eb !important;
+            border-color: #bfdbfe;
+        }
+        .btn-outline-primary:hover {
+            background: #eff6ff;
+            color: #1d4ed8 !important;
+            border-color: #93c5fa;
+        }
+
+        .btn-outline-danger {
+            background: #ffffff;
+            color: #dc2626 !important;
+            border-color: #fecaca;
+        }
+        .btn-outline-danger:hover {
+            background: #fef2f2;
+            color: #b91c1c !important;
+            border-color: #f87171;
+        }
+
+        .btn-outline-success {
+            background: #ffffff;
+            color: #059669 !important;
+            border-color: #bbf7d0;
+        }
+        .btn-outline-success:hover {
+            background: #ecfdf5;
+            color: #047857 !important;
+            border-color: #86efac;
+        }
+
+        .btn-outline-dark {
+            background: #ffffff;
+            color: #0f172a !important;
+            border-color: var(--border-strong);
+        }
+        .btn-outline-dark:hover {
+            background: #f1f5f9;
+            color: #0f172a !important;
+            border-color: #0f172a;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #ffffff !important;
+            border-color: #dc2626;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            border-color: #b91c1c;
+            color: #ffffff !important;
+        }
+
+        .btn-success {
+            background: #059669;
+            color: #ffffff !important;
+            border-color: #059669;
+        }
+        .btn-success:hover {
+            background: #047857;
+            border-color: #047857;
+            color: #ffffff !important;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: #0f172a !important;
+            border-color: #f59e0b;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+            border-color: #d97706;
+            color: #ffffff !important;
+        }
+
+        /* -------------------------------------------------------------
+           Table Action Columns & Actions Alignment
+        ------------------------------------------------------------- */
+        .table-minimal th:last-child,
+        .table-minimal td:last-child,
+        .table-action-cell {
+            white-space: nowrap !important;
+            width: 1%;
+            text-align: right;
+        }
+
+        .table-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-wrap: nowrap;
+            vertical-align: middle;
+        }
+
+        /* -------------------------------------------------------------
+           Minimalist Form Controls
+        ------------------------------------------------------------- */
+        .form-control, .form-select {
+            font-family: var(--font-sans);
+            font-size: 0.84rem;
             color: var(--text-heading);
+            background-color: #ffffff;
+            border: 1px solid var(--border-strong);
+            border-radius: 7px;
+            padding: 7px 12px;
+            box-shadow: none !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb;
+            outline: 2px solid rgba(37, 99, 235, 0.2);
+            outline-offset: 1px;
+            background-color: #ffffff;
+        }
+
+        .form-control-sm, .form-select-sm {
+            font-size: 0.78rem;
+            padding: 5px 10px;
+            border-radius: 6px;
+            height: 32px;
         }
 
         /* -------------------------------------------------------------
@@ -1069,52 +1272,51 @@
     <div id="main-wrapper">
         <!-- Top Header Bar -->
         <header class="top-header">
-            <div class="d-flex align-items-center gap-2 gap-md-3 flex-wrap">
-                <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none px-2 py-1" id="sidebarToggle" aria-label="Toggle Sidebar Menu">
+            <div class="top-header-left">
+                <button type="button" class="btn btn-icon-sm btn-outline-secondary d-lg-none" id="sidebarToggle" aria-label="Toggle Sidebar Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="telemetry-pulse d-none d-md-inline-flex">
+                <div class="telemetry-pulse d-none d-md-inline-flex flex-shrink-0">
                     <div class="pulse-dot"></div>
                     <span>Telematics Online</span>
                 </div>
-                <span class="badge bg-white text-dark border d-none d-xl-inline-flex align-items-center gap-1" style="font-size: 0.72rem; padding: 4px 8px;" title="Active Security: CSRF Enabled, Secure Headers (SAMEORIGIN, nosniff), Rate-Limited Auth, RBAC Enforced">
+                <span class="badge border d-none d-xl-inline-flex align-items-center gap-1 flex-shrink-0" style="font-size: 0.72rem; padding: 4px 8px; background: #ffffff; color: var(--text-body);" title="Active Security: CSRF Enabled, Secure Headers (SAMEORIGIN, nosniff), Rate-Limited Auth, RBAC Enforced">
                     <i class="fa-solid fa-shield-halved text-success"></i> Secured (CSRF &bull; RBAC &bull; Rate-Limit)
                 </span>
 
                 <!-- Contextual breadcrumb: current sidebar section / page -->
-                <nav aria-label="breadcrumb" class="d-none d-lg-flex align-items-center gap-2 ms-1">
-                    <span class="text-muted" style="font-size: 0.74rem;">
-                        <i class="fa-solid fa-house me-1" style="font-size: 0.62rem;"></i><?= esc($crumbSection) ?>
+                <nav aria-label="breadcrumb" class="d-none d-lg-flex align-items-center gap-2 ms-1 text-truncate">
+                    <span class="text-muted text-truncate" style="font-size: 0.76rem;">
+                        <i class="fa-solid fa-house me-1" style="font-size: 0.65rem;"></i><?= esc($crumbSection) ?>
                     </span>
-                    <span class="text-secondary" style="font-size: 0.6rem;">/</span>
-                    <span class="fw-semibold text-dark text-truncate" style="font-size: 0.76rem; max-width: 260px;"><?= esc($title ?? 'Dashboard') ?></span>
+                    <span class="text-muted" style="font-size: 0.65rem;">/</span>
+                    <span class="fw-semibold text-dark text-truncate" style="font-size: 0.76rem; max-width: 240px;"><?= esc($title ?? 'Dashboard') ?></span>
                 </nav>
             </div>
 
             <!-- Profile & Actions Dropdown -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="top-header-right">
                 <!-- In-App Notification Bell -->
-                <a href="<?= base_url('notifications') ?>" class="btn btn-corp btn-corp-secondary position-relative d-flex align-items-center gap-2" title="My Notifications">
-                    <i class="fa-solid fa-bell text-primary"></i>
-                    <span class="small fw-semibold d-none d-sm-inline">Alerts</span>
+                <a href="<?= base_url('notifications') ?>" class="btn btn-sm btn-outline-secondary btn-icon-sm position-relative" title="My Notifications">
+                    <i class="fa-solid fa-bell text-secondary"></i>
                     <?php if ($notifUnread > 0): ?>
-                        <span class="position-absolute badge rounded-pill bg-danger d-flex align-items-center justify-content-center" style="font-size: 0.56rem; min-width: 16px; height: 16px; top: 1px; right: 1px; padding: 0;">
+                        <span class="position-absolute badge rounded-pill bg-danger d-flex align-items-center justify-content-center" style="font-size: 0.55rem; min-width: 15px; height: 15px; top: -3px; right: -3px; padding: 0 3px;">
                             <?= $notifUnread > 99 ? '99+' : $notifUnread ?>
                         </span>
                     <?php endif; ?>
                 </a>
 
                 <!-- System Guide & User Manual Trigger -->
-                <button type="button" class="btn btn-corp btn-corp-secondary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#systemGuideModal" title="Open Complete System Operations & Security Guide">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#systemGuideModal" title="Open Complete System Operations & Security Guide">
                     <i class="fa-solid fa-book-open text-primary"></i>
-                    <span class="small fw-semibold d-none d-sm-inline">System Manual</span>
+                    <span class="d-none d-md-inline ms-1 fw-semibold">System Manual</span>
                 </button>
 
                 <div class="dropdown">
-                    <button class="btn btn-corp btn-corp-secondary d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-circle-user" style="color: #2563eb;"></i>
-                        <span class="small fw-semibold"><?= esc($userName) ?></span>
-                        <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.65rem;"></i>
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-circle-user text-primary"></i>
+                        <span class="fw-semibold text-truncate d-none d-sm-inline" style="max-width: 130px;"><?= esc($userName) ?></span>
+                        <i class="fa-solid fa-chevron-down text-muted" style="font-size: 0.6rem;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-1">
                         <li>
@@ -1309,7 +1511,7 @@
                                                 <i class="fa-solid fa-diagram-project text-primary fs-5"></i>
                                                 <strong class="text-dark">Official Travel &amp; Maintenance Flowchart</strong>
                                             </div>
-                                            <a href="<?= base_url('admin/flowchart') ?>" class="btn btn-sm btn-corp-primary text-decoration-none">
+                                            <a href="<?= base_url('admin/flowchart') ?>" class="btn btn-sm btn-primary text-decoration-none">
                                                 <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Interactive Flowchart &amp; Nav
                                             </a>
                                         </div>
@@ -1533,7 +1735,7 @@
                 <!-- Modal Footer -->
                 <div class="modal-footer border-top py-2 px-4" style="background: #f8fafc;">
                     <span class="small text-muted me-auto"><i class="fa-solid fa-circle-check text-success me-1"></i> System Status: All 5 Security Layers & Telematics Active</span>
-                    <button type="button" class="btn btn-sm btn-corp-primary px-3" data-bs-dismiss="modal">Close Manual</button>
+                    <button type="button" class="btn btn-sm btn-primary px-3" data-bs-dismiss="modal">Close Manual</button>
                 </div>
             </div>
         </div>

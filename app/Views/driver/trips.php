@@ -32,7 +32,7 @@
             --text-secondary: #475569;
             --text-muted: #94a3b8;
 
-            --brand-primary: #1e3a8a;
+            --brand-primary: #0f172a;
             --brand-accent: #2563eb;
             --brand-light: #eff6ff;
 
@@ -43,9 +43,9 @@
             --danger: #dc2626;
             --danger-light: #fef2f2;
 
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 10px;
             --radius-pill: 9999px;
 
             --touch-target: 48px;
@@ -384,21 +384,25 @@
         }
         .segmented-item {
             flex: 1;
-            padding: 8px 4px;
-            font-size: 0.75rem;
+            min-width: 0;
+            padding: 8px 6px;
+            font-size: 0.74rem;
             font-weight: 600;
             text-align: center;
             color: var(--text-secondary);
             background: none;
             border: none;
             border-radius: var(--radius-sm);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             cursor: pointer;
             transition: all 0.15s ease;
         }
         .segmented-item.active {
             background: #ffffff;
             color: var(--brand-primary);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         .tab-panel-view {
@@ -493,32 +497,32 @@
          MINIMALIST APP HEADER (Sticky)
     -------------------------------------------------------------- -->
     <header class="driver-header">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-                <div class="driver-avatar">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
+                <div class="driver-avatar flex-shrink-0">
                     <?= esc(strtoupper(substr($driver['first_name'] ?? 'D', 0, 1) . substr($driver['last_name'] ?? 'R', 0, 1))) ?>
                 </div>
-                <div>
-                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.92rem; max-width: 170px;">
+                <div style="min-width: 0;">
+                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.92rem;">
                         <?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?>
                     </h6>
-                    <div class="small text-muted mono" style="font-size: 0.7rem;">
+                    <div class="small text-muted mono text-truncate" style="font-size: 0.7rem;">
                         <?= esc($driver['driver_code'] ?? 'DRV-101') ?> &bull; PIA Motorpool
                     </div>
                 </div>
             </div>
 
             <!-- Duty Status & Profile Switcher -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 <?php $dutyState = $driver['status'] ?? 'available'; ?>
-                <button type="button" class="duty-badge duty-<?= esc($dutyState) ?>" data-bs-toggle="modal" data-bs-target="#dutyModal" title="Change Duty Status">
+                <button type="button" class="duty-badge duty-<?= esc($dutyState) ?>" data-bs-toggle="modal" data-bs-target="#dutyModal" title="Change Duty Status" style="white-space: nowrap;">
                     <span class="status-dot"></span>
                     <span><?= ucfirst(str_replace('_', ' ', $dutyState)) ?></span>
                 </button>
 
                 <!-- More Options Menu -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-light border p-1 rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 32px; height: 32px;">
+                    <button class="btn btn-sm btn-light border p-1 rounded-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 32px; height: 32px;">
                         <i class="fa-solid fa-ellipsis-vertical text-secondary"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-1" style="min-width: 220px; font-size: 0.85rem;">

@@ -12,14 +12,14 @@
             FR-6.1 card registry &bull; FR-6.2 reload &amp; toll entry &bull; FR-6.3 automated ₱500 low-balance alerts to the Motorpool Head.
         </p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex align-items-center gap-2">
         <?php if (!empty($lowBalance)): ?>
-            <a href="<?= base_url('rfid?filter=low') ?>" class="btn btn-danger rounded-pill fw-semibold">
+            <a href="<?= base_url('rfid?filter=low') ?>" class="btn btn-sm btn-danger">
                 <i class="fa-solid fa-triangle-exclamation me-1"></i> <?= count($lowBalance) ?> Low-Balance Card(s)
             </a>
         <?php endif; ?>
         <?php if ($lowOnly): ?>
-            <a href="<?= base_url('rfid') ?>" class="btn-corp btn-corp-secondary text-decoration-none">Show All Cards</a>
+            <a href="<?= base_url('rfid') ?>" class="btn btn-sm btn-secondary">Show All Cards</a>
         <?php endif; ?>
     </div>
 </div>
@@ -173,7 +173,7 @@
                     <label class="form-label small fw-semibold text-dark">Remarks</label>
                     <input type="text" name="remarks" class="form-control" placeholder="OR/official receipt reference">
                 </div>
-                <button type="submit" class="btn-corp btn-corp-primary w-100">
+                <button type="submit" class="btn btn-primary w-100">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Record Reload
                 </button>
             </form>
@@ -210,7 +210,7 @@
                         <input type="number" step="0.01" min="0" name="balance" class="form-control" value="0.00">
                     </div>
                 </div>
-                <button type="submit" class="btn-corp btn-corp-secondary w-100">
+                <button type="submit" class="btn btn-secondary w-100">
                     <i class="fa-solid fa-plus me-1"></i> Register Card
                 </button>
             </form>

@@ -10,7 +10,7 @@
         <h1 class="page-title mb-1">Work Orders & Preventative Service</h1>
         <p class="text-muted small mb-0">Scheduled servicing intervals, defect remediation, and commercial garage ledger.</p>
     </div>
-    <a href="<?= base_url('maintenance/new') ?>" class="btn-corp btn-corp-primary text-decoration-none">
+    <a href="<?= base_url('maintenance/new') ?>" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i> Issue Work Order
     </a>
 </div>
@@ -29,7 +29,7 @@
                     <th>Workshop Facility</th>
                     <th>Invoiced Cost</th>
                     <th>State</th>
-                    <th class="text-end">Lifecycle</th>
+                    <th class="text-end" style="width: 1%;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,50 +85,52 @@
                                     <?= ucfirst(str_replace('_', ' ', esc($m['status']))) ?>
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <?php if ($m['status'] !== 'completed'): ?>
-                                    <button class="btn-corp btn-corp-secondary" data-bs-toggle="modal" data-bs-target="#completeModal-<?= $m['id'] ?>">
-                                        <i class="fa-solid fa-pen-to-square me-1"></i> Update
-                                    </button>
-                                    
-                                    <!-- Modal for updating work order status -->
-                                    <div class="modal fade text-start" id="completeModal-<?= $m['id'] ?>" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content" style="border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-                                                <form action="<?= base_url('maintenance/' . $m['id'] . '/status') ?>" method="POST">
-                                                    <?= csrf_field() ?>
-                                                    <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid var(--border-subtle);">
-                                                        <h6 class="modal-title fw-bold mono mb-0" style="color: #0f172a;">Order #<?= esc($m['reference_no']) ?></h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body" style="padding: 24px;">
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Lifecycle Stage</label>
-                                                            <select name="status" class="form-select" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
-                                                                <option value="scheduled" <?= $m['status'] === 'scheduled' ? 'selected' : '' ?>>Scheduled (Pending Intake)</option>
-                                                                <option value="in_progress" <?= $m['status'] === 'in_progress' ? 'selected' : '' ?>>In Progress (Vehicle In Bay)</option>
-                                                                <option value="completed" <?= $m['status'] === 'completed' ? 'selected' : '' ?>>Completed (Certified Road-Ready)</option>
-                                                                <option value="cancelled" <?= $m['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                                                            </select>
+                            <td class="table-action-cell">
+                                <div class="table-actions">
+                                    <?php if ($m['status'] !== 'completed'): ?>
+                                        <button class="btn btn-xs btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#completeModal-<?= $m['id'] ?>">
+                                            <i class="fa-solid fa-pen-to-square me-1"></i> Update
+                                        </button>
+                                        
+                                        <!-- Modal for updating work order status -->
+                                        <div class="modal fade text-start" id="completeModal-<?= $m['id'] ?>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content" style="border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                                                    <form action="<?= base_url('maintenance/' . $m['id'] . '/status') ?>" method="POST">
+                                                        <?= csrf_field() ?>
+                                                        <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid var(--border-subtle);">
+                                                            <h6 class="modal-title fw-bold mono mb-0" style="color: #0f172a;">Order #<?= esc($m['reference_no']) ?></h6>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                         </div>
-                                                        <div class="mb-2">
-                                                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Final Repair Cost (₱)</label>
-                                                            <input type="number" step="0.01" name="cost" class="form-control mono" value="<?= $m['cost'] ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                                                        <div class="modal-body" style="padding: 24px;">
+                                                            <div class="mb-3">
+                                                                <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Lifecycle Stage</label>
+                                                                <select name="status" class="form-select" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                                                                    <option value="scheduled" <?= $m['status'] === 'scheduled' ? 'selected' : '' ?>>Scheduled (Pending Intake)</option>
+                                                                    <option value="in_progress" <?= $m['status'] === 'in_progress' ? 'selected' : '' ?>>In Progress (Vehicle In Bay)</option>
+                                                                    <option value="completed" <?= $m['status'] === 'completed' ? 'selected' : '' ?>>Completed (Certified Road-Ready)</option>
+                                                                    <option value="cancelled" <?= $m['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Final Repair Cost (₱)</label>
+                                                                <input type="number" step="0.01" name="cost" class="form-control mono" value="<?= $m['cost'] ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="modal-footer" style="border-top: 1px solid var(--border-subtle); background: #f8fafc;">
-                                                        <button type="button" class="btn-corp btn-corp-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn-corp btn-corp-primary">Save Changes</button>
-                                                    </div>
-                                                </form>
+                                                        <div class="modal-footer" style="border-top: 1px solid var(--border-subtle); background: #f8fafc;">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                <?php else: ?>
-                                    <span class="status-badge status-completed" style="font-size: 0.65rem;">
-                                        <i class="fa-solid fa-check"></i> Certified
-                                    </span>
-                                <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="status-badge status-completed" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-check"></i> Certified
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
