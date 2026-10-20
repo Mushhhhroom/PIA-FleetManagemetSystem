@@ -51,13 +51,6 @@ class MaintenanceDue extends BaseCommand
 
                     CLI::write("Created {$refNo} for vehicle {$v['vehicle_code']}.", 'green');
                     $createdCount++;
-
-                    // SDD §5.5 Step 6: Dispatch notification to maintenance lead
-                    $smsSender = new \App\Libraries\SmsSender();
-                    $smsSender->send(
-                        '+63 919 555 0300',
-                        "PIA Motorpool Maintenance Alert: Vehicle {$v['vehicle_code']} exceeded PMS service threshold ({$odo} km / {$nextDue} km). Work order {$refNo} auto-generated."
-                    );
                 }
             }
         }

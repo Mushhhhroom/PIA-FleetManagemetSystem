@@ -82,12 +82,33 @@ class TripTicketModel extends Model
             return null;
         }
 
-        $builder = $this->select('trip_tickets.*,
-                              vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.odometer_km AS vehicle_current_odometer,
-                              drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
-                              drivers.license_number, drivers.license_type,
-                              trip_requests.request_number, trip_requests.purpose, trip_requests.passenger_names,
-                              offices.office_name')
+        // If a full URL or query string was scanned, extract the token/serial parameter or last path segment
+        if (str_contains($cleanId, 'http://') || str_contains($cleanId, 'https://')) {
+            $parsedUrl = parse_url($cleanId);
+            if (!empty($parsedUrl['query'])) {
+                parse_str($parsedUrl['query'], $qParams);
+                if (!empty($qParams['token'])) {
+                    $cleanId = trim((string)$qParams['token']);
+                } elseif (!empty($qParams['verify'])) {
+                    $cleanId = trim((string)$qParams['verify']);
+                }
+            } elseif (!empty($parsedUrl['path'])) {
+                $segments = array_values(array_filter(explode('/', $parsedUrl['path'])));
+                $lastSeg  = end($segments);
+                if ($lastSeg) {
+                    $cleanId = trim((string)$lastSeg);
+                }
+            }
+        }
+
+        $baseSelect = 'trip_tickets.*,
+                       vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.odometer_km AS vehicle_current_odometer,
+                       drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
+                       drivers.license_number, drivers.license_type,
+                       trip_requests.request_number, trip_requests.purpose, trip_requests.passenger_names,
+                       offices.office_name';
+
+        $builder = $this->select($baseSelect)
                     ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                     ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
                     ->join('trip_requests', 'trip_requests.id = trip_tickets.request_id', 'left')
@@ -110,7 +131,31 @@ class TripTicketModel extends Model
                     ->groupEnd();
         }
 
-        return $builder->first();
+        // Prioritize active/actionable tickets first if multiple match a partial query
+        $builder->orderBy("FIELD(trip_tickets.status, 'issued', 'departed', 'arrived_dest', 'departed_dest', 'returned', 'completed', 'cancelled')", '', false)
+                ->orderBy('trip_tickets.id', 'DESC');
+
+        $ticket = $builder->first();
+        if ($ticket) {
+            return $ticket;
+        }
+
+        // Fallback: If a driver's QR pass or manual input passed a Vehicle Plate Number, Vehicle Code, or Driver Code,
+        // resolve the most recent active ('issued' or 'departed') Trip Ticket for that vehicle/driver.
+        $fallbackBuilder = $this->select($baseSelect)
+                    ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
+                    ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
+                    ->join('trip_requests', 'trip_requests.id = trip_tickets.request_id', 'left')
+                    ->join('offices', 'offices.id = trip_requests.office_id', 'left')
+                    ->groupStart()
+                        ->where('vehicles.plate_number', $cleanId)
+                        ->orWhere('vehicles.vehicle_code', $cleanId)
+                        ->orWhere('drivers.driver_code', $cleanId)
+                    ->groupEnd()
+                    ->orderBy("FIELD(trip_tickets.status, 'issued', 'departed', 'arrived_dest', 'departed_dest', 'returned', 'completed', 'cancelled')", '', false)
+                    ->orderBy('trip_tickets.id', 'DESC');
+
+        return $fallbackBuilder->first();
     }
 
     /**

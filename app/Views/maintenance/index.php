@@ -5,10 +5,10 @@
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            Technical Workshop &bull; Asset Integrity
+            PIA Motorpool &bull; Asset Integrity
         </div>
-        <h1 class="page-title mb-1">Work Orders & Preventative Service</h1>
-        <p class="text-muted small mb-0">Scheduled servicing intervals, defect remediation, and commercial garage ledger.</p>
+        <h1 class="page-title mb-1">Work Orders &amp; Preventive Service</h1>
+        <p class="text-muted small mb-0">Scheduled PMS servicing intervals, defect remediation, and motorpool workshop ledger.</p>
     </div>
     <a href="<?= base_url('maintenance/new') ?>" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i> Issue Work Order

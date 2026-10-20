@@ -6,32 +6,39 @@ class GeofenceChecker
 {
     protected array $geofences = [
         [
-            'name'       => 'Manila Harbor Port Terminal Zone',
+            'name'       => 'PIA Central Office Compound (Visayas Ave, QC)',
+            'center_lat' => 14.657200,
+            'center_lng' => 121.045000,
+            'radius_km'  => 2.5,
+            'type'       => 'compound'
+        ],
+        [
+            'name'       => 'Malacañang / PCO Press Complex (Manila)',
+            'center_lat' => 14.594200,
+            'center_lng' => 120.994600,
+            'radius_km'  => 3.0,
+            'type'       => 'government'
+        ],
+        [
+            'name'       => 'Manila Port / Intramuros Government Zone',
             'center_lat' => 14.583333,
             'center_lng' => 120.966667,
             'radius_km'  => 5.0,
-            'type'       => 'port'
-        ],
-        [
-            'name'       => 'Clark Global Logistics Zone',
-            'center_lat' => 15.185500,
-            'center_lng' => 120.540600,
-            'radius_km'  => 6.0,
             'type'       => 'hub'
         ],
         [
-            'name'       => 'Laguna Technopark Industrial Hub',
-            'center_lat' => 14.282900,
-            'center_lng' => 121.077200,
-            'radius_km'  => 4.0,
-            'type'       => 'depot'
+            'name'       => 'Clark Regional Government Center',
+            'center_lat' => 15.185500,
+            'center_lng' => 120.540600,
+            'radius_km'  => 6.0,
+            'type'       => 'regional'
         ],
         [
-            'name'       => 'Batangas Container Port',
-            'center_lat' => 13.756500,
-            'center_lng' => 121.058300,
+            'name'       => 'CALABARZON Regional Hub (Laguna)',
+            'center_lat' => 14.282900,
+            'center_lng' => 121.077200,
             'radius_km'  => 4.5,
-            'type'       => 'port'
+            'type'       => 'regional'
         ],
     ];
 

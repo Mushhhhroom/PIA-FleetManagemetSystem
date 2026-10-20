@@ -343,7 +343,7 @@ class DispatchController extends BaseController
                 'title'      => "Official Dispatch: {$serialNo}",
                 'message'    => "You have been dispatched with vehicle {$vehicle['plate_number']} to {$request['destination']}. Present your e-DTT at Gate security.",
                 'type'       => 'info',
-                'link'       => "/tickets/{$ticketId}",
+                'link'       => '/driver/trips',
                 'is_read'    => 0,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);

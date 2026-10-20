@@ -5,13 +5,13 @@
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            Asset Management &bull; Fleet Inventory
+            PIA Motorpool &bull; Fleet Inventory
         </div>
         <h1 class="page-title mb-1">Vehicle Fleet Registry</h1>
-        <p class="text-muted small mb-0">Commercial transport units, VIN registrations, telematics status, and driver assignments.</p>
+        <p class="text-muted small mb-0">Official government service vehicles, LTO/GSIS compliance expiries, and driver assignments.</p>
     </div>
     <a href="<?= base_url('vehicles/new') ?>" class="btn btn-primary text-decoration-none">
-        <i class="fa-solid fa-plus me-1"></i> Register Transport Unit
+        <i class="fa-solid fa-plus me-1"></i> Register Service Vehicle
     </a>
 </div>
 
@@ -22,12 +22,12 @@
             <thead>
                 <tr>
                     <th>Unit Code</th>
-                    <th>Plate & Identification</th>
-                    <th>Make & Model</th>
+                    <th>Plate &amp; Identification</th>
+                    <th>Make &amp; Model</th>
                     <th>Powertrain / Type</th>
                     <th>Cumulative Odometer</th>
-                    <th>Assigned Operator</th>
-                    <th>Telemetry State</th>
+                    <th>Assigned Driver</th>
+                    <th>Operational State</th>
                     <th>Fleet Segregation &amp; Expiries (FR-2.1 / FR-7.1)</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -36,8 +36,8 @@
                 <?php if (empty($vehicles)): ?>
                     <tr>
                         <td colspan="9" class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-truck fa-2x mb-2 d-block text-secondary opacity-50"></i>
-                            No commercial vehicles enrolled in registry.
+                            <i class="fa-solid fa-car-side fa-2x mb-2 d-block text-secondary opacity-50"></i>
+                            No government service vehicles enrolled in registry.
                         </td>
                     </tr>
                 <?php else: ?>

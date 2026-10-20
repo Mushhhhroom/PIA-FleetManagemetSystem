@@ -30,22 +30,19 @@ class TripTicketController extends BaseController
 
     public function index()
     {
-        $statusFilter = $this->request->getGet('status');
-        $filters = [];
-        if ($statusFilter) {
-            $filters['status'] = $statusFilter;
-        }
-
         $session = session();
         $userRole = $session->get('user_role');
         $userId   = $session->get('user_id');
 
-        // If driver, only show tickets assigned to them
+        // Drivers exclusively use the native mobile website (/driver/trips)
         if ($userRole === 'driver') {
-            $driver = $this->driverModel->where('user_id', $userId)->first();
-            if ($driver) {
-                $filters['driver_id'] = $driver['id'];
-            }
+            return redirect()->to('/driver/trips?tab=history');
+        }
+
+        $statusFilter = $this->request->getGet('status');
+        $filters = [];
+        if ($statusFilter) {
+            $filters['status'] = $statusFilter;
         }
 
         $tickets = $this->ticketModel->getTicketsWithDetails($filters);
@@ -62,6 +59,11 @@ class TripTicketController extends BaseController
 
     public function show($id)
     {
+        // Drivers exclusively use the native mobile website (/driver/trips)
+        if (session()->get('user_role') === 'driver') {
+            return redirect()->to('/driver/trips?ticket_id=' . (int) $id);
+        }
+
         $ticket = $this->ticketModel->getTicketByIdWithDetails($id);
         if (!$ticket) {
             return redirect()->to('/tickets')->with('error', "Trip ticket not found.");
@@ -69,6 +71,8 @@ class TripTicketController extends BaseController
 
         // Fetch gate logs for this ticket
         $gateLogs = $this->gateLogModel->where('trip_ticket_id', $id)->orderBy('id', 'ASC')->findAll();
+        $safetyModel = new \App\Models\SafetyCheckModel();
+        $hasPassedSafety = $safetyModel->hasPassedCheck((int) $id);
 
         // Fetch any secondary merged requests for this consolidated ticket
         $mergedRequests = [];
@@ -85,11 +89,12 @@ class TripTicketController extends BaseController
         }
 
         $data = [
-            'title'          => "Driver's Trip Ticket: {$ticket['ticket_serial_no']}",
-            'ticket'         => $ticket,
-            'gateLogs'       => $gateLogs,
-            'mergedRequests' => $mergedRequests,
-            'userRole'       => session()->get('user_role'),
+            'title'           => "Driver's Trip Ticket: {$ticket['ticket_serial_no']}",
+            'ticket'          => $ticket,
+            'gateLogs'        => $gateLogs,
+            'hasPassedSafety' => $hasPassedSafety,
+            'mergedRequests'  => $mergedRequests,
+            'userRole'        => session()->get('user_role'),
         ];
 
         return view('tickets/show', $data);
@@ -118,10 +123,10 @@ class TripTicketController extends BaseController
         }
 
         // Section B Timeline & Odometers
-        $depTimeStr    = $this->request->getPost('departure_time');
+        // NOTE: departure_time (Departure from Compound) and arrival_back_time (Arrival back at Compound)
+        // are strictly controlled and auto-stamped by the Compound Gate QR Scanner (GateSecurityController).
         $arrDestStr    = $this->request->getPost('arrival_dest_time');
         $depDestStr    = $this->request->getPost('departure_dest_time');
-        $arrBackStr    = $this->request->getPost('arrival_back_time');
 
         $startOdo      = (float)$this->request->getPost('start_odometer');
         $destOdo       = (float)$this->request->getPost('dest_odometer');
@@ -169,12 +174,12 @@ class TripTicketController extends BaseController
         $now = date('Y-m-d H:i:s');
 
         $updateData = [
-            'departure_time'            => $depTimeStr ?: $ticket['departure_time'],
-            'arrival_dest_time'         => $arrDestStr ?: null,
-            'departure_dest_time'       => $depDestStr ?: null,
-            'arrival_back_time'         => $arrBackStr ?: $ticket['arrival_back_time'],
+            'departure_time'            => $ticket['departure_time'],
+            'arrival_dest_time'         => $arrDestStr ?: $ticket['arrival_dest_time'],
+            'departure_dest_time'       => $depDestStr ?: $ticket['departure_dest_time'],
+            'arrival_back_time'         => $ticket['arrival_back_time'],
             'start_odometer'            => $startOdo,
-            'dest_odometer'             => $destOdo ?: null,
+            'dest_odometer'             => $destOdo ?: $ticket['dest_odometer'],
             'return_odometer'           => $returnOdo,
             'total_distance_km'         => $totalDistKm,
             'fuel_balance_start_liters' => $fuelStart,
@@ -195,7 +200,7 @@ class TripTicketController extends BaseController
             'passenger_certified'       => $passCert ? 1 : $ticket['passenger_certified'],
             'passenger_certifier_name'  => $passName ?: $ticket['passenger_certifier_name'],
             'passenger_certified_at'    => $passCert ? $now : $ticket['passenger_certified_at'],
-            'notes'                     => trim((string)$this->request->getPost('notes')),
+            'notes'                     => trim((string)$this->request->getPost('notes')) ?: $ticket['notes'],
         ];
 
         // If trip is returned and certifications completed, mark ticket and VRS completed
@@ -243,7 +248,7 @@ class TripTicketController extends BaseController
         }
 
         $referer = $this->request->getServer('HTTP_REFERER') ?? '';
-        if (str_contains($referer, 'driver/trips')) {
+        if (session()->get('user_role') === 'driver' || str_contains($referer, 'driver/trips')) {
             return redirect()->to('/driver/trips')->with('success', "Driver Trip Ticket {$ticket['ticket_serial_no']} Section B updated successfully.");
         }
 
@@ -260,7 +265,7 @@ class TripTicketController extends BaseController
     {
         $ticket = $this->ticketModel->find($id);
         if (!$ticket) {
-            return redirect()->to('/tickets')->with('error', 'Trip ticket not found.');
+            return redirect()->to(session()->get('user_role') === 'driver' ? '/driver/trips' : '/tickets')->with('error', 'Trip ticket not found.');
         }
 
         $minutes = (int) $this->request->getPost('delay_minutes');
@@ -283,6 +288,8 @@ class TripTicketController extends BaseController
             'logged_by'          => (int) session()->get('user_id') ?: null,
             'created_at'         => $now,
         ]);
+
+        $isDriver = session()->get('user_role') === 'driver' || str_contains($this->request->getServer('HTTP_REFERER') ?? '', 'driver/trips');
 
         if ($notified) {
             $notificationModel = new \App\Models\NotificationModel();
@@ -309,9 +316,11 @@ class TripTicketController extends BaseController
                 ['minutes' => $minutes, 'reason' => $reason]
             );
 
-            return redirect()->back()->with('success', "Delay of {$minutes} minutes logged. Dispatchers have been automatically notified (15-minute rule).");
+            $msg = "Delay of {$minutes} minutes logged. Dispatchers have been automatically notified (15-minute rule).";
+            return ($isDriver ? redirect()->to('/driver/trips') : redirect()->back())->with('success', $msg);
         }
 
-        return redirect()->back()->with('success', "Delay of {$minutes} minutes logged on the trip ticket.");
+        $msg = "Delay of {$minutes} minutes logged on the trip ticket.";
+        return ($isDriver ? redirect()->to('/driver/trips') : redirect()->back())->with('success', $msg);
     }
 }

@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\VehicleModel;
 use App\Models\DriverModel;
-use App\Models\TripModel;
+use App\Models\TripTicketModel;
 use App\Models\MaintenanceModel;
 use App\Models\FuelLogModel;
 use App\Models\TripRequestModel;
@@ -14,16 +14,16 @@ class DashboardController extends BaseController
 {
     public function index()
     {
-        $vehicleModel = new VehicleModel();
-        $driverModel = new DriverModel();
-        $tripModel = new TripModel();
+        $vehicleModel     = new VehicleModel();
+        $driverModel      = new DriverModel();
+        $ticketModel      = new TripTicketModel();
         $maintenanceModel = new MaintenanceModel();
-        $fuelModel = new FuelLogModel();
-        $requestModel = new TripRequestModel();
+        $fuelModel        = new FuelLogModel();
+        $requestModel     = new TripRequestModel();
 
         // 0. Official Travel VRS Queues
-        $pendingTier1Count = $requestModel->where('status', 'pending_dispatcher')->countAllResults();
-        $pendingAdminCount = $requestModel->where('status', 'pending_admin')->countAllResults();
+        $pendingTier1Count    = $requestModel->where('status', 'pending_dispatcher')->countAllResults();
+        $pendingAdminCount    = $requestModel->where('status', 'pending_admin')->countAllResults();
         $pendingDispatchCount = $requestModel->where('status', 'approved')->countAllResults();
 
         $pendingTier1List = $requestModel->getRequestsWithDetails(['status' => 'pending_dispatcher'], 5);
@@ -32,22 +32,22 @@ class DashboardController extends BaseController
         }
 
         // 1. KPI Counts
-        $totalVehicles = $vehicleModel->countAllResults();
-        $inTransitVehicles = $vehicleModel->where('status', 'in_transit')->countAllResults();
-        $activeVehicles = $vehicleModel->where('status', 'active')->countAllResults();
-        $maintenanceVehicles = $vehicleModel->where('status', 'maintenance')->countAllResults();
+        $totalVehicles       = $vehicleModel->countAllResults();
+        $inTransitVehicles   = $vehicleModel->where('status', 'in_transit')->countAllResults();
+        $activeVehicles      = $vehicleModel->where('status', 'active')->countAllResults();
+        $maintenanceVehicles = $vehicleModel->whereIn('status', ['maintenance', 'under_maintenance', 'disabled_breakdown'])->countAllResults();
 
-        $totalDrivers = $driverModel->countAllResults();
+        $totalDrivers     = $driverModel->countAllResults();
         $availableDrivers = $driverModel->where('status', 'available')->countAllResults();
-        $onTripDrivers = $driverModel->where('status', 'on_trip')->countAllResults();
+        $onTripDrivers    = $driverModel->where('status', 'on_trip')->countAllResults();
 
-        $activeTrips = $tripModel->whereIn('status', ['dispatched', 'in_transit'])->countAllResults();
-        $scheduledTrips = $tripModel->where('status', 'scheduled')->countAllResults();
+        $activeTrips    = $ticketModel->whereIn('status', ['departed', 'arrived_dest', 'departed_dest'])->countAllResults();
+        $scheduledTrips = $ticketModel->where('status', 'issued')->countAllResults();
 
         $openMaintenance = $maintenanceModel->whereIn('status', ['scheduled', 'in_progress'])->countAllResults();
 
         // Total fuel cost
-        $fuelSummary = $fuelModel->selectSum('total_cost')->first();
+        $fuelSummary   = $fuelModel->selectSum('total_cost')->first();
         $totalFuelCost = $fuelSummary['total_cost'] ?? 0;
 
         // 2. Live vehicles for interactive map widget
@@ -55,8 +55,8 @@ class DashboardController extends BaseController
                                     ->join('drivers', 'drivers.id = vehicles.current_driver_id', 'left')
                                     ->findAll();
 
-        // 3. Recent trips
-        $recentTrips = $tripModel->getTripsWithDetails(5);
+        // 3. Recent Official Driver's Trip Tickets (e-DTT)
+        $recentTrips = $ticketModel->getTicketsWithDetails([], 6);
 
         // 4. Maintenance Alerts
         $maintenanceAlerts = $maintenanceModel->getRecordsWithVehicle(5);

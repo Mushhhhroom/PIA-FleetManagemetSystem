@@ -11,9 +11,15 @@
         <p class="text-muted small mb-0">Official travel authorization, Section B trip execution logs, fuel balance accounting, and dual certifications.</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="<?= base_url('dispatch') ?>" class="btn btn-primary">
-            <i class="fa-solid fa-van-shuttle me-1"></i> Motorpool Dispatch Queue
-        </a>
+        <?php if (($userRole ?? '') === 'guard'): ?>
+            <a href="<?= base_url('gate') ?>" class="btn btn-success">
+                <i class="fa-solid fa-qrcode me-1"></i> Compound Gate QR Scanner
+            </a>
+        <?php elseif (in_array($userRole ?? '', ['admin', 'dispatcher', 'approver_admin'], true)): ?>
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-primary">
+                <i class="fa-solid fa-van-shuttle me-1"></i> Motorpool Dispatch Queue
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -117,6 +123,11 @@
                             </td>
                             <td class="text-end table-action-cell">
                                 <div class="table-actions">
+                                    <?php if (in_array($userRole ?? '', ['guard', 'admin', 'dispatcher', 'approver_admin'], true) && in_array($t['status'], ['issued', 'departed'], true)): ?>
+                                        <a href="<?= base_url('gate?verify=' . urlencode($t['ticket_serial_no'])) ?>" class="btn btn-icon-sm btn-outline-success" title="Verify & Auto-Stamp at Compound Gate">
+                                            <i class="fa-solid fa-qrcode"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <a href="<?= base_url('tickets/' . $t['id']) ?>" class="btn btn-icon-sm btn-outline-secondary" title="View e-DTT">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>

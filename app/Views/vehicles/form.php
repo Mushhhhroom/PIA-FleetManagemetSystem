@@ -51,11 +51,11 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Manufacturer / Make</label>
-                        <input type="text" name="make" class="form-control" required placeholder="e.g. Freightliner, Isuzu, Volvo" value="<?= old('make', $vehicle['make'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                        <input type="text" name="make" class="form-control" required placeholder="e.g. Toyota, Mitsubishi, Nissan, Isuzu" value="<?= old('make', $vehicle['make'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Model</label>
-                        <input type="text" name="model" class="form-control" required placeholder="e.g. Cascadia 126, Giga EXR" value="<?= old('model', $vehicle['model'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                        <input type="text" name="model" class="form-control" required placeholder="e.g. Hiace Commuter, Innova, Montero Sport" value="<?= old('model', $vehicle['model'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Model Year</label>
@@ -63,11 +63,11 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Chassis Category</label>
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Vehicle Category</label>
                         <select name="type" class="form-select" required style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                             <?php
-                            $types = ['semi_truck' => 'Semi-Truck / Tractor', 'box_truck' => 'Box Truck (Medium)', 'delivery_van' => 'Commercial Van', 'pickup' => 'Light Utility', 'trailer' => 'Chassis Trailer', 'suv' => 'Fleet Utility'];
-                            $curType = old('type', $vehicle['type'] ?? 'semi_truck');
+                            $types = ['suv' => 'SUV / Official Utility', 'delivery_van' => 'Passenger Van / Commuter', 'pickup' => 'Pickup / Field Utility', 'box_truck' => 'Media Production Van / Truck', 'semi_truck' => 'Heavy Transport', 'trailer' => 'Utility Trailer'];
+                            $curType = old('type', $vehicle['type'] ?? 'suv');
                             foreach ($types as $key => $label): ?>
                                 <option value="<?= $key ?>" <?= $curType === $key ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>

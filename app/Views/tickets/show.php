@@ -27,12 +27,19 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
+        <?php if (in_array($userRole ?? '', ['guard', 'admin', 'dispatcher', 'approver_admin'], true) && in_array($ticket['status'], ['issued', 'departed'], true)): ?>
+            <a href="<?= base_url('gate?verify=' . urlencode($ticket['ticket_serial_no'])) ?>" class="btn btn-success fw-semibold">
+                <i class="fa-solid fa-qrcode me-1"></i> Verify &amp; Auto-Stamp at Compound Gate
+            </a>
+        <?php endif; ?>
         <a href="<?= base_url('tickets/' . $ticket['id'] . '/print') ?>" target="_blank" class="btn btn-secondary">
             <i class="fa-solid fa-print me-1"></i> Print Official DTT (ADMIN-F-001 rev1)
         </a>
-        <a href="<?= base_url('requests/' . $ticket['request_id']) ?>" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-file-lines me-1"></i> View VRS (ADMIN-F-018)
-        </a>
+        <?php if (($userRole ?? '') !== 'guard'): ?>
+            <a href="<?= base_url('requests/' . $ticket['request_id']) ?>" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-file-lines me-1"></i> View VRS (ADMIN-F-018)
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -181,8 +188,13 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
-                        <label class="form-label small fw-semibold text-dark">Departure from Compound</label>
-                        <input type="datetime-local" name="departure_time" class="form-control form-control-sm" value="<?= $ticket['departure_time'] ? date('Y-m-d\TH:i', strtotime($ticket['departure_time'])) : '' ?>">
+                        <label class="form-label small fw-semibold text-dark d-flex align-items-center justify-content-between">
+                            <span>Departure from Compound</span>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" style="font-size: 0.6rem;" title="Automatically stamped by the Compound Gate QR Scanner upon Egress">
+                                <i class="fa-solid fa-qrcode me-1"></i>GATE AUTO
+                            </span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm mono bg-light fw-semibold" value="<?= $ticket['departure_time'] ? date('M d, Y h:i A', strtotime($ticket['departure_time'])) : 'Pending Gate QR Scan' ?>" readonly>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold text-dark">Arrival at Destination</label>
@@ -193,8 +205,13 @@
                         <input type="datetime-local" name="departure_dest_time" class="form-control form-control-sm" value="<?= $ticket['departure_dest_time'] ? date('Y-m-d\TH:i', strtotime($ticket['departure_dest_time'])) : '' ?>">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small fw-semibold text-dark">Arrival back at Compound</label>
-                        <input type="datetime-local" name="arrival_back_time" class="form-control form-control-sm" value="<?= $ticket['arrival_back_time'] ? date('Y-m-d\TH:i', strtotime($ticket['arrival_back_time'])) : '' ?>">
+                        <label class="form-label small fw-semibold text-dark d-flex align-items-center justify-content-between">
+                            <span>Arrival back at Compound</span>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" style="font-size: 0.6rem;" title="Automatically stamped by the Compound Gate QR Scanner upon Ingress">
+                                <i class="fa-solid fa-qrcode me-1"></i>GATE AUTO
+                            </span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm mono bg-light fw-semibold" value="<?= $ticket['arrival_back_time'] ? date('M d, Y h:i A', strtotime($ticket['arrival_back_time'])) : 'Pending Gate QR Scan' ?>" readonly>
                     </div>
 
                     <div class="col-md-4">
@@ -394,9 +411,16 @@
                                 A single failed item locks the vehicle to Under Maintenance and auto-generates a PIR (FR-5.2).
                             </div>
                         </div>
-                        <a href="<?= base_url('safety/' . $ticket['id']) ?>" class="btn btn-sm btn-primary rounded-pill fw-semibold text-decoration-none">
-                            <i class="fa-solid fa-clipboard-check me-1"></i> Open Checklist
-                        </a>
+                        <?php if (($userRole ?? '') === 'guard'): ?>
+                            <span class="badge <?= !empty($hasPassedSafety) ? 'bg-success text-white' : 'bg-warning text-dark' ?> px-3 py-2 rounded-pill">
+                                <i class="fa-solid <?= !empty($hasPassedSafety) ? 'fa-circle-check' : 'fa-clock' ?> me-1"></i>
+                                <?= !empty($hasPassedSafety) ? 'BLOWBAGETS Passed' : 'BLOWBAGETS Pending' ?>
+                            </span>
+                        <?php else: ?>
+                            <a href="<?= base_url('safety/' . $ticket['id']) ?>" class="btn btn-sm btn-primary rounded-pill fw-semibold text-decoration-none">
+                                <i class="fa-solid fa-clipboard-check me-1"></i> Open Checklist
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -435,7 +459,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Generate QR Code dynamically
+    // Generate QR Code dynamically (CorrectLevel.L ensures large, crisp scannable modules for webcams)
     const qrContainer = document.getElementById('qrcodeCanvas');
     const qrToken = <?= json_encode($ticket['qr_crypt_token']) ?>;
 
@@ -446,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
             height: 190,
             colorDark: "#0A2540",
             colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: QRCode.CorrectLevel.L
         });
     }
 

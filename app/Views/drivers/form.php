@@ -35,8 +35,8 @@
                         <input type="text" name="last_name" class="form-control" required placeholder="Doe" value="<?= old('last_name', $driver['last_name'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Corporate Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="john.doe@fleet.com" value="<?= old('email', $driver['email'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Government Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="driver@pia.gov.ph" value="<?= old('email', $driver['email'] ?? '') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Mobile Phone</label>
@@ -63,7 +63,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">License Classification</label>
-                        <input type="text" name="license_type" class="form-control" required placeholder="e.g. Heavy Articulated, Light Commercial" value="<?= old('license_type', $driver['license_type'] ?? 'Professional Driver (Heavy Articulated)') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
+                        <input type="text" name="license_type" class="form-control" required placeholder="e.g. Professional Driver (Restriction 1, 2, 3)" value="<?= old('license_type', $driver['license_type'] ?? 'Professional Driver (Restriction 1, 2, 3)') ?>" style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">License Expiration Date</label>

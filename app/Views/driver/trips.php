@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="PIA Driver">
-    <title><?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?> | Driver Mobile</title>
+    <title><?= esc(($driver['first_name'] ?? 'Driver') . ' ' . ($driver['last_name'] ?? '')) ?> | PIA-AFMS Driver Web Portal</title>
 
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -536,13 +533,13 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item py-2" href="<?= base_url('tickets') ?>">
+                            <a class="dropdown-item py-2" href="#view-history" data-view="view-history">
                                 <i class="fa-solid fa-file-invoice me-2 text-secondary"></i> All Trip Tickets
                             </a>
                         </li>
-                        <?php if (!empty($allDrivers) && count($allDrivers) > 1): ?>
+                        <?php if (session()->get('user_role') === 'admin' && !empty($allDrivers) && count($allDrivers) > 1): ?>
                             <li><hr class="dropdown-divider my-1"></li>
-                            <li class="px-3 py-1 text-muted small text-uppercase mono" style="font-size: 0.65rem;">Switch Driver Profile (Demo)</li>
+                            <li class="px-3 py-1 text-muted small text-uppercase mono" style="font-size: 0.65rem;">Switch Driver Profile (Admin)</li>
                             <?php foreach ($allDrivers as $ad): ?>
                                 <li>
                                     <a class="dropdown-item py-1 <?= $ad['id'] == ($driver['id'] ?? 0) ? 'fw-bold text-primary' : 'text-secondary' ?>" href="<?= base_url('driver/trips?driver_id=' . $ad['id']) ?>">
@@ -606,10 +603,10 @@
                     <span>Log Delay</span>
                 </button>
             <?php else: ?>
-                <a href="<?= base_url('tickets') ?>" class="quick-btn">
+                <button type="button" class="quick-btn" data-view="view-history">
                     <i class="fa-solid fa-ticket quick-btn-icon"></i>
                     <span>Tickets</span>
-                </a>
+                </button>
             <?php endif; ?>
 
             <!-- 4. Emergency SOS Breakdown (FR-4.3) -->
@@ -691,9 +688,13 @@
                             </div>
                         </div>
                         <?php if (!$blowbagetsPassed): ?>
-                            <a href="<?= base_url('safety/' . $activeTicket['id']) ?>" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1" style="font-size: 0.75rem;">
+                            <button type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1" data-bs-toggle="modal" data-bs-target="#blowbagetsModal" style="font-size: 0.75rem;">
                                 Inspect
-                            </a>
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2 py-1" data-bs-toggle="modal" data-bs-target="#blowbagetsModal" style="font-size: 0.7rem;">
+                                Re-Inspect
+                            </button>
                         <?php endif; ?>
                     </div>
 
@@ -771,29 +772,37 @@
                                 <i class="fa-solid fa-shield-halved text-primary fs-4 mb-1"></i>
                                 <div class="small fw-bold text-dark">Ready for Gate Departure</div>
                                 <p class="text-muted small mb-0" style="font-size: 0.72rem;">
-                                    Present the Gate Pass QR code above to the Guard at Gate #1 to record your official departure egress.
+                                    Present the Gate Pass QR code above to the Guard at Gate #1 to automatically stamp your official Compound Departure date &amp; time.
                                 </p>
                             </div>
-                            <a href="<?= base_url('tickets/' . $activeTicket['id']) ?>" class="btn-driver-outline">
+                            <button type="button" class="btn-driver-outline" onclick="openMobileTicketModal(<?= (int)$activeTicket['id'] ?>)">
                                 <i class="fa-solid fa-file-lines me-1"></i> View Full Ticket Document
-                            </a>
+                            </button>
                         <?php elseif ($activeTicket['status'] === 'departed'): ?>
                             <div class="d-grid gap-2">
                                 <button type="button" class="btn-driver-primary" data-bs-toggle="modal" data-bs-target="#sectionBModal">
-                                    <i class="fa-solid fa-location-dot me-1"></i> Log Arrival or Toll Expense
+                                    <i class="fa-solid fa-location-dot me-1"></i> Log Destination or Toll Expense
                                 </button>
                                 <button type="button" class="btn-driver-outline" data-bs-toggle="modal" data-bs-target="#delayModal">
                                     <i class="fa-solid fa-user-clock me-1"></i> Log 15-Minute Passenger Delay
                                 </button>
+                                <button type="button" class="btn-driver-outline" onclick="openMobileTicketModal(<?= (int)$activeTicket['id'] ?>)">
+                                    <i class="fa-solid fa-file-lines me-1"></i> View Full Ticket Document
+                                </button>
                             </div>
                         <?php elseif ($activeTicket['status'] === 'returned'): ?>
-                            <button type="button" class="btn-driver-success" data-bs-toggle="modal" data-bs-target="#sectionBModal">
-                                <i class="fa-solid fa-clipboard-check me-1"></i> Complete Section B Post-Trip Report
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn-driver-success" data-bs-toggle="modal" data-bs-target="#sectionBModal">
+                                    <i class="fa-solid fa-clipboard-check me-1"></i> Complete Section B Post-Trip Report
+                                </button>
+                                <button type="button" class="btn-driver-outline" onclick="openMobileTicketModal(<?= (int)$activeTicket['id'] ?>)">
+                                    <i class="fa-solid fa-file-lines me-1"></i> View Full Ticket Document
+                                </button>
+                            </div>
                         <?php else: ?>
-                            <a href="<?= base_url('tickets/' . $activeTicket['id']) ?>" class="btn-driver-outline">
+                            <button type="button" class="btn-driver-outline" onclick="openMobileTicketModal(<?= (int)$activeTicket['id'] ?>)">
                                 <i class="fa-solid fa-file-check me-1"></i> View Reconciled Ticket
-                            </a>
+                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -908,9 +917,9 @@
 
                     <!-- BLOWBAGETS Pre-Trip Safety Action Button -->
                     <?php if ($activeTicket): ?>
-                        <a href="<?= base_url('safety/' . $activeTicket['id']) ?>" class="btn-driver-outline py-2 w-100" style="min-height: 42px;">
+                        <button type="button" class="btn-driver-outline py-2 w-100" data-bs-toggle="modal" data-bs-target="#blowbagetsModal" style="min-height: 42px;">
                             <i class="fa-solid fa-list-check text-primary me-1"></i> Perform BLOWBAGETS Pre-Trip Inspection
-                        </a>
+                        </button>
                     <?php endif; ?>
                 </div>
 
@@ -1052,7 +1061,7 @@
                     <div class="d-flex flex-column gap-2">
                         <?php foreach ($tripTickets as $tk): ?>
                             <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
-                                <div>
+                                <div role="button" onclick="openMobileTicketModal(<?= (int)$tk['id'] ?>)" class="flex-grow-1" style="cursor: pointer;">
                                     <div class="d-flex align-items-center gap-1">
                                         <strong class="mono text-primary"><?= esc($tk['ticket_serial_no']) ?></strong>
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size: 0.65rem;">
@@ -1064,10 +1073,13 @@
                                     </span>
                                 </div>
                                 <div class="d-flex gap-1">
-                                    <a href="<?= base_url('tickets/' . $tk['id']) ?>" class="btn btn-sm btn-light border py-1 px-2" title="View">
+                                    <button type="button" onclick="openQrForTicket(<?= (int)$tk['id'] ?>)" class="btn btn-sm btn-light border py-1 px-2" title="Show QR Gate Pass">
+                                        <i class="fa-solid fa-qrcode text-primary"></i>
+                                    </button>
+                                    <button type="button" onclick="openMobileTicketModal(<?= (int)$tk['id'] ?>)" class="btn btn-sm btn-light border py-1 px-2" title="View Mobile Ticket">
                                         <i class="fa-solid fa-eye text-secondary"></i>
-                                    </a>
-                                    <a href="<?= base_url('tickets/' . $tk['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-light border py-1 px-2" title="Print">
+                                    </button>
+                                    <a href="<?= base_url('tickets/' . $tk['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-light border py-1 px-2" title="Print PDF">
                                         <i class="fa-solid fa-print text-secondary"></i>
                                     </a>
                                 </div>
@@ -1409,17 +1421,53 @@
                             Official post-trip audit formula and digital driver certification for <?= esc($activeTicket['ticket_serial_no']) ?>.
                         </p>
 
-                        <!-- Trip Odometers -->
-                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
-                            <i class="fa-solid fa-gauge text-primary me-1"></i> 1. Odometer Readings
+                        <!-- Compound Gate Automated Timestamps & Destination Schedule -->
+                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-clock text-primary me-1"></i> 1. Compound Gate &amp; Destination Timestamps</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono" style="font-size: 0.62rem;">
+                                <i class="fa-solid fa-qrcode me-1"></i>COMPOUND GATE AUTOMATED
+                            </span>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label class="form-label small text-secondary">Start Odometer (KM)</label>
-                                <input type="number" step="0.1" name="start_odometer" id="m_start_odo" class="form-control mono" value="<?= (float)($activeTicket['start_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
+                                <label class="form-label small text-secondary mb-1 d-flex justify-content-between align-items-center">
+                                    <span>Compound Departure</span>
+                                    <span class="badge bg-dark text-white mono" style="font-size: 0.58rem;"><i class="fa-solid fa-lock me-1"></i>GATE AUTO</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm mono bg-light fw-bold text-dark" value="<?= !empty($activeTicket['departure_time']) ? date('M d, Y h:i A', strtotime($activeTicket['departure_time'])) : 'Pending Gate Egress Scan' ?>" readonly tabindex="-1">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small text-secondary">Return Odometer (KM)</label>
+                                <label class="form-label small text-secondary mb-1 d-flex justify-content-between align-items-center">
+                                    <span>Compound Arrival</span>
+                                    <span class="badge bg-dark text-white mono" style="font-size: 0.58rem;"><i class="fa-solid fa-lock me-1"></i>GATE AUTO</span>
+                                </label>
+                                <input type="text" class="form-control form-control-sm mono bg-light fw-bold text-dark" value="<?= !empty($activeTicket['arrival_back_time']) ? date('M d, Y h:i A', strtotime($activeTicket['arrival_back_time'])) : 'Pending Gate Ingress Scan' ?>" readonly tabindex="-1">
+                            </div>
+                            <div class="col-6 mt-2">
+                                <label class="form-label small text-secondary mb-1">Arrival at Destination</label>
+                                <input type="datetime-local" name="arrival_dest_time" class="form-control form-control-sm mono" value="<?= !empty($activeTicket['arrival_dest_time']) ? date('Y-m-d\TH:i', strtotime($activeTicket['arrival_dest_time'])) : '' ?>">
+                            </div>
+                            <div class="col-6 mt-2">
+                                <label class="form-label small text-secondary mb-1">Departure from Destination</label>
+                                <input type="datetime-local" name="departure_dest_time" class="form-control form-control-sm mono" value="<?= !empty($activeTicket['departure_dest_time']) ? date('Y-m-d\TH:i', strtotime($activeTicket['departure_dest_time'])) : '' ?>">
+                            </div>
+                        </div>
+
+                        <!-- Trip Odometers -->
+                        <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
+                            <i class="fa-solid fa-gauge text-primary me-1"></i> 2. Odometer Readings
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <label class="form-label small text-secondary">Start Odo (KM)</label>
+                                <input type="number" step="0.1" name="start_odometer" id="m_start_odo" class="form-control mono" value="<?= (float)($activeTicket['start_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label small text-secondary">Dest. Odo (KM)</label>
+                                <input type="number" step="0.1" name="dest_odometer" id="m_dest_odo" class="form-control mono" value="<?= (float)($activeTicket['dest_odometer'] ?? 0) ?>">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label small text-secondary">Return Odo (KM)</label>
                                 <input type="number" step="0.1" name="return_odometer" id="m_return_odo" class="form-control mono" value="<?= (float)($activeTicket['return_odometer'] ?? ($vehicle['odometer_km'] ?? 0)) ?>" required>
                             </div>
                             <div class="col-12">
@@ -1432,7 +1480,7 @@
 
                         <!-- Fuel Accounting Formula -->
                         <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
-                            <i class="fa-solid fa-gas-pump text-primary me-1"></i> 2. Fuel Balance Formula
+                            <i class="fa-solid fa-gas-pump text-primary me-1"></i> 3. Fuel Balance Formula
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
@@ -1461,7 +1509,7 @@
 
                         <!-- Toll Expense Capture (FR-4.1 & FR-6.2) -->
                         <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
-                            <i class="fa-solid fa-road text-primary me-1"></i> 3. Tollways & Expenses
+                            <i class="fa-solid fa-road text-primary me-1"></i> 4. Tollways & Expenses
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
@@ -1497,17 +1545,289 @@
             </div>
         </div>
     </div>
+
+    <!-- 7. NATIVE MOBILE BLOWBAGETS PRE-TRIP SAFETY CHECKLIST MODAL (FR-5.1) -->
+    <?php
+        $safetyItems = $checklistItems ?? \App\Models\SafetyCheckModel::checklistItems();
+    ?>
+    <div class="modal fade" id="blowbagetsModal" tabindex="-1" aria-labelledby="blowbagetsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <form action="<?= base_url('safety/' . $activeTicket['id']) ?>" method="POST" id="blowbagetsMobileForm">
+                    <?= !is_cli() ? csrf_field() : '' ?>
+                    <div class="modal-header border-0 pb-0">
+                        <div>
+                            <span class="badge bg-warning bg-opacity-25 text-dark border border-warning mono" style="font-size: 0.68rem;">FR-5.1 &bull; BLOWBAGETS PROTOCOL</span>
+                            <h6 class="modal-title fw-bold text-dark mt-1" id="blowbagetsModalLabel">10-Point Pre-Trip Safety Inspection</h6>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded-3 bg-light border">
+                            <div class="small">
+                                <strong class="text-dark d-block mono"><?= esc($activeTicket['ticket_serial_no']) ?> &bull; <?= esc($vehicle['plate_number'] ?? '') ?></strong>
+                                <span class="text-muted" style="font-size: 0.72rem;">All 10 points must pass for compound gate clearance</span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold" id="btnMarkAllPassMobile" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-check-double me-1"></i>All Pass
+                            </button>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            <?php foreach ($safetyItems as $code => $label): ?>
+                                <?php
+                                    $parts = explode('—', (string)$label, 2);
+                                    $letter = trim($parts[0] ?? strtoupper(substr($code, 0, 1)));
+                                    $title = trim($parts[1] ?? (string)$label);
+                                ?>
+                                <div class="p-2 rounded-3 border bg-white d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2 pe-2">
+                                        <span class="badge bg-primary text-white mono d-inline-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
+                                            <?= esc($letter) ?>
+                                        </span>
+                                        <div>
+                                            <strong class="text-dark d-block small" style="font-size: 0.8rem;"><?= esc($title) ?></strong>
+                                            <span class="text-muted d-block" style="font-size: 0.68rem; line-height: 1.2;">Inspect before compound departure</span>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group btn-group-sm flex-shrink-0" role="group">
+                                        <input type="radio" class="btn-check safety-pass-radio" name="check[<?= esc($code) ?>]" id="mob_<?= esc($code) ?>_pass" value="pass" checked required>
+                                        <label class="btn btn-outline-success fw-bold px-2 py-1" for="mob_<?= esc($code) ?>_pass" style="font-size: 0.72rem;">PASS</label>
+
+                                        <input type="radio" class="btn-check safety-fail-radio" name="check[<?= esc($code) ?>]" id="mob_<?= esc($code) ?>_fail" value="fail">
+                                        <label class="btn btn-outline-danger fw-bold px-2 py-1" for="mob_<?= esc($code) ?>_fail" style="font-size: 0.72rem;">FAIL</label>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Inspection Remarks / Defect Notes (Optional)</label>
+                            <textarea name="remarks" rows="2" class="form-control form-control-sm" placeholder="Note any observations or leave blank if all 10 points pass..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success fw-bold">
+                            <i class="fa-solid fa-shield-check me-1"></i> Certify &amp; Submit Inspection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <?php endif; ?>
+
+    <!-- 8. NATIVE MOBILE TRIP TICKET DOCUMENT VIEWER MODAL (ADMIN-F-001 rev1) -->
+    <div class="modal fade" id="ticketDetailModal" tabindex="-1" aria-labelledby="ticketDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono" id="td_serial_badge">ADMIN-F-001 rev1</span>
+                        <h6 class="modal-title fw-bold text-dark mt-1" id="ticketDetailModalLabel">Electronic Driver's Trip Ticket</h6>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <!-- Status & Quick Actions Banner -->
+                    <div class="p-3 rounded-3 bg-light border mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small text-muted" style="font-size: 0.68rem;">Official Serial Number</div>
+                            <strong class="mono text-dark fs-6" id="td_serial_no">DTT-0000</strong>
+                        </div>
+                        <span class="badge bg-primary" id="td_status_badge">Issued</span>
+                    </div>
+
+                    <!-- Section A: Administrative Dispatch Directives -->
+                    <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom">
+                        <i class="fa-solid fa-file-signature text-primary me-1"></i> Section A: Dispatch Authorization
+                    </div>
+                    <div class="row g-2 small mb-3">
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.68rem;">Assigned Vehicle</span>
+                            <strong class="mono text-dark" id="td_vehicle">-</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.68rem;">Assigned Driver</span>
+                            <strong class="text-dark" id="td_driver"><?= esc($driver['first_name'] . ' ' . $driver['last_name']) ?></strong>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="text-muted d-block" style="font-size: 0.68rem;">Authorized Destination</span>
+                            <strong class="text-dark" id="td_destination">-</strong>
+                        </div>
+                        <div class="col-12 mt-1">
+                            <span class="text-muted d-block" style="font-size: 0.68rem;">Official Purpose</span>
+                            <span class="text-secondary" id="td_purpose">-</span>
+                        </div>
+                        <div class="col-12 mt-1">
+                            <span class="text-muted d-block" style="font-size: 0.68rem;">Authorized Passengers</span>
+                            <span class="text-dark" id="td_passengers">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Section B: Compound Gate Audit & Post-Trip Summary -->
+                    <div class="fw-bold text-dark small text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-shield-halved text-primary me-1"></i> Section B: Compound Gate &amp; Trip Audit</span>
+                        <span class="badge bg-dark text-white mono" style="font-size: 0.6rem;">GATE AUTO-STAMPED</span>
+                    </div>
+                    <div class="row g-2 small mb-3">
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-light border">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Compound Departure (Gate Egress)</span>
+                                <strong class="mono text-dark" id="td_dep_time">Pending Gate Scan</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-light border">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Compound Arrival (Gate Ingress)</span>
+                                <strong class="mono text-dark" id="td_arr_time">Pending Gate Scan</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-light border text-center">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Start Odo</span>
+                                <strong class="mono text-dark" id="td_start_odo">0.0 KM</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-light border text-center">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Return Odo</span>
+                                <strong class="mono text-dark" id="td_return_odo">0.0 KM</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-light border text-center">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Distance</span>
+                                <strong class="mono text-primary" id="td_total_dist">0.0 KM</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-light border">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Fuel Used / Ending Balance</span>
+                                <strong class="mono text-success" id="td_fuel_summary">0.00 L</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-light border">
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">Tollways &amp; RFID</span>
+                                <strong class="mono text-dark" id="td_toll_summary">₱0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                    <a href="#" target="_blank" id="td_print_btn" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-print me-1"></i> Print Official DTT
+                    </a>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-sm fw-bold" id="td_qr_btn">
+                            <i class="fa-solid fa-qrcode me-1"></i> Gate Pass QR
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm border" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php
+        $ticketsJsMap = [];
+        foreach ($tripTickets as $tk) {
+            $ticketsJsMap[(int)$tk['id']] = [
+                'id'                     => (int)$tk['id'],
+                'ticket_serial_no'       => $tk['ticket_serial_no'] ?? '',
+                'qr_crypt_token'         => $tk['qr_crypt_token'] ?? ($tk['ticket_serial_no'] ?? ''),
+                'status'                 => $tk['status'] ?? 'issued',
+                'plate_number'           => $tk['plate_number'] ?? ($vehicle['plate_number'] ?? 'N/A'),
+                'make_model'             => trim(($tk['make'] ?? ($vehicle['make'] ?? '')) . ' ' . ($tk['model'] ?? ($vehicle['model'] ?? ''))),
+                'authorized_destination' => $tk['authorized_destination'] ?? 'Official Coverage',
+                'authorized_purpose'     => $tk['authorized_purpose'] ?? 'Official Travel',
+                'authorized_passengers'  => $tk['authorized_passengers'] ?? 'Official Coverage Team',
+                'departure_time'         => !empty($tk['departure_time']) ? date('M d, Y h:i A', strtotime($tk['departure_time'])) : 'Pending Gate Egress Scan',
+                'arrival_back_time'      => !empty($tk['arrival_back_time']) ? date('M d, Y h:i A', strtotime($tk['arrival_back_time'])) : 'Pending Gate Ingress Scan',
+                'start_odometer'         => number_format((float)($tk['start_odometer'] ?? 0), 1),
+                'return_odometer'        => number_format((float)($tk['return_odometer'] ?? 0), 1),
+                'total_distance_km'      => number_format((float)($tk['total_distance_km'] ?? 0), 1),
+                'fuel_used_liters'       => number_format((float)($tk['fuel_used_liters'] ?? 0), 2),
+                'fuel_balance_end_liters'=> number_format((float)($tk['fuel_balance_end_liters'] ?? 0), 2),
+                'toll_expense'           => number_format((float)($tk['toll_expense'] ?? 0), 2),
+                'toll_provider'          => strtoupper($tk['toll_provider'] ?? 'NONE'),
+                'print_url'              => base_url('tickets/' . $tk['id'] . '/print'),
+            ];
+        }
+    ?>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Client Scripts for Tabs, QR Code & Forms -->
     <script>
+    const driverTicketsMap = <?= json_encode($ticketsJsMap) ?>;
+
+    function renderModalQrToken(tokenText, serialLabel) {
+        const modalQr = document.getElementById('modalQrCanvas');
+        if (!modalQr || !tokenText) return;
+        modalQr.innerHTML = '';
+        new QRCode(modalQr, {
+            text: tokenText,
+            width: 210,
+            height: 210,
+            colorDark: "#0f172a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.L
+        });
+    }
+
+    window.openQrForTicket = function(ticketId) {
+        const tk = driverTicketsMap[ticketId];
+        if (tk) {
+            renderModalQrToken(tk.qr_crypt_token || tk.ticket_serial_no, tk.ticket_serial_no);
+        }
+        const detailEl = document.getElementById('ticketDetailModal');
+        if (detailEl) {
+            const detailInst = bootstrap.Modal.getInstance(detailEl);
+            if (detailInst) detailInst.hide();
+        }
+        const qrModal = new bootstrap.Modal(document.getElementById('qrPassModal'));
+        qrModal.show();
+    };
+
+    window.openMobileTicketModal = function(ticketId) {
+        const tk = driverTicketsMap[ticketId];
+        if (!tk) return;
+
+        document.getElementById('td_serial_no').innerText = tk.ticket_serial_no;
+        document.getElementById('td_status_badge').innerText = tk.status.toUpperCase();
+        document.getElementById('td_vehicle').innerText = tk.plate_number + (tk.make_model ? ' • ' + tk.make_model : '');
+        document.getElementById('td_destination').innerText = tk.authorized_destination;
+        document.getElementById('td_purpose').innerText = tk.authorized_purpose;
+        document.getElementById('td_passengers').innerText = tk.authorized_passengers;
+        document.getElementById('td_dep_time').innerText = tk.departure_time;
+        document.getElementById('td_arr_time').innerText = tk.arrival_back_time;
+        document.getElementById('td_start_odo').innerText = tk.start_odometer + ' KM';
+        document.getElementById('td_return_odo').innerText = tk.return_odometer + ' KM';
+        document.getElementById('td_total_dist').innerText = tk.total_distance_km + ' KM';
+        document.getElementById('td_fuel_summary').innerText = 'Used: ' + tk.fuel_used_liters + ' L • End: ' + tk.fuel_balance_end_liters + ' L';
+        document.getElementById('td_toll_summary').innerText = '₱' + tk.toll_expense + ' (' + tk.toll_provider + ')';
+        document.getElementById('td_print_btn').href = tk.print_url;
+
+        const qrBtn = document.getElementById('td_qr_btn');
+        if (qrBtn) {
+            qrBtn.onclick = function() {
+                window.openQrForTicket(ticketId);
+            };
+        }
+
+        const detailModal = new bootstrap.Modal(document.getElementById('ticketDetailModal'));
+        detailModal.show();
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Tab & View Switcher Engine
+        // 1. Tab & View Switcher Engine (Supports Segmented Tabs, Bottom Dock, Dropdown Links & Quick Buttons)
         const segButtons = document.querySelectorAll('.segmented-item[data-view]');
         const dockButtons = document.querySelectorAll('.thumb-nav-btn[data-view]');
+        const allViewTriggers = document.querySelectorAll('[data-view]');
         const tabViews = document.querySelectorAll('.tab-panel-view');
 
         function switchView(targetViewId) {
@@ -1538,7 +1858,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        [...segButtons, ...dockButtons].forEach(btn => {
+        allViewTriggers.forEach(btn => {
             btn.addEventListener('click', function (e) {
                 const target = this.getAttribute('data-view');
                 if (target) {
@@ -1548,34 +1868,32 @@
             });
         });
 
-        // 2. High-Contrast QR Code Rendering for Checkpoint
+        // 2. High-Contrast Low-Density QR Code Rendering for Instant Compound Gate Scanning
         const qrToken = <?= json_encode($activeTicket['qr_crypt_token'] ?? ($activeTicket['ticket_serial_no'] ?? ($vehicle['plate_number'] ?? 'PIA-TOKEN-DEMO'))) ?>;
 
         const cardQr = document.getElementById('activeTicketQr');
         if (cardQr && qrToken) {
             new QRCode(cardQr, {
                 text: qrToken,
-                width: 130,
-                height: 130,
+                width: 140,
+                height: 140,
                 colorDark: "#0f172a",
                 colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+                correctLevel: QRCode.CorrectLevel.L
             });
         }
 
-        const modalQr = document.getElementById('modalQrCanvas');
-        if (modalQr && qrToken) {
-            new QRCode(modalQr, {
-                text: qrToken,
-                width: 210,
-                height: 210,
-                colorDark: "#0f172a",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
+        renderModalQrToken(qrToken);
+
+        // 3. BLOWBAGETS Quick "Mark All Pass" Helper
+        const btnMarkAllPassMobile = document.getElementById('btnMarkAllPassMobile');
+        if (btnMarkAllPassMobile) {
+            btnMarkAllPassMobile.addEventListener('click', function () {
+                document.querySelectorAll('.safety-pass-radio').forEach(r => { r.checked = true; });
             });
         }
 
-        // 3. Passenger Delay Chips Interactive Selector
+        // 4. Passenger Delay Chips Interactive Selector
         const delayChips = document.querySelectorAll('#delayMinutesChips .chip-option');
         const delayInput = document.getElementById('inputDelayMinutes');
         delayChips.forEach(chip => {
@@ -1596,7 +1914,7 @@
             });
         });
 
-        // 4. Section B Live Calculator
+        // 5. Section B Live Calculator
         const sOdo = document.getElementById('m_start_odo');
         const rOdo = document.getElementById('m_return_odo');
         const calcDist = document.getElementById('m_calcDistance');
@@ -1629,7 +1947,7 @@
             if (inp) inp.addEventListener('input', recalcSectionB);
         });
 
-        // 5. GPS Locator for Incident Reporting
+        // 6. GPS Locator for Incident Reporting
         const btnGps = document.getElementById('btnGetGps');
         const locInput = document.getElementById('incidentLocationInput');
         if (btnGps && locInput) {
@@ -1651,6 +1969,30 @@
                     );
                 }
             });
+        }
+
+        // 7. Deep-Link Query Parameter Routing (Keeps Driver 100% in Native Mobile View)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam === 'history') {
+            switchView('view-history');
+        } else if (tabParam === 'vehicle') {
+            switchView('view-vehicle');
+        } else if (tabParam === 'expenses') {
+            switchView('view-expenses');
+        }
+
+        const openSafetyId = urlParams.get('open_safety');
+        if (openSafetyId) {
+            const blowModalEl = document.getElementById('blowbagetsModal');
+            if (blowModalEl) {
+                new bootstrap.Modal(blowModalEl).show();
+            }
+        }
+
+        const ticketIdParam = urlParams.get('ticket_id');
+        if (ticketIdParam && driverTicketsMap[parseInt(ticketIdParam, 10)]) {
+            window.openMobileTicketModal(parseInt(ticketIdParam, 10));
         }
     });
     </script>

@@ -304,12 +304,12 @@
         const qrEl = document.getElementById('printQr');
         if (qrEl) {
             new QRCode(qrEl, {
-                text: <?= json_encode($ticket['qr_crypt_token']) ?>,
+                text: <?= json_encode($ticket['qr_crypt_token'] ?: $ticket['ticket_serial_no']) ?>,
                 width: 75,
                 height: 75,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+                correctLevel: QRCode.CorrectLevel.L
             });
         }
     });

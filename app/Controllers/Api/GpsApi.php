@@ -10,7 +10,6 @@ use App\Models\IncidentModel;
 use App\Models\MaintenanceModel;
 use App\Models\TelemetryModel;
 use App\Libraries\GeofenceChecker;
-use App\Libraries\SmsSender;
 
 class GpsApi extends BaseController
 {
@@ -143,40 +142,7 @@ class GpsApi extends BaseController
             }
         }
 
-        // 5. OBD-II Fault Code -> Flow 3 Maintenance Alert trigger (SDD §5.5)
-        $maintAlert = false;
-        if (!empty($engineCode) && $engineCode !== 'OK') {
-            $maintModel = new MaintenanceModel();
-            $existingMaint = $maintModel->where('vehicle_id', $vehicleId)
-                                        ->where('status', 'scheduled')
-                                        ->like('service_type', $engineCode)
-                                        ->first();
-
-            if (!$existingMaint) {
-                $refNo = 'WO-OBD-' . date('Ymd-His');
-                $maintModel->insert([
-                    'reference_no'        => $refNo,
-                    'vehicle_id'          => $vehicleId,
-                    'service_type'        => "OBD-II Fault: {$engineCode}",
-                    'priority'            => 'high',
-                    'scheduled_date'      => date('Y-m-d'),
-                    'odometer_at_service' => $vehicle['odometer_km'],
-                    'service_center'      => 'Authorized Diagnostic Workshop',
-                    'cost'                => 8500.00,
-                    'status'              => 'scheduled',
-                    'description'         => "Telemetry OBD-II engine fault code {$engineCode} reported at location: {$geofenceName}.",
-                ]);
-                $maintAlert = true;
-
-                $smsSender = new SmsSender();
-                $smsSender->send(
-                    '+63 919 555 0300',
-                    "PIA Motorpool Telematics Alert: Engine fault {$engineCode} reported on {$vehicle['vehicle_code']} at {$geofenceName}. WO {$refNo} scheduled."
-                );
-            }
-        }
-
-        // 6. Calculate distance delta and update vehicle location & odometer
+        // 5. Calculate distance delta and update vehicle location & odometer
         $currentOdo = (float)$vehicle['odometer_km'];
         $prevLat = (float)$vehicle['current_latitude'];
         $prevLng = (float)$vehicle['current_longitude'];
@@ -206,7 +172,6 @@ class GpsApi extends BaseController
             'message'           => 'GPS telemetry ping processed.',
             'geofence'          => $geofenceName,
             'overspeed_alert'   => $overspeedAlert,
-            'maintenance_alert' => $maintAlert,
             'odometer_km'       => $currentOdo,
             'timestamp'         => date('Y-m-d H:i:s'),
         ]);

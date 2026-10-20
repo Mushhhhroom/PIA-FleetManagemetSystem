@@ -221,6 +221,9 @@ APPLIED FIXES:
                                 <i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem;"></i> LIVE SCANNER
                             </span>
                             <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-info border-info border-opacity-50 py-1 px-2 d-none" id="btnSwitchCamera" title="Switch Camera Lens">
+                                    <i class="fa-solid fa-camera-rotate"></i>
+                                </button>
                                 <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-warning border-warning border-opacity-50 py-1 px-2" id="btnToggleTorch" title="Flashlight Torch">
                                     <i class="fa-solid fa-bolt"></i> <span id="torchLabel">Torch</span>
                                 </button>
@@ -234,11 +237,17 @@ APPLIED FIXES:
                         <div id="qrReader" style="width: 100%; min-height: 270px;">
                             <div id="scannerPlaceholder" class="p-4 text-center text-white-50">
                                 <i class="fa-solid fa-qrcode fa-3x mb-3 d-block text-white opacity-50"></i>
-                                <button type="button" class="btn btn-primary px-4 py-2 shadow fw-semibold" id="btnStartCamera">
-                                    <i class="fa-solid fa-video me-1"></i> Start Camera Viewfinder
-                                </button>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <button type="button" class="btn btn-primary px-4 py-2 shadow fw-semibold" id="btnStartCamera">
+                                        <i class="fa-solid fa-video me-1"></i> Start Camera Viewfinder
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light px-3 py-2 fw-semibold" id="btnScanQrImage" title="Upload or scan a saved QR code image">
+                                        <i class="fa-solid fa-image me-1"></i> Scan QR Image
+                                    </button>
+                                </div>
+                                <input type="file" id="qrImageFileInput" accept="image/*" class="d-none">
                                 <div class="small mt-2 text-white-50" style="font-size: 0.72rem;">
-                                    Targeted optical reticle & flashlight enabled
+                                    Auto-stamps Compound Departure &amp; Arrival upon Driver/Passenger validation
                                 </div>
                             </div>
                         </div>
@@ -252,7 +261,7 @@ APPLIED FIXES:
                     <div class="mt-3 pt-2 border-top">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light mono"><i class="fa-solid fa-barcode"></i></span>
-                            <input type="text" id="manualTokenInput" class="form-control mono" placeholder="Or scan/type DTT Serial (e.g. DTT-2026-0001)">
+                            <input type="text" id="manualTokenInput" class="form-control mono" placeholder="Scan/type DTT Serial or Plate (e.g. DTT-2026-0001)">
                             <button class="btn btn-dark" type="button" id="btnVerifyManual">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i> Verify
                             </button>
@@ -326,6 +335,67 @@ APPLIED FIXES:
 
     <!-- Right Column: Live Compound Roster & Clearance History -->
     <div class="col-lg-7">
+        <!-- Vehicles Pending Compound Departure (Issued Tickets Awaiting Egress Scan) -->
+        <div class="card-panel border shadow-sm mb-4">
+            <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+                <span class="fw-bold text-dark small text-uppercase">
+                    <i class="fa-solid fa-right-from-bracket text-warning me-1"></i> Dispatched Units Awaiting Compound Departure (<?= count($vehiclesPendingDeparture) ?>)
+                </span>
+                <span class="badge bg-warning text-dark small">PENDING EGRESS</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table-minimal">
+                    <thead>
+                        <tr>
+                            <th>Unit / e-DTT</th>
+                            <th>Driver</th>
+                            <th>Destination</th>
+                            <th>BLOWBAGETS</th>
+                            <th class="text-end">Compound Gate Audit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($vehiclesPendingDeparture)): ?>
+                            <tr>
+                                <td colspan="5" class="text-center py-3 text-muted small">
+                                    No dispatched vehicles currently awaiting departure at the compound gate.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($vehiclesPendingDeparture as $vp): ?>
+                                <tr>
+                                    <td>
+                                        <div class="mono fw-bold text-dark"><?= esc($vp['plate_number']) ?></div>
+                                        <div class="text-muted mono" style="font-size: 0.7rem;"><?= esc($vp['ticket_serial_no']) ?></div>
+                                    </td>
+                                    <td class="small fw-semibold"><?= esc($vp['driver_name']) ?></td>
+                                    <td class="small text-truncate" style="max-width: 160px;" title="<?= esc($vp['authorized_destination']) ?>">
+                                        <?= esc($vp['authorized_destination']) ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($vp['has_passed_safety'])): ?>
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle" style="font-size: 0.68rem;">
+                                                <i class="fa-solid fa-check me-1"></i>PASSED
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-warning bg-opacity-25 text-dark border border-warning" style="font-size: 0.68rem;">
+                                                <i class="fa-solid fa-clock me-1"></i>PENDING
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-primary py-1 px-2 fw-semibold" onclick="triggerManualVerification('<?= esc($vp['ticket_serial_no']) ?>')">
+                                            <i class="fa-solid fa-qrcode me-1"></i> Scan Egress
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Vehicles Currently on Official Transit Outside Compound -->
         <div class="card-panel border shadow-sm mb-4">
             <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
@@ -341,8 +411,8 @@ APPLIED FIXES:
                             <th>Unit / Plate</th>
                             <th>Driver</th>
                             <th>Destination</th>
-                            <th>Departed At</th>
-                            <th class="text-end">Action</th>
+                            <th>Departed Compound</th>
+                            <th class="text-end">Compound Return</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -357,18 +427,18 @@ APPLIED FIXES:
                                 <tr>
                                     <td>
                                         <div class="mono fw-bold text-dark"><?= esc($vo['plate_number']) ?></div>
-                                        <div class="text-muted" style="font-size: 0.7rem;"><?= esc($vo['ticket_serial_no']) ?></div>
+                                        <div class="text-muted mono" style="font-size: 0.7rem;"><?= esc($vo['ticket_serial_no']) ?></div>
                                     </td>
                                     <td class="small fw-semibold"><?= esc($vo['driver_name']) ?></td>
                                     <td class="small text-truncate" style="max-width: 180px;" title="<?= esc($vo['authorized_destination']) ?>">
                                         <?= esc($vo['authorized_destination']) ?>
                                     </td>
                                     <td class="mono small text-muted">
-                                        <?= $vo['departure_time'] ? date('M d, H:i', strtotime($vo['departure_time'])) : '-' ?>
+                                        <?= $vo['departure_time'] ? date('M d, h:i A', strtotime($vo['departure_time'])) : '-' ?>
                                     </td>
                                     <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 fw-semibold" onclick="triggerManualVerification('<?= esc($vo['ticket_serial_no']) ?>')">
-                                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Ingress
+                                        <button type="button" class="btn btn-sm btn-success py-1 px-2 fw-semibold" onclick="triggerManualVerification('<?= esc($vo['ticket_serial_no']) ?>')">
+                                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Scan Ingress
                                         </button>
                                     </td>
                                 </tr>
@@ -515,8 +585,47 @@ APPLIED FIXES:
                         </div>
                     </div>
 
-                    <!-- Egress / Ingress Odometer Section (Active only on PASS) -->
+                    <!-- Egress / Ingress Automated Timestamp, Audit Validation & Odometer Section (Active only on PASS) -->
                     <div id="verdictOdometerSection">
+                        <!-- Automated Compound Departure / Arrival Timestamp Box -->
+                        <div class="card border-2 border-success-subtle p-3 mb-3 shadow-sm" style="background: #f0fdf4;">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                <div>
+                                    <div class="small fw-bold text-success text-uppercase mono" id="modalAutoTimeLabel">
+                                        <i class="fa-solid fa-clock me-1"></i> Automated Compound Departure Date &amp; Time
+                                    </div>
+                                    <div class="mono fw-bold fs-5 text-dark mt-1" id="modalAutoTimeValue">
+                                        <?= date('M d, Y h:i:s A') ?>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.72rem;" id="modalPrevDepartureNote">
+                                        Automatically stamped by the Compound Gate QR Scanner upon driver &amp; passenger validation.
+                                    </div>
+                                </div>
+                                <span class="badge bg-success text-white mono px-2 py-2 align-self-start align-self-md-center">
+                                    <i class="fa-solid fa-lock me-1"></i> AUTO-STAMPED AT COMPOUND
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Driver & Passenger Compound Audit Checkboxes -->
+                        <div class="card border p-3 bg-white shadow-sm mb-3">
+                            <div class="small fw-bold text-dark text-uppercase mono mb-2">
+                                <i class="fa-solid fa-user-check text-primary me-1"></i> Compound Gate Audit Validation
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="driver_validated" value="1" id="chkDriverValidated" checked required>
+                                <label class="form-check-label small fw-semibold text-dark" for="chkDriverValidated">
+                                    Assigned Driver identity &amp; official vehicle plate verified at compound barrier
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="passengers_validated" value="1" id="chkPassengersValidated" checked required>
+                                <label class="form-check-label small fw-semibold text-dark" for="chkPassengersValidated">
+                                    Authorized passengers &amp; official travel manifest verified at compound barrier
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="card border-2 border-primary-subtle p-3 bg-white shadow-sm mb-3">
                             <label class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
                                 <span><i class="fa-solid fa-gauge-high text-primary me-1"></i> Physical Odometer Reading (KM) <span class="text-danger">*</span></span>
@@ -540,7 +649,7 @@ APPLIED FIXES:
                         <i class="fa-solid fa-xmark me-1"></i> Close / Hold
                     </button>
                     <button type="submit" class="btn btn-success px-4 py-2 fw-bold shadow" id="btnSubmitClearance">
-                        <i class="fa-solid fa-check-double me-1"></i> Authorize & Open Barrier
+                        <i class="fa-solid fa-check-double me-1"></i> Validate &amp; Record Compound Timestamp
                     </button>
                 </div>
             </form>
@@ -554,12 +663,19 @@ APPLIED FIXES:
 document.addEventListener('DOMContentLoaded', function() {
     let html5QrCode = null;
     let isScanning = false;
+    let isVerifying = false;
     let isTorchOn = false;
     let currentTicketData = null;
     let pinBuffer = "";
+    let availableCameras = [];
+    let currentCameraIdx = 0;
+    let autoClockTimer = null;
 
     const btnStart = document.getElementById('btnStartCamera');
     const btnStop = document.getElementById('btnStopCamera');
+    const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+    const btnScanQrImage = document.getElementById('btnScanQrImage');
+    const qrImageFileInput = document.getElementById('qrImageFileInput');
     const btnTorch = document.getElementById('btnToggleTorch');
     const torchLabel = document.getElementById('torchLabel');
     const placeholder = document.getElementById('scannerPlaceholder');
@@ -569,7 +685,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnToggleHighContrast = document.getElementById('btnToggleHighContrast');
     const contrastLabel = document.getElementById('contrastModeLabel');
 
-    const verdictModal = new bootstrap.Modal(document.getElementById('verdictModal'));
+    const verdictModalEl = document.getElementById('verdictModal');
+    const verdictModal = new bootstrap.Modal(verdictModalEl);
+
+    // Resume camera scanning when verdict modal closes
+    verdictModalEl.addEventListener('hidden.bs.modal', function() {
+        isVerifying = false;
+        if (autoClockTimer) {
+            clearInterval(autoClockTimer);
+            autoClockTimer = null;
+        }
+        if (html5QrCode && isScanning) {
+            try {
+                html5QrCode.resume();
+                statusText.innerText = "Camera active. Center the e-DTT QR code inside the green reticle.";
+            } catch (e) {}
+        }
+    });
 
     // Audio & Haptic Feedback synthesis (Zero latency Web Audio API)
     function playAudioFeedback(type) {
@@ -637,39 +769,136 @@ document.addEventListener('DOMContentLoaded', function() {
     btnStart.addEventListener('click', startScanner);
     btnStop.addEventListener('click', stopScanner);
 
-    function startScanner() {
+    function createQrInstance() {
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("qrReader", {
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+            });
+        }
+        return html5QrCode;
+    }
+
+    function onQrDecodedSuccess(decodedText) {
+        if (isVerifying) return;
+        isVerifying = true;
+        if (html5QrCode && isScanning) {
+            try { html5QrCode.pause(true); } catch (e) {}
+        }
+        statusText.innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> QR Code Read! Validating &amp; Preparing Compound Timestamp...</span>`;
+        verifyToken(decodedText);
+    }
+
+    function startScannerWithCameraSource(cameraSource) {
         placeholder.classList.add('d-none');
         reticle.style.display = 'flex';
         controls.style.setProperty('display', 'flex', 'important');
 
-        if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("qrReader");
-        }
+        createQrInstance();
 
         const config = {
             fps: 15,
-            qrbox: { width: 220, height: 220 },
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                const minEdge = Math.min(viewfinderWidth || 260, viewfinderHeight || 260);
+                const boxSize = Math.max(180, Math.floor(minEdge * 0.78));
+                return { width: boxSize, height: boxSize };
+            },
             aspectRatio: 1.0
         };
 
-        html5QrCode.start(
-            { facingMode: "environment" },
+        return html5QrCode.start(
+            cameraSource,
             config,
-            (decodedText, decodedResult) => {
-                statusText.innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> Scanned successfully! Verifying...</span>`;
-                verifyToken(decodedText);
-            },
-            (errorMessage) => {
-                // scanning frame in progress...
-            }
+            (decodedText) => onQrDecodedSuccess(decodedText),
+            () => {}
         ).then(() => {
             isScanning = true;
-            statusText.innerText = "Camera active. Center the e-DTT QR code inside the green reticle.";
-        }).catch((err) => {
-            statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Camera access error: ${err}</span>`;
-            placeholder.classList.remove('d-none');
-            reticle.style.display = 'none';
-            controls.style.setProperty('display', 'none', 'important');
+            statusText.innerText = "Camera active. Center the Driver's e-DTT QR code inside the green reticle.";
+        });
+    }
+
+    function startScanner() {
+        createQrInstance();
+        Html5Qrcode.getCameras().then(cameras => {
+            availableCameras = cameras || [];
+            if (availableCameras.length > 1 && btnSwitchCamera) {
+                btnSwitchCamera.classList.remove('d-none');
+            }
+            // Prefer environment/back camera first, then fallback to user/front camera or first camera ID
+            startScannerWithCameraSource({ facingMode: "environment" })
+                .catch(() => {
+                    if (availableCameras.length > 0) {
+                        currentCameraIdx = availableCameras.length - 1;
+                        return startScannerWithCameraSource(availableCameras[currentCameraIdx].id);
+                    }
+                    return startScannerWithCameraSource({ facingMode: "user" });
+                })
+                .catch((err) => {
+                    statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Camera access error (${err}). Use 'Scan QR Image', Serial Input, or 6-Digit Keypad.</span>`;
+                    placeholder.classList.remove('d-none');
+                    reticle.style.display = 'none';
+                    controls.style.setProperty('display', 'none', 'important');
+                });
+        }).catch(() => {
+            // If getCameras() fails, try direct environment then user facingMode
+            startScannerWithCameraSource({ facingMode: "environment" })
+                .catch(() => startScannerWithCameraSource({ facingMode: "user" }))
+                .catch((err) => {
+                    statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Camera unavailable (${err}). Use 'Scan QR Image' or Serial Input below.</span>`;
+                    placeholder.classList.remove('d-none');
+                    reticle.style.display = 'none';
+                    controls.style.setProperty('display', 'none', 'important');
+                });
+        });
+    }
+
+    if (btnSwitchCamera) {
+        btnSwitchCamera.addEventListener('click', function() {
+            if (!availableCameras || availableCameras.length < 2) return;
+            currentCameraIdx = (currentCameraIdx + 1) % availableCameras.length;
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    startScannerWithCameraSource(availableCameras[currentCameraIdx].id);
+                }).catch(() => {});
+            }
+        });
+    }
+
+    // Scan QR from Image File / Screenshot Fallback
+    if (btnScanQrImage && qrImageFileInput) {
+        btnScanQrImage.addEventListener('click', function() {
+            qrImageFileInput.value = '';
+            qrImageFileInput.click();
+        });
+
+        qrImageFileInput.addEventListener('change', function(e) {
+            if (!e.target.files || e.target.files.length === 0) return;
+            const imageFile = e.target.files[0];
+            createQrInstance();
+            statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-primary"></i> Decoding QR image file...`;
+
+            const scanImageFile = () => {
+                html5QrCode.scanFile(imageFile, false)
+                    .then(decodedText => {
+                        onQrDecodedSuccess(decodedText);
+                    })
+                    .catch(err => {
+                        playAudioFeedback('reject');
+                        statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Could not detect a valid QR code in that image. Try entering the DTT Serial below.</span>`;
+                    });
+            };
+
+            if (isScanning) {
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    placeholder.classList.remove('d-none');
+                    reticle.style.display = 'none';
+                    controls.style.setProperty('display', 'none', 'important');
+                    scanImageFile();
+                }).catch(() => scanImageFile());
+            } else {
+                scanImageFile();
+            }
         });
     }
 
@@ -764,30 +993,57 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Manual Input Verification
+    // Manual Input Verification (Button + Enter Key)
+    const manualTokenInput = document.getElementById('manualTokenInput');
     document.getElementById('btnVerifyManual').addEventListener('click', function() {
-        const val = document.getElementById('manualTokenInput').value.trim();
+        const val = manualTokenInput.value.trim();
         if (val) verifyToken(val);
     });
+    if (manualTokenInput) {
+        manualTokenInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim();
+                if (val) verifyToken(val);
+            }
+        });
+    }
 
     window.triggerManualVerification = function(serial) {
         verifyToken(serial);
     };
 
-    // Central Token Verification
+    // Central Token Verification (Includes CSRF Token + Header for CI4 Security Filter)
+    let currentCsrfTokenName = '<?= csrf_token() ?>';
+    let currentCsrfHash = '<?= csrf_hash() ?>';
+
     function verifyToken(token) {
         statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-primary"></i> Cryptographically verifying token signature...`;
+
+        const formInputCsrf = document.querySelector('#gateClearanceForm input[name="' + currentCsrfTokenName + '"]');
+        if (formInputCsrf && formInputCsrf.value) {
+            currentCsrfHash = formInputCsrf.value;
+        }
+
+        const payload = new URLSearchParams();
+        payload.append('token', token);
+        payload.append(currentCsrfTokenName, currentCsrfHash);
 
         fetch('<?= base_url('gate/verify') ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': currentCsrfHash
             },
-            body: new URLSearchParams({ token: token })
+            body: payload
         })
         .then(res => res.json())
         .then(data => {
+            if (data.csrf_hash) {
+                currentCsrfHash = data.csrf_hash;
+                if (formInputCsrf) formInputCsrf.value = data.csrf_hash;
+            }
             if (data.status === 'success') {
                 renderVerdictModal(data);
                 statusText.innerText = "Verified: " + data.ticket.ticket_serial_no;
@@ -800,9 +1056,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(err => {
+            isVerifying = false;
             playAudioFeedback('reject');
             alert('Verification request failed. Please check network connection.');
             statusText.innerText = "Network verification error.";
+        });
+    }
+
+    function formatLiveCompoundClock(dateObj) {
+        return dateObj.toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
         });
     }
 
@@ -836,6 +1105,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const odoInput = document.getElementById('modalOdometer');
         const odoHint = document.getElementById('modalOdoValidationHint');
         const odoLabel = document.getElementById('odoTypeLabel');
+        const autoTimeLabel = document.getElementById('modalAutoTimeLabel');
+        const autoTimeValue = document.getElementById('modalAutoTimeValue');
+        const prevDepNote = document.getElementById('modalPrevDepartureNote');
+        const chkDriver = document.getElementById('chkDriverValidated');
+        const chkPassengers = document.getElementById('chkPassengersValidated');
+
+        if (chkDriver) chkDriver.checked = true;
+        if (chkPassengers) chkPassengers.checked = true;
+
+        if (autoClockTimer) {
+            clearInterval(autoClockTimer);
+            autoClockTimer = null;
+        }
 
         if (isPass) {
             playAudioFeedback('pass');
@@ -846,18 +1128,41 @@ document.addEventListener('DOMContentLoaded', function() {
             title.innerText = isEgress ? 'CLEARED FOR EGRESS (DEPARTURE)' : 'CLEARED FOR INGRESS (RETURN)';
             subTitle.innerText = 'Cryptographic Signature Verified & Security Clear';
             eventBadge.className = 'badge bg-white text-success mono px-3 py-1 fw-bold';
-            eventBadge.innerText = isEgress ? 'EGRESS VERIFIED' : 'INGRESS VERIFIED';
+            eventBadge.innerText = isEgress ? 'COMPOUND DEPARTURE' : 'COMPOUND ARRIVAL';
 
             rejectBox.classList.add('d-none');
             odoSection.classList.remove('d-none');
             submitBtn.classList.remove('d-none');
             submitBtn.disabled = false;
+            submitBtn.innerHTML = isEgress
+                ? `<i class="fa-solid fa-check-double me-1"></i> Validate &amp; Auto-Stamp Departure Time`
+                : `<i class="fa-solid fa-check-double me-1"></i> Validate &amp; Auto-Stamp Arrival Time`;
+
+            if (autoTimeValue) {
+                autoTimeValue.innerText = data.automated_timestamp_formatted || formatLiveCompoundClock(new Date());
+                autoClockTimer = setInterval(() => {
+                    autoTimeValue.innerText = formatLiveCompoundClock(new Date());
+                }, 1000);
+            }
 
             if (isEgress) {
+                if (autoTimeLabel) {
+                    autoTimeLabel.innerHTML = `<i class="fa-solid fa-clock me-1"></i> Automated Compound Departure Date &amp; Time`;
+                }
+                if (prevDepNote) {
+                    prevDepNote.innerText = `Will automatically stamp 'Departure from Compound' on e-DTT ${t.ticket_serial_no} upon confirmation.`;
+                }
                 odoLabel.innerText = "Departure Odometer";
                 odoInput.value = parseFloat(t.vehicle_current_odometer || 0).toFixed(1);
                 odoHint.innerHTML = `Must be &ge; current vehicle odometer: <strong>${t.vehicle_current_odometer} KM</strong>`;
             } else {
+                if (autoTimeLabel) {
+                    autoTimeLabel.innerHTML = `<i class="fa-solid fa-clock me-1"></i> Automated Compound Arrival Back Date &amp; Time`;
+                }
+                if (prevDepNote) {
+                    const depText = data.departure_time_formatted || t.departure_time || 'Recorded at Egress';
+                    prevDepNote.innerHTML = `Departed Compound at: <strong>${depText}</strong> &bull; Will automatically stamp 'Arrival back at Compound'.`;
+                }
                 odoLabel.innerText = "Return Odometer";
                 const startOdo = parseFloat(t.start_odometer || t.vehicle_current_odometer || 0);
                 odoInput.value = (startOdo + 10).toFixed(1);
@@ -923,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(this);
         const submitBtn = document.getElementById('btnSubmitClearance');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Authorizing & Logging...`;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Stamping Compound Timestamp...`;
 
         fetch('<?= base_url('gate/record') ?>', {
             method: 'POST',
@@ -935,13 +1240,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => res.json())
         .then(data => {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fa-solid fa-check-double me-1"></i> Authorize & Open Barrier`;
+            submitBtn.innerHTML = `<i class="fa-solid fa-check-double me-1"></i> Validate &amp; Record Compound Timestamp`;
 
             if (data.status === 'success') {
                 playAudioFeedback('pass');
+                statusText.innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> ${data.message}</span>`;
                 verdictModal.hide();
-                alert(data.message);
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.href = '<?= base_url('gate') ?>';
+                }, 400);
             } else {
                 playAudioFeedback('reject');
                 alert(data.message);
@@ -949,10 +1256,17 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fa-solid fa-check-double me-1"></i> Authorize & Open Barrier`;
+            submitBtn.innerHTML = `<i class="fa-solid fa-check-double me-1"></i> Validate &amp; Record Compound Timestamp`;
             alert('Error logging clearance. Please verify odometer input.');
         });
     });
+
+    // Auto-trigger verification if ?verify=DTT-... query parameter is present
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyParam = urlParams.get('verify') || urlParams.get('token');
+    if (verifyParam) {
+        verifyToken(verifyParam);
+    }
 });
 </script>
 <?= $this->endSection() ?>

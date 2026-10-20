@@ -1415,12 +1415,12 @@
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link fw-semibold small" id="radar-tab" data-bs-toggle="tab" data-bs-target="#tab-radar" type="button" role="tab">
-                                <i class="fa-brands fa-google me-1 text-info"></i> 4. Google Maps & Radar
+                                <i class="fa-solid fa-qrcode me-1 text-info"></i> 4. Gate QR &amp; GPS Radar
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link fw-semibold small" id="api-tab" data-bs-toggle="tab" data-bs-target="#tab-api" type="button" role="tab">
-                                <i class="fa-solid fa-terminal me-1 text-warning"></i> 5. REST & IoT APIs
+                                <i class="fa-solid fa-terminal me-1 text-warning"></i> 5. Telematics APIs
                             </button>
                         </li>
                     </ul>
@@ -1434,7 +1434,7 @@
                         <div class="tab-pane fade show active" id="tab-workflows" role="tabpanel">
                             <div class="alert alert-primary border-0 rounded-2 py-2 px-3 mb-4 d-flex align-items-center gap-2">
                                 <i class="fa-solid fa-circle-info fs-5"></i>
-                                <span>The PIA Motorpool Automated Fleet Management System orchestrates official government travel through a closed-loop verified workflow — from vehicle request to trip completion and COA compliance.</span>
+                                <span>The PIA Motorpool Automated Fleet Management System orchestrates official government travel through a closed-loop verified workflow — from Vehicle Request Slip (ADMIN-F-018) to e-DTT (ADMIN-F-001) and COA compliance.</span>
                             </div>
 
                             <div class="row g-3">
@@ -1442,12 +1442,12 @@
                                     <div class="p-3 border rounded-2 bg-white h-100">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary">Module 01</span>
-                                            <strong class="text-dark">Vehicle Fleet Registry</strong>
+                                            <strong class="text-dark">VRS &amp; 2-Tier SLA Approvals (ADMIN-F-018)</strong>
                                         </div>
-                                        <p class="text-muted small mb-2">Maintains complete records of all transport assets, including VIN, plate number, fuel tank capacity, current odometer, and PMS thresholds.</p>
+                                        <p class="text-muted small mb-2">Staff file official Vehicle Request Slips with 24-hour lead time enforcement, passenger manifest, and two-tier approval (Dispatcher Tier 1 &rarr; Admin Division Head Tier 2).</p>
                                         <ul class="small text-muted ps-3 mb-0">
-                                            <li><strong>Statuses:</strong> Active, In Transit, Maintenance, Out of Service.</li>
-                                            <li>Tracks engine status, battery voltage, and coolant temperature.</li>
+                                            <li><strong>4-Hour SLA Watcher:</strong> Tracks approval turnaround and supports Emergency Fast-Track Override (FR-1.3).</li>
+                                            <li>Mandatory justification upload for late (&lt;24h) requests.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1456,12 +1456,12 @@
                                     <div class="p-3 border rounded-2 bg-white h-100">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary">Module 02</span>
-                                            <strong class="text-dark">Driver Personnel & Compliance</strong>
+                                            <strong class="text-dark">Dispatch Console &amp; e-DTT (ADMIN-F-001)</strong>
                                         </div>
-                                        <p class="text-muted small mb-2">Manages certified operators, heavy-vehicle licenses, emergency contacts, and algorithmic safety scoring.</p>
+                                        <p class="text-muted small mb-2">Allocates Shared Pool or Dedicated service vehicles and qualified drivers using an anti-double-booking calendar and automated e-DTT issuance.</p>
                                         <ul class="small text-muted ps-3 mb-0">
-                                            <li><strong>Safety Scoring:</strong> Penalizes overspeeding incidents (>80 km/h) automatically.</li>
-                                            <li>Prevents dispatching drivers with expired licenses or unverified status.</li>
+                                            <li><strong>Cryptographic QR Gate Pass:</strong> Every e-DTT embeds an HMAC-SHA256 token for compound gate scanning.</li>
+                                            <li>Supports multi-request trip merging along common corridors.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1470,12 +1470,12 @@
                                     <div class="p-3 border rounded-2 bg-white h-100">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary">Module 03</span>
-                                            <strong class="text-dark">Trip Dispatch & Waybills</strong>
+                                            <strong class="text-dark">BLOWBAGETS &amp; Compound Gate QR</strong>
                                         </div>
-                                        <p class="text-muted small mb-2">Assigns truck and driver to a corridor with auto-calculated OSRM road distance, scheduled departure, and cargo tracking.</p>
+                                        <p class="text-muted small mb-2">Drivers complete the 10-point BLOWBAGETS safety inspection before departure. Compound Gate Security scans the QR pass to automatically stamp Departure &amp; Arrival timestamps.</p>
                                         <ul class="small text-muted ps-3 mb-0">
-                                            <li><strong>Anti-Fraud Odometer Lock:</strong> At trip completion, arrival odometer is logged and cross-verified against route distance.</li>
-                                            <li>Dispatches alert drivers via simulated SMS transmission.</li>
+                                            <li><strong>Safety Interlock (FR-5.2):</strong> Any failed critical item locks the vehicle and generates a Mechanic PIR.</li>
+                                            <li>Automated Gate Egress &amp; Ingress timestamps lock into Section B.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1484,12 +1484,12 @@
                                     <div class="p-3 border rounded-2 bg-white h-100">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary">Module 04</span>
-                                            <strong class="text-dark">Technical Shop & Maintenance (PMS)</strong>
+                                            <strong class="text-dark">Mechanic PIR Queue &amp; Preventive PMS</strong>
                                         </div>
-                                        <p class="text-muted small mb-2">Automates preventive maintenance intervals (every 10,000 km) and captures real-time OBD-II vehicle diagnostic error codes.</p>
+                                        <p class="text-muted small mb-2">Handles Pre-Repair Inspection Reports (PIR) from BLOWBAGETS defects or roadside breakdowns, plus 10,000-km preventive maintenance work orders.</p>
                                         <ul class="small text-muted ps-3 mb-0">
-                                            <li><strong>OBD-II Alerts:</strong> Engine fault codes (e.g. P0420) instantly trigger high-priority work orders.</li>
-                                            <li>Completing service recalibrates the next maintenance threshold.</li>
+                                            <li><strong>Roadside Breakdown (FR-4.3):</strong> Auto-disables the vehicle and routes a PIR to the mechanic queue.</li>
+                                            <li>Completing repair evaluation restores vehicle readiness.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1498,9 +1498,9 @@
                                     <div class="p-3 border rounded-2 bg-white">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge bg-primary">Module 05</span>
-                                            <strong class="text-dark">Fuel Logging & Financial Audits</strong>
+                                            <strong class="text-dark">RFID Ledger, Fuel Accounting &amp; COA Compliance</strong>
                                         </div>
-                                        <p class="text-muted small mb-0">Captures fuel volume (liters), cost (₱), odometer readings, and receipt image uploads. Computes the executive Fleet Cost per Kilometer metric (Total Operating Expenses &divide; Total Fleet Distance) to identify operational wastage.</p>
+                                        <p class="text-muted small mb-0">Monitors Autosweep/Easytrip RFID balances (&lt;₱500 low-balance alert), Section B fuel accounting, LTO/GSIS 30-day expiry alerts, COA Monthly Report of Official Travels (Form B), and Certificates of Non-Usage.</p>
                                     </div>
                                 </div>
 
@@ -1615,11 +1615,11 @@
                                         <tr>
                                             <td>
                                                 <span class="badge" style="background:#0284c7;">Official Driver</span>
-                                                <div class="text-muted" style="font-size:0.7rem;">Commercial Transport Operator</div>
+                                                <div class="text-muted" style="font-size:0.7rem;">PIA Motorpool Driver</div>
                                             </td>
                                             <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> No Access</td>
                                             <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> View Assignment</td>
-                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Driver PWA Section B</td>
+                                            <td class="text-success text-center"><i class="fa-solid fa-check"></i> Mobile Web Section B</td>
                                             <td class="text-primary text-center"><i class="fa-solid fa-qrcode"></i> Present QR</td>
                                             <td class="text-success text-center"><i class="fa-solid fa-check"></i> Pre-Trip BLOWBAGETS</td>
                                             <td class="text-muted text-center"><i class="fa-solid fa-minus"></i> Fuel Receipts Only</td>
@@ -1686,27 +1686,27 @@
                             </div>
                         </div>
 
-                        <!-- TAB 4: Google Maps & Radar -->
+                        <!-- TAB 4: Gate QR & GPS Radar -->
                         <div class="tab-pane fade" id="tab-radar" role="tabpanel">
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <div class="p-3 border rounded-2 bg-white">
-                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-traffic-light text-warning me-1"></i> Google Live Traffic</strong>
-                                        <p class="text-muted small mb-0">Clicking <strong>Traffic: ON</strong> displays Google's real-time color-coded congestion overlay across major corridors, allowing dispatchers to reroute drivers around traffic jams.</p>
+                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-qrcode text-primary me-1"></i> Compound Gate QR Automation</strong>
+                                        <p class="text-muted small mb-0">Scanning a driver's e-DTT QR pass at the Compound Gate automatically stamps the official <strong>Compound Departure</strong> and <strong>Compound Return</strong> dates and times onto the Trip Ticket.</p>
                                     </div>
                                 </div>
 
                                 <div class="col-md-4">
                                     <div class="p-3 border rounded-2 bg-white">
-                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-route text-primary me-1"></i> GPS Breadcrumb Trails</strong>
-                                        <p class="text-muted small mb-0">Selecting any vehicle draws its historical movement trajectory line and waypoint nodes, revealing recent speed, heading, and corridor adherence.</p>
+                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-route text-success me-1"></i> OpenStreetMap &amp; OSRM Routing</strong>
+                                        <p class="text-muted small mb-0">Displays live vehicle pins, OSRM road route distances, ETA estimates, and historical GPS breadcrumb trajectories without requiring third-party commercial map billing keys.</p>
                                     </div>
                                 </div>
 
                                 <div class="col-md-4">
                                     <div class="p-3 border rounded-2 bg-white">
-                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> Geofence Resolution</strong>
-                                        <p class="text-muted small mb-0">Geographic circular fences (e.g. Manila Harbor, Clark Distribution Hub) automatically detect vehicle presence and record arrival and departure times.</p>
+                                        <strong class="text-dark d-block mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> Government Zone Geofencing</strong>
+                                        <p class="text-muted small mb-0">Circular geofences around the PIA Central Office Compound, Malacañang/PCO Complex, and regional hubs automatically identify vehicle zones in real time.</p>
                                     </div>
                                 </div>
                             </div>

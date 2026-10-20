@@ -5,20 +5,26 @@
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            Overview &bull; Real-Time Fleet Intelligence
+            PIA Motorpool &bull; Real-Time Fleet Intelligence
         </div>
         <h1 class="page-title mb-1">Operations Command Center</h1>
-        <p class="text-muted small mb-0">High-level telemetry overview, active dispatches, and fleet health.</p>
+        <p class="text-muted small mb-0">Official vehicle travel requests, active e-DTT trip tickets, and fleet readiness.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
         <a href="<?= base_url('tracking') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-satellite me-1 text-primary"></i> Live Radar
         </a>
         <?php if (session()->get('user_role') !== 'maintenance'): ?>
-            <a href="<?= base_url('trips/new') ?>" class="btn btn-primary">
-                <i class="fa-solid fa-plus me-1"></i> New Dispatch
+            <a href="<?= base_url('requests/new') ?>" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-file-signature me-1"></i> File VRS
+            </a>
+            <a href="<?= base_url('dispatch') ?>" class="btn btn-primary">
+                <i class="fa-solid fa-van-shuttle me-1"></i> Dispatch Console
             </a>
         <?php else: ?>
+            <a href="<?= base_url('pir') ?>" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-clipboard-check me-1"></i> PIR Queue
+            </a>
             <a href="<?= base_url('maintenance/new') ?>" class="btn btn-primary">
                 <i class="fa-solid fa-plus me-1"></i> New Work Order
             </a>
@@ -101,7 +107,7 @@
         <div class="kpi-tile">
             <div class="kpi-label">In Transit</div>
             <div class="kpi-value text-primary"><?= $inTransitVehicles ?></div>
-            <div class="kpi-sub">Commercial delivery routes</div>
+            <div class="kpi-sub">Official government travel</div>
         </div>
     </div>
     <div class="col-xl-2 col-md-4 col-6">
@@ -154,42 +160,42 @@
             </div>
         </div>
 
-        <!-- Active Trips Ledger -->
+        <!-- Official Driver's Trip Tickets (e-DTT) Ledger -->
         <div class="card-panel">
             <div class="card-panel-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-route text-primary"></i>
-                    <h6>Active Dispatches & Waybills</h6>
+                    <i class="fa-solid fa-ticket text-primary"></i>
+                    <h6>Official Driver's Trip Tickets (e-DTT)</h6>
                 </div>
                 <?php if (session()->get('user_role') !== 'maintenance'): ?>
-                    <a href="<?= base_url('trips') ?>" class="btn btn-sm btn-outline-secondary">View All Trips</a>
+                    <a href="<?= base_url('tickets') ?>" class="btn btn-sm btn-outline-secondary">View All Tickets</a>
                 <?php endif; ?>
             </div>
             <div class="table-responsive">
                 <table class="table-minimal">
                     <thead>
                         <tr>
-                            <th>Waybill #</th>
+                            <th>e-DTT Serial #</th>
                             <th>Vehicle</th>
                             <th>Driver</th>
-                            <th>Route Corridor</th>
-                            <th>Cargo</th>
+                            <th>Authorized Destination &amp; Purpose</th>
+                            <th>Requesting Office</th>
                             <th>Status</th>
                             <th class="text-end" style="width: 1%;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($recentTrips)): ?>
-                            <tr><td colspan="7" class="text-center py-4 text-muted small">No active trips dispatched at the moment.</td></tr>
+                            <tr><td colspan="7" class="text-center py-4 text-muted small">No official Driver's Trip Tickets issued yet.</td></tr>
                         <?php else: ?>
                             <?php foreach ($recentTrips as $trip): ?>
                                 <tr>
                                     <td>
-                                        <a href="<?= base_url('trips/' . $trip['id']) ?>" class="fw-bold text-decoration-none text-dark mono">
-                                            <?= esc($trip['trip_number']) ?>
+                                        <a href="<?= base_url('tickets/' . $trip['id']) ?>" class="fw-bold text-decoration-none text-dark mono">
+                                            <?= esc($trip['ticket_serial_no']) ?>
                                         </a>
-                                        <?php if ($trip['priority'] === 'urgent' || $trip['priority'] === 'critical'): ?>
-                                            <span class="badge bg-danger-subtle text-danger ms-1" style="font-size: 0.65rem;"><?= ucfirst($trip['priority']) ?></span>
+                                        <?php if (!empty($trip['request_number'])): ?>
+                                            <span class="small text-muted d-block mono" style="font-size: 0.68rem;">VRS: <?= esc($trip['request_number']) ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -197,26 +203,26 @@
                                         <span class="small text-muted mono"><?= esc($trip['plate_number']) ?></span>
                                     </td>
                                     <td>
-                                        <span class="fw-medium text-dark"><?= esc($trip['driver_name']) ?></span>
-                                        <span class="small text-muted d-block mono" style="font-size: 0.72rem;"><?= esc($trip['driver_phone']) ?></span>
+                                        <span class="fw-medium text-dark"><?= esc($trip['driver_name'] ?: 'Unassigned') ?></span>
+                                        <span class="small text-muted d-block mono" style="font-size: 0.72rem;"><?= esc($trip['driver_phone'] ?? '') ?></span>
                                     </td>
                                     <td style="max-width: 240px;">
-                                        <div class="text-truncate small fw-medium text-dark"><?= esc($trip['destination_address']) ?></div>
-                                        <div class="text-truncate text-muted" style="font-size: 0.72rem;">From: <?= esc($trip['origin_address']) ?></div>
+                                        <div class="text-truncate small fw-medium text-dark"><?= esc($trip['authorized_destination'] ?? $trip['destination'] ?? 'Official Travel') ?></div>
+                                        <div class="text-truncate text-muted" style="font-size: 0.72rem;"><?= esc($trip['authorized_purpose'] ?? '') ?></div>
                                     </td>
                                     <td class="small">
-                                        <span class="fw-medium"><?= esc($trip['cargo_type']) ?></span>
-                                        <span class="text-muted d-block mono" style="font-size: 0.72rem;"><?= number_format($trip['cargo_weight_kg'], 0) ?> kg</span>
+                                        <span class="fw-semibold mono"><?= esc($trip['office_code'] ?: 'PIA-CO') ?></span>
+                                        <span class="text-muted d-block text-truncate" style="max-width: 140px; font-size: 0.72rem;"><?= esc($trip['requestor_name'] ?? '') ?></span>
                                     </td>
                                     <td>
                                         <span class="status-badge status-<?= esc($trip['status']) ?>">
-                                            <?= ucfirst(str_replace('_', ' ', $trip['status'])) ?>
+                                            <?= strtoupper(str_replace('_', ' ', $trip['status'])) ?>
                                         </span>
                                     </td>
                                     <td class="table-action-cell">
                                         <div class="table-actions">
-                                            <a href="<?= base_url('trips/' . $trip['id']) ?>" class="btn btn-xs btn-outline-secondary">
-                                                Inspect &rarr;
+                                            <a href="<?= base_url('tickets/' . $trip['id']) ?>" class="btn btn-xs btn-outline-secondary">
+                                                Open e-DTT &rarr;
                                             </a>
                                         </div>
                                     </td>
@@ -301,11 +307,11 @@
             attributionControl: false
         }).setView([14.5995, 120.9842], 9);
 
-        // Google Maps Roadmap Layer
-        L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['0', '1', '2', '3'],
-            attribution: '&copy; Google Maps'
+        // OpenStreetMap / CartoDB Voyager Layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);

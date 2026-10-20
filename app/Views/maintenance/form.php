@@ -29,7 +29,7 @@
                     <div class="col-md-6">
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading);">Fleet Vehicle Asset</label>
                         <select name="vehicle_id" class="form-select" required style="font-size: 0.85rem; border-color: var(--border-subtle); border-radius: 7px;">
-                            <option value="">-- Choose Commercial Unit --</option>
+                            <option value="">-- Choose Service Vehicle --</option>
                             <?php foreach ($vehicles as $v): ?>
                                 <option value="<?= $v['id'] ?>" <?= old('vehicle_id') == $v['id'] ? 'selected' : '' ?>>
                                     <?= esc($v['vehicle_code']) ?> &bull; <?= esc($v['make'] . ' ' . $v['model']) ?> (Plate: <?= esc($v['plate_number']) ?>) [<?= number_format($v['odometer_km'], 1) ?> km]

@@ -7,7 +7,7 @@ use App\Models\DriverModel;
 use App\Models\MaintenanceModel;
 use App\Models\FuelLogModel;
 use App\Models\TelemetryModel;
-use App\Models\TripModel;
+use App\Models\TripTicketModel;
 
 class VehicleController extends BaseController
 {
@@ -107,8 +107,8 @@ class VehicleController extends BaseController
             return redirect()->to('/vehicles')->with('error', 'Vehicle not found.');
         }
 
-        $tripModel = new TripModel();
-        $trips = $tripModel->where('vehicle_id', $id)->orderBy('id', 'DESC')->limit(10)->findAll();
+        $ticketModel = new TripTicketModel();
+        $trips = $ticketModel->getTicketsWithDetails(['vehicle_id' => $id], 10);
 
         $maintenanceModel = new MaintenanceModel();
         $maintenance = $maintenanceModel->where('vehicle_id', $id)->orderBy('id', 'DESC')->findAll();

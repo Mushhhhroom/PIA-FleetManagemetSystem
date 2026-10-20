@@ -41,18 +41,15 @@ class SafetyChecklistController extends BaseController
      */
     public function create($ticketId)
     {
+        // Drivers exclusively use the native mobile website (/driver/trips)
+        $session = session();
+        if ($session->get('user_role') === 'driver') {
+            return redirect()->to('/driver/trips?open_safety=' . (int) $ticketId);
+        }
+
         $ticket = $this->ticketModel->getTicketByIdWithDetails($ticketId);
         if (!$ticket) {
             return redirect()->to('/tickets')->with('error', 'Trip ticket not found.');
-        }
-
-        // Drivers may only complete their own checklist
-        $session = session();
-        if ($session->get('user_role') === 'driver') {
-            $driver = (new \App\Models\DriverModel())->where('user_id', $session->get('user_id'))->first();
-            if (!$driver || (int) $driver['id'] !== (int) $ticket['driver_id']) {
-                return redirect()->to('/driver/trips')->with('error', 'You can only complete safety checks for your own dispatches.');
-            }
         }
 
         $vehicle = $this->vehicleModel->find($ticket['vehicle_id']);
@@ -76,22 +73,24 @@ class SafetyChecklistController extends BaseController
      */
     public function store($ticketId)
     {
-        $ticket = $this->ticketModel->find($ticketId);
-        if (!$ticket) {
-            return redirect()->to('/tickets')->with('error', 'Trip ticket not found.');
-        }
-
         $session   = session();
         $userId    = $session->get('user_id');
         $userName  = $session->get('user_name');
         $userRole  = $session->get('user_role');
+        $referer   = $this->request->getServer('HTTP_REFERER') ?? '';
+        $isDriver  = ($userRole === 'driver' || str_contains($referer, 'driver/trips'));
+
+        $ticket = $this->ticketModel->find($ticketId);
+        if (!$ticket) {
+            return redirect()->to($isDriver ? '/driver/trips' : '/tickets')->with('error', 'Trip ticket not found.');
+        }
 
         $items     = SafetyCheckModel::checklistItems();
         $submitted = $this->request->getPost('check') ?? [];
         $remarks   = trim((string) $this->request->getPost('remarks'));
 
         if (count($submitted) < count($items)) {
-            return redirect()->back()->withInput()->with('error', 'All BLOWBAGETS items must be inspected — every item requires a Pass/Fail answer (FR-5.1).');
+            return ($isDriver ? redirect()->to('/driver/trips') : redirect()->back()->withInput())->with('error', 'All BLOWBAGETS items must be inspected — every item requires a Pass/Fail answer (FR-5.1).');
         }
 
         $failed = [];
@@ -124,7 +123,8 @@ class SafetyChecklistController extends BaseController
                 (int) $checkId
             );
 
-            return redirect()->to("/tickets/{$ticketId}")->with('success', 'BLOWBAGETS pre-trip safety check PASSED. Trip activation unlocked — you may depart.');
+            $targetUrl = $isDriver ? '/driver/trips' : "/tickets/{$ticketId}";
+            return redirect()->to($targetUrl)->with('success', 'BLOWBAGETS pre-trip safety check PASSED. Trip activation unlocked — present your Gate Pass QR to the Compound Guard.');
         }
 
         // ------------------------------------------------------------------
@@ -179,7 +179,8 @@ class SafetyChecklistController extends BaseController
             ['failed' => $failed, 'pir' => $pirNumber]
         );
 
-        return redirect()->to("/tickets/{$ticketId}")->with('error', "SAFETY LOCK ENGAGED (FR-5.2): failed items — {$failedTxt}. Vehicle locked to Under Maintenance, trip cancelled, and PIR {$pirNumber} routed to the mechanic queue.");
+        $targetUrl = $isDriver ? '/driver/trips' : "/tickets/{$ticketId}";
+        return redirect()->to($targetUrl)->with('error', "SAFETY LOCK ENGAGED (FR-5.2): failed items — {$failedTxt}. Vehicle locked to Under Maintenance, trip cancelled, and PIR {$pirNumber} routed to the mechanic queue.");
     }
 
     /**
@@ -187,6 +188,9 @@ class SafetyChecklistController extends BaseController
      */
     public function index()
     {
+        if (session()->get('user_role') === 'driver') {
+            return redirect()->to('/driver/trips?tab=vehicle');
+        }
         $checks = $this->safetyModel
             ->select('safety_checks.*, vehicles.plate_number, vehicles.make, vehicles.model,
                       trip_tickets.ticket_serial_no,

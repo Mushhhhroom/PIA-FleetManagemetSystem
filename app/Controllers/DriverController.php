@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\DriverModel;
 use App\Models\VehicleModel;
-use App\Models\TripModel;
 use App\Models\IncidentModel;
 use App\Models\TripTicketModel;
 use App\Models\FuelLogModel;
@@ -29,7 +28,6 @@ class DriverController extends BaseController
     {
         $driverModel   = new DriverModel();
         $ticketModel   = new TripTicketModel();
-        $tripModel     = new TripModel();
         $vehicleModel  = new VehicleModel();
         $incidentModel = new IncidentModel();
         $fuelLogModel  = new FuelLogModel();
@@ -40,7 +38,7 @@ class DriverController extends BaseController
         $driverId = $this->request->getGet('driver_id');
 
         $driver = null;
-        if ($driverId) {
+        if ($driverId && (session()->get('user_role') === 'admin' || is_cli())) {
             $driver = $driverModel->find($driverId);
         }
         if (!$driver && session()->get('user_id')) {
@@ -67,6 +65,10 @@ class DriverController extends BaseController
         $activeTicket = null;
         if ($driver) {
             $tripTickets = $ticketModel->getTicketsWithDetails(['driver_id' => $driver['id']]);
+            foreach ($tripTickets as &$tkItem) {
+                $tkItem['has_passed_safety'] = $safetyModel->hasPassedCheck((int) $tkItem['id']);
+            }
+            unset($tkItem);
 
             // Prefer in-transit (departed), then issued (pending gate departure), then returned (pending Section B)
             foreach ($tripTickets as $tk) {
@@ -93,20 +95,10 @@ class DriverController extends BaseController
             }
         }
 
-        // 2. Freight / Waybill Trips
-        $trips = $driver ? $tripModel->where('driver_id', $driver['id'])->orderBy('id', 'DESC')->findAll() : [];
-
-        // If no vehicle directly assigned, find vehicle from active ticket or active waybill
+        // If no vehicle directly assigned, find vehicle from active or recent trip ticket
         if (!$vehicle) {
             if ($activeTicket && !empty($activeTicket['vehicle_id'])) {
                 $vehicle = $vehicleModel->find($activeTicket['vehicle_id']);
-            } elseif (!empty($trips)) {
-                foreach ($trips as $t) {
-                    if (in_array($t['status'], ['in_transit', 'dispatched', 'scheduled'])) {
-                        $vehicle = $vehicleModel->find($t['vehicle_id']);
-                        break;
-                    }
-                }
             }
             if (!$vehicle && !empty($tripTickets)) {
                 $vehicle = $vehicleModel->find($tripTickets[0]['vehicle_id']);
@@ -151,11 +143,11 @@ class DriverController extends BaseController
         return view('driver/trips', [
             'driver'           => $driver,
             'vehicle'          => $vehicle,
-            'trips'            => $trips,
             'tripTickets'      => $tripTickets,
             'activeTicket'     => $activeTicket,
             'rfidCards'        => $rfidCards,
             'blowbagetsPassed' => $blowbagetsPassed,
+            'checklistItems'   => SafetyCheckModel::checklistItems(),
             'recentDelays'     => $recentDelays,
             'recentFuelLogs'   => $recentFuelLogs,
             'recentIncidents'  => $recentIncidents,
@@ -236,8 +228,8 @@ class DriverController extends BaseController
         $vehicleModel = new VehicleModel();
         $assignedVehicle = $vehicleModel->where('current_driver_id', $id)->first();
 
-        $tripModel = new TripModel();
-        $trips = $tripModel->where('driver_id', $id)->orderBy('id', 'DESC')->findAll();
+        $ticketModel = new TripTicketModel();
+        $trips = $ticketModel->getTicketsWithDetails(['driver_id' => $id]);
 
         $incidentModel = new IncidentModel();
         $incidents = $incidentModel->where('driver_id', $id)->orderBy('id', 'DESC')->findAll();
@@ -404,14 +396,6 @@ class DriverController extends BaseController
                 ['incident' => $incNo, 'severity' => $severity]
             );
         }
-
-        // Notify dispatch via SMS (SDD Â§5.9)
-        $smsSender = new \App\Libraries\SmsSender();
-        $smsSender->send(
-            '+63 918 555 0200',
-            "PIA Motorpool Dispatch Alert: Incident {$incNo} reported by driver ({$type} - {$severity}). Location: {$location}."
-            . ($pirNumber ? " PIR {$pirNumber} auto-generated; vehicle Disabled." : '')
-        );
 
         $referer = $this->request->getServer('HTTP_REFERER') ?? '';
         if (str_contains($referer, 'driver/trips') || !$this->request->isAJAX()) {

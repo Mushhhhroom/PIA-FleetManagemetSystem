@@ -5,10 +5,10 @@
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            Logistics &bull; Energy Accounting
+            PIA Motorpool &bull; Petroleum &amp; Oil Accounting
         </div>
-        <h1 class="page-title mb-1">Fuel & Energy Records</h1>
-        <p class="text-muted small mb-0">Monitor commercial fueling transactions, fuel economy rates, and station vendor billing.</p>
+        <h1 class="page-title mb-1">Fuel &amp; Energy Records</h1>
+        <p class="text-muted small mb-0">Official fuel purchase receipts, liters dispensed, and COA fuel accounting logs.</p>
     </div>
     <a href="<?= base_url('fuel/new') ?>" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i> Record Fuel Purchase
@@ -28,7 +28,7 @@
         <div class="kpi-tile">
             <div class="kpi-label">Cumulative Volume Dispensed</div>
             <div class="kpi-value mono" style="color: #2563eb;"><?= number_format($totalLiters, 1) ?> <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">Liters</span></div>
-            <div class="kpi-sub">Diesel and commercial fuel volume</div>
+            <div class="kpi-sub">Official diesel and gasoline volume</div>
         </div>
     </div>
 </div>

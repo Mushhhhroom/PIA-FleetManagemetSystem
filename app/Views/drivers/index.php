@@ -5,13 +5,13 @@
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            Personnel &bull; Operator Roster
+            PIA Motorpool &bull; Driver Roster
         </div>
         <h1 class="page-title mb-1">Driver Personnel</h1>
-        <p class="text-muted small mb-0">Certified commercial operators, compliance licensing, safety metrics, and trip history.</p>
+        <p class="text-muted small mb-0">Official government drivers, LTO professional licensing, safety metrics, and trip ticket history.</p>
     </div>
     <a href="<?= base_url('drivers/new') ?>" class="btn btn-primary text-decoration-none">
-        <i class="fa-solid fa-user-plus me-1"></i> Register Operator
+        <i class="fa-solid fa-user-plus me-1"></i> Register Driver
     </a>
 </div>
 
@@ -36,7 +36,7 @@
                     <tr>
                         <td colspan="8" class="text-center py-5 text-muted">
                             <i class="fa-solid fa-id-card fa-2x mb-2 d-block text-secondary opacity-50"></i>
-                            No commercial drivers registered.
+                            No official drivers registered.
                         </td>
                     </tr>
                 <?php else: ?>

@@ -70,7 +70,7 @@
         <ul class="nav nav-pills" id="vehicleTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active btn-sm fw-semibold" data-bs-toggle="pill" data-bs-target="#tripsTab" style="font-size: 0.8rem; border-radius: 6px; padding: 6px 14px;">
-                    <i class="fa-solid fa-route me-1"></i> Trip Dispatches (<?= count($trips) ?>)
+                    <i class="fa-solid fa-ticket me-1"></i> Official Trip Tickets (<?= count($trips) ?>)
                 </button>
             </li>
             <li class="nav-item">
@@ -98,31 +98,36 @@
                 <table class="table-minimal">
                     <thead>
                         <tr>
-                            <th>Waybill #</th>
-                            <th>Transit Corridor</th>
+                            <th>e-DTT Serial #</th>
+                            <th>Authorized Destination &amp; Purpose</th>
+                            <th>Driver</th>
                             <th>Distance</th>
-                            <th>Cargo Commodity</th>
                             <th>Status</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($trips)): ?>
-                            <tr><td colspan="6" class="text-center py-4 text-muted">No trip dispatches logged for this asset.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4 text-muted">No official Trip Tickets logged for this vehicle.</td></tr>
                         <?php else: ?>
                             <?php foreach ($trips as $t): ?>
                                 <tr>
-                                    <td><strong class="mono" style="color: #0f172a;"><?= esc($t['trip_number']) ?></strong></td>
                                     <td>
-                                        <div class="text-truncate" style="font-size: 0.78rem; max-width: 280px;"><strong>From:</strong> <?= esc($t['origin_address']) ?></div>
-                                        <div class="text-truncate" style="font-size: 0.78rem; max-width: 280px;"><strong>To:</strong> <?= esc($t['destination_address']) ?></div>
+                                        <strong class="mono" style="color: #0f172a;"><?= esc($t['ticket_serial_no']) ?></strong>
+                                        <?php if (!empty($t['request_number'])): ?>
+                                            <div class="mono text-muted" style="font-size: 0.7rem;">VRS: <?= esc($t['request_number']) ?></div>
+                                        <?php endif; ?>
                                     </td>
-                                    <td class="mono"><?= number_format($t['distance_km'], 1) ?> km</td>
-                                    <td><?= esc($t['cargo_type']) ?> (<?= number_format($t['cargo_weight_kg'], 0) ?> kg)</td>
-                                    <td><span class="status-badge status-<?= esc($t['status']) ?>"><?= ucfirst(str_replace('_', ' ', $t['status'])) ?></span></td>
+                                    <td>
+                                        <div class="text-truncate fw-medium" style="font-size: 0.78rem; max-width: 280px;"><?= esc($t['authorized_destination'] ?? $t['destination'] ?? 'Official Travel') ?></div>
+                                        <div class="text-truncate text-muted" style="font-size: 0.74rem; max-width: 280px;"><?= esc($t['authorized_purpose'] ?? '') ?></div>
+                                    </td>
+                                    <td><?= esc($t['driver_name'] ?: 'Unassigned') ?></td>
+                                    <td class="mono"><?= number_format((float)($t['total_distance_km'] ?? 0), 1) ?> km</td>
+                                    <td><span class="status-badge status-<?= esc($t['status']) ?>"><?= strtoupper(str_replace('_', ' ', $t['status'])) ?></span></td>
                                     <td class="table-action-cell">
                                         <div class="table-actions">
-                                            <a href="<?= base_url('trips/' . $t['id']) ?>" class="btn btn-xs btn-outline-secondary">View &rarr;</a>
+                                            <a href="<?= base_url('tickets/' . $t['id']) ?>" class="btn btn-xs btn-outline-secondary">Open e-DTT &rarr;</a>
                                         </div>
                                     </td>
                                 </tr>
