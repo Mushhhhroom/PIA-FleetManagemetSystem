@@ -11,6 +11,7 @@
     { "source": "/assets/(.*)", "destination": "/public/assets/$1" },
     { "source": "/docs/(.*)", "destination": "/public/docs/$1" },
     { "source": "/uploads/(.*)", "destination": "/public/uploads/$1" },
+    { "source": "/", "destination": "/api/index.php" },
     { "source": "/(.*)", "destination": "/api/index.php" }
   ]
 }

@@ -3,6 +3,8 @@
 !.env.example
 .git
 tests
+public/index.php
+public/.htaccess
 writable/logs/*
 writable/session/*
 writable/cache/*
