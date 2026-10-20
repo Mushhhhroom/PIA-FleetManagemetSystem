@@ -34,7 +34,7 @@ class TripRequestModel extends Model
                                   users.name AS requestor_full_name, users.email AS requestor_email,
                                   disp_u.name AS dispatcher_approver_name,
                                   adm_u.name AS admin_approver_name,
-                                  CONCAT(drivers.first_name, " ", drivers.last_name) AS requested_driver_name,
+                                  CONCAT(drivers.first_name, \' \', drivers.last_name) AS requested_driver_name,
                                   trip_tickets.id AS ticket_id, trip_tickets.ticket_serial_no, trip_tickets.status AS ticket_status')
                         ->join('offices', 'offices.id = trip_requests.office_id', 'left')
                         ->join('departments', 'departments.id = trip_requests.department_id', 'left')
@@ -74,7 +74,7 @@ class TripRequestModel extends Model
                               disp_u.name AS dispatcher_approver_name,
                               disp_u.designation AS dispatcher_approver_designation,
                               adm_u.name AS admin_approver_name, adm_u.designation AS admin_approver_designation,
-                              CONCAT(drivers.first_name, " ", drivers.last_name) AS requested_driver_name,
+                              CONCAT(drivers.first_name, \' \', drivers.last_name) AS requested_driver_name,
                               trip_tickets.id AS ticket_id, trip_tickets.ticket_serial_no, trip_tickets.status AS ticket_status,
                               trip_tickets.qr_crypt_token,
                               vehicles.plate_number, vehicles.make AS vehicle_make, vehicles.model AS vehicle_model')

@@ -24,7 +24,7 @@ class VehicleModel extends Model
 
     public function getVehiclesWithDriver()
     {
-        return $this->select('vehicles.*, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.driver_code')
+        return $this->select('vehicles.*, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.driver_code')
                     ->join('drivers', 'drivers.id = vehicles.current_driver_id', 'left')
                     ->orderBy('vehicles.id', 'DESC')
                     ->findAll();

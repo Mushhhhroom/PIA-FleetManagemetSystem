@@ -21,7 +21,7 @@ class FuelLogModel extends Model
 
     public function getLogsWithDetails($limit = null)
     {
-        $builder = $this->select('fuel_logs.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name')
+        $builder = $this->select('fuel_logs.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
                         ->join('vehicles', 'vehicles.id = fuel_logs.vehicle_id', 'left')
                         ->join('drivers', 'drivers.id = fuel_logs.driver_id', 'left')
                         ->orderBy('fuel_logs.fuel_date', 'DESC');

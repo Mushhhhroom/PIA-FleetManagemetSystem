@@ -6,6 +6,11 @@
     }
   },
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/public/favicon.ico" },
+    { "source": "/robots.txt", "destination": "/public/robots.txt" },
+    { "source": "/assets/(.*)", "destination": "/public/assets/$1" },
+    { "source": "/docs/(.*)", "destination": "/public/docs/$1" },
+    { "source": "/uploads/(.*)", "destination": "/public/uploads/$1" },
     { "source": "/(.*)", "destination": "/api/index.php" }
   ]
 }

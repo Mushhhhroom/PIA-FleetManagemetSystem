@@ -1,5 +1,7 @@
 <?php
 
+use App\Libraries\ServerlessSessionHandler;
+use App\Libraries\VercelSqliteBootstrap;
 use CodeIgniter\Boot;
 use Config\Paths;
 
@@ -7,15 +9,9 @@ use Config\Paths;
  * Vercel front controller (▲ serverless runtime).
  *
  * Every request is routed here by vercel.json. The CodeIgniter application
- * lives one directory up (the project root); this file only adjusts the two
- * things that differ on Vercel:
- *
- *   1. FCPATH points at public/ so asset helpers resolve correctly.
- *   2. The writable tree is moved into the function's OS temp directory,
- *      because the deployed filesystem is read-only and ephemeral.
- *
- * Configuration (database, baseURL, session driver) arrives through process
- * environment variables — see .env.example for the full list.
+ * lives one directory up (the project root); this file adjusts runtime paths,
+ * proxy headers, dynamic baseURL detection, and serverless session/database
+ * fallbacks so the application runs seamlessly on Vercel.
  */
 
 $minPhpVersion = '8.2';
@@ -25,14 +21,37 @@ if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
     exit(1);
 }
 
+$projectRoot = dirname(__DIR__);
+
+// Normalize HTTPS and Host headers behind Vercel Edge proxy
+if (
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+    || getenv('VERCEL') === '1'
+) {
+    $_SERVER['HTTPS']       = 'on';
+    $_SERVER['SERVER_PORT'] = 443;
+}
+
+$detectedHost = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'pia-fms.vercel.app';
+$detectedHost = trim(explode(',', (string) $detectedHost)[0]);
+$_SERVER['HTTP_HOST']   = $detectedHost;
+$_SERVER['SERVER_NAME'] = explode(':', $detectedHost)[0];
+
+// Normalize SCRIPT_NAME so CodeIgniter URI detection strips /api/index.php cleanly
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['PHP_SELF']    = '/index.php';
+
+// Serverless writable directory inside OS temp
+$runtimeWritable = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'pia-afms-writable';
+foreach (['cache', 'logs', 'session', 'debugbar', 'uploads'] as $dir) {
+    $path = $runtimeWritable . DIRECTORY_SEPARATOR . $dir;
+    if (! is_dir($path)) {
+        @mkdir($path, 0777, true);
+    }
+}
+
 /*
  * Environment-variable aliases.
- *
- * Vercel rejects dotted names ("app.baseURL") in `vercel env add` — only
- * letters, digits and underscores are allowed. The cloud configuration
- * therefore uses conventional SCREAMING_SNAKE names, which this block
- * re-publishes under the dotted keys CodeIgniter reads, before any Config
- * class is instantiated.
  */
 $envAliases = [
     'APP_BASEURL'                   => 'app.baseURL',
@@ -54,17 +73,67 @@ $envAliases = [
 foreach ($envAliases as $alias => $ciKey) {
     $value = getenv($alias);
     if ($value === false || $value === '') {
-        continue;                               // not configured — leave default
+        continue;
     }
     if (isset($_ENV[$ciKey]) || isset($_SERVER[$ciKey])) {
-        continue;                               // an explicit dotted value wins
+        continue;
     }
     $_ENV[$ciKey]    = $value;
     $_SERVER[$ciKey] = $value;
     putenv($ciKey . '=' . $value);
 }
 
-$projectRoot = dirname(__DIR__);
+// Always bind app.baseURL to the active request host on Vercel so redirects & CSRF match the exact domain
+$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$dynamicBaseUrl = $scheme . '://' . $detectedHost . '/';
+$_ENV['app.baseURL']    = $dynamicBaseUrl;
+$_SERVER['app.baseURL'] = $dynamicBaseUrl;
+putenv('app.baseURL=' . $dynamicBaseUrl);
+
+$_ENV['app.indexPage']    = '';
+$_SERVER['app.indexPage'] = '';
+putenv('app.indexPage=');
+
+// Default CI_ENVIRONMENT to production on Vercel unless explicitly overridden
+if (empty(getenv('CI_ENVIRONMENT')) && empty($_ENV['CI_ENVIRONMENT'])) {
+    $_ENV['CI_ENVIRONMENT']    = 'production';
+    $_SERVER['CI_ENVIRONMENT'] = 'production';
+    putenv('CI_ENVIRONMENT=production');
+}
+
+// Default encryption key if not set in Vercel environment
+if (empty($_ENV['encryption.key'])) {
+    $defaultKey = 'hex2bin:66d6ea49e272c05df9ffc91b0595ee8944087ee6f54c9f5801272afbef7e53fb';
+    $_ENV['encryption.key']    = $defaultKey;
+    $_SERVER['encryption.key'] = $defaultKey;
+    putenv('encryption.key=' . $defaultKey);
+}
+
+// When no external DB_HOST is configured on Vercel, automatically initialize
+// the embedded SQLite3 database and stateless-resilient session handler.
+$dbHost = getenv('DB_HOST');
+if ($dbHost === false || trim($dbHost) === '') {
+    require_once $projectRoot . '/app/Libraries/VercelSqliteBootstrap.php';
+
+    $sqlitePath   = $runtimeWritable . DIRECTORY_SEPARATOR . 'pia_fms.sqlite';
+    $snapshotPath = $projectRoot . '/app/Database/vercel_demo_snapshot.json';
+    VercelSqliteBootstrap::ensureDatabase($sqlitePath, $snapshotPath);
+
+    $sqliteOverrides = [
+        'database.default.DBDriver' => 'SQLite3',
+        'database.default.database' => $sqlitePath,
+        'database.default.hostname' => '',
+        'database.default.username' => '',
+        'database.default.password' => '',
+        'session.driver'            => ServerlessSessionHandler::class,
+        'session.savePath'          => $runtimeWritable . DIRECTORY_SEPARATOR . 'session',
+    ];
+    foreach ($sqliteOverrides as $k => $v) {
+        $_ENV[$k]    = $v;
+        $_SERVER[$k] = $v;
+        putenv($k . '=' . $v);
+    }
+}
 
 // Path to the front controller (this file) + the public directory
 define('FCPATH', $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR);
@@ -78,20 +147,6 @@ if (getcwd() . DIRECTORY_SEPARATOR !== FCPATH) {
 require $projectRoot . '/app/Config/Paths.php';
 
 $paths = new Paths();
-
-/*
- * Serverless filesystem: only the OS temp directory is writable and it does
- * not survive cold starts. Point CodeIgniter's writable tree there and make
- * sure the subdirectories exist before the framework boots.
- * (Sessions use the database on Vercel — see session.driver.)
- */
-$runtimeWritable = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'pia-afms-writable';
-foreach (['cache', 'logs', 'session', 'debugbar', 'uploads'] as $dir) {
-    $path = $runtimeWritable . DIRECTORY_SEPARATOR . $dir;
-    if (! is_dir($path)) {
-        @mkdir($path, 0777, true);
-    }
-}
 $paths->writableDirectory = $runtimeWritable;
 
 // LOAD THE FRAMEWORK BOOTSTRAP FILE

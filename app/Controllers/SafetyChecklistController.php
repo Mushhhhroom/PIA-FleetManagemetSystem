@@ -194,7 +194,7 @@ class SafetyChecklistController extends BaseController
         $checks = $this->safetyModel
             ->select('safety_checks.*, vehicles.plate_number, vehicles.make, vehicles.model,
                       trip_tickets.ticket_serial_no,
-                      CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name')
+                      CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
             ->join('vehicles', 'vehicles.id = safety_checks.vehicle_id', 'left')
             ->join('trip_tickets', 'trip_tickets.id = safety_checks.trip_ticket_id', 'left')
             ->join('drivers', 'drivers.id = safety_checks.driver_id', 'left')

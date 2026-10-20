@@ -12,7 +12,7 @@ class TrackingController extends BaseController
     {
         $vehicleModel = new VehicleModel();
         $vehicles = $vehicleModel->select('vehicles.*,
-                                          CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name,
+                                          CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name,
                                           drivers.phone AS driver_phone,
                                           trip_tickets.id AS active_ticket_id,
                                           trip_tickets.ticket_serial_no AS trip_number,
@@ -41,7 +41,7 @@ class TrackingController extends BaseController
     {
         $vehicleModel = new VehicleModel();
         $vehicles = $vehicleModel->select('vehicles.*,
-                                          CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name,
+                                          CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name,
                                           drivers.phone AS driver_phone,
                                           trip_tickets.id AS active_ticket_id,
                                           trip_tickets.ticket_serial_no AS trip_number,

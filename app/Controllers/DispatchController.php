@@ -445,7 +445,7 @@ class DispatchController extends BaseController
             ->select('trip_tickets.ticket_serial_no, trip_tickets.status, trip_tickets.vehicle_id,
                       trip_tickets.driver_id, vehicles.plate_number,
                       trip_tickets.authorized_departure, trip_tickets.authorized_return,
-                      CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name')
+                      CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
             ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
             ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
             ->whereNotIn('trip_tickets.status', ['cancelled', 'completed', 'returned'])
@@ -882,7 +882,7 @@ class DispatchController extends BaseController
                       tt.start_odometer, tt.dest_odometer, tt.return_odometer,
                       vehicles.plate_number, vehicles.fleet_category, vehicles.assigned_official,
                       vehicles.make AS vehicle_make, vehicles.model AS vehicle_model,
-                      CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name,
+                      CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name,
                       drivers.driver_code, drivers.phone AS driver_phone')
             ->join('offices', 'offices.id = tr.office_id', 'left')
             ->join('departments', 'departments.id = tr.department_id', 'left')
@@ -906,7 +906,7 @@ class DispatchController extends BaseController
             ->select('tt.*,
                       vehicles.plate_number, vehicles.fleet_category, vehicles.assigned_official,
                       vehicles.make AS vehicle_make, vehicles.model AS vehicle_model,
-                      CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name,
+                      CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name,
                       drivers.driver_code, drivers.phone AS driver_phone')
             ->join('vehicles', 'vehicles.id = tt.vehicle_id', 'left')
             ->join('drivers', 'drivers.id = tt.driver_id', 'left')

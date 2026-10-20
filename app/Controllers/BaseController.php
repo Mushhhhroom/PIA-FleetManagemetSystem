@@ -51,6 +51,15 @@ abstract class BaseController extends Controller
         $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         $this->response->setHeader('Pragma', 'no-cache');
 
+        // Ensure SQLite3 compatibility for CONCAT() when running on serverless runtime
+        $db = \Config\Database::connect();
+        if ($db->DBDriver === 'SQLite3') {
+            $db->initialize();
+            if ($db->connID instanceof \SQLite3) {
+                $db->connID->createFunction('CONCAT', static fn (...$args): string => implode('', array_map('strval', $args)));
+            }
+        }
+
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
     }

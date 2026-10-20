@@ -21,7 +21,7 @@ class IncidentModel extends Model
 
     public function getIncidentsWithDetails($limit = null)
     {
-        $builder = $this->select('incidents.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name')
+        $builder = $this->select('incidents.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
                         ->join('vehicles', 'vehicles.id = incidents.vehicle_id', 'left')
                         ->join('drivers', 'drivers.id = incidents.driver_id', 'left')
                         ->orderBy('incidents.incident_date', 'DESC');

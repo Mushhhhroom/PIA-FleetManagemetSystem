@@ -51,7 +51,7 @@ class DashboardController extends BaseController
         $totalFuelCost = $fuelSummary['total_cost'] ?? 0;
 
         // 2. Live vehicles for interactive map widget
-        $liveVehicles = $vehicleModel->select('vehicles.*, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone')
+        $liveVehicles = $vehicleModel->select('vehicles.*, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone')
                                     ->join('drivers', 'drivers.id = vehicles.current_driver_id', 'left')
                                     ->findAll();
 

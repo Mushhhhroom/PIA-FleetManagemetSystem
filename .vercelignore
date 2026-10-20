@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+.git
+tests
+writable/logs/*
+writable/session/*
+writable/cache/*
+writable/debugbar/*

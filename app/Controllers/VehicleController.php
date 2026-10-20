@@ -98,7 +98,7 @@ class VehicleController extends BaseController
     public function show($id)
     {
         $vehicleModel = new VehicleModel();
-        $vehicle = $vehicleModel->select('vehicles.*, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number')
+        $vehicle = $vehicleModel->select('vehicles.*, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number')
                                 ->join('drivers', 'drivers.id = vehicles.current_driver_id', 'left')
                                 ->where('vehicles.id', $id)
                                 ->first();

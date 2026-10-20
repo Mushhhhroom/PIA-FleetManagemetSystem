@@ -47,7 +47,7 @@ class DriverController extends BaseController
                 $driver = $driverModel->where('email', session()->get('user_email'))->first();
             }
             if (!$driver && session()->get('user_name')) {
-                $driver = $driverModel->where('CONCAT(first_name, " ", last_name)', session()->get('user_name'))->first();
+                $driver = $driverModel->where('CONCAT(first_name, \' \', last_name)', session()->get('user_name'))->first();
             }
         }
         if (!$driver) {

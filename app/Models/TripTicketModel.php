@@ -31,7 +31,7 @@ class TripTicketModel extends Model
     {
         $builder = $this->select('trip_tickets.*,
                                   vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.fuel_type,
-                                  drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
+                                  drivers.driver_code, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
                                   trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination,
                                   offices.office_code, offices.office_name')
                         ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
@@ -61,7 +61,7 @@ class TripTicketModel extends Model
     {
         return $this->select('trip_tickets.*,
                               vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.year, vehicles.fuel_type, vehicles.odometer_km AS vehicle_current_odometer,
-                              drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number,
+                              drivers.driver_code, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number,
                               trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination, trip_requests.purpose, trip_requests.passenger_names, trip_requests.office_scope,
                               offices.office_code, offices.office_name, offices.address AS office_address,
                               disp_u.name AS dispatcher_name, adm_u.name AS admin_name')
@@ -103,7 +103,7 @@ class TripTicketModel extends Model
 
         $baseSelect = 'trip_tickets.*,
                        vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.odometer_km AS vehicle_current_odometer,
-                       drivers.driver_code, CONCAT(drivers.first_name, " ", drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
+                       drivers.driver_code, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
                        drivers.license_number, drivers.license_type,
                        trip_requests.request_number, trip_requests.purpose, trip_requests.passenger_names,
                        offices.office_name';
