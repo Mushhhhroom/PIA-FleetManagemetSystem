@@ -100,13 +100,23 @@ class TripRequestModel extends Model
     {
         $year   = date('Y');
         $prefix = "VRS-{$year}-";
-        $row    = $this->db->table('trip_requests')
-            ->select("MAX(CAST(SUBSTRING_INDEX(request_number, '-', -1) AS UNSIGNED)) AS max_no")
+        $rows   = $this->db->table('trip_requests')
+            ->select('request_number')
             ->like('request_number', $prefix, 'after')
             ->get()
-            ->getRow();
+            ->getResultArray();
 
-        $next = (int) ($row->max_no ?? 0) + 1;
+        $maxNo = 0;
+        foreach ($rows as $r) {
+            $reqStr = (string) ($r['request_number'] ?? '');
+            $parts  = explode('-', $reqStr);
+            $seq    = (int) end($parts);
+            if ($seq > $maxNo) {
+                $maxNo = $seq;
+            }
+        }
+
+        $next = $maxNo + 1;
         do {
             $number = sprintf('%s%04d', $prefix, $next++);
         } while ($this->db->table('trip_requests')->where('request_number', $number)->countAllResults() > 0);

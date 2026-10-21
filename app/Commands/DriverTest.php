@@ -183,6 +183,109 @@ class DriverTest extends BaseCommand
         $distKm   = $retOdo - $startOdo;
         $assert($distKm === 142.5, "Distance auto-calculated accurately: 142.5 KM");
 
+        // -------------------------------------------------------------
+        // Test 6: 4-Phase DTT Automation (Egress -> Arrive -> Depart -> Ingress -> Section B)
+        // -------------------------------------------------------------
+        CLI::write("\n--- Test 6: 4-Phase DDT Trip Lifecycle Automation ---", 'yellow');
+        $ticketModel->where('ticket_serial_no', 'DTT-TEST-4PHASE')->delete();
+        $testTicketId = $ticketModel->insert([
+            'ticket_serial_no'       => 'DTT-TEST-4PHASE',
+            'request_id'             => 1,
+            'vehicle_id'             => 1,
+            'driver_id'              => 1,
+            'qr_crypt_token'         => 'TEST-TOKEN-4PHASE',
+            'status'                 => 'issued',
+            'authorized_departure'   => date('Y-m-d 08:00:00'),
+            'authorized_return'      => date('Y-m-d 17:00:00'),
+            'authorized_destination' => 'PICC Pasay City',
+            'authorized_purpose'     => 'Presidential Coverage',
+            'authorized_passengers'  => 'Official Media Crew',
+            'start_odometer'         => 50000.0,
+        ]);
+
+        try {
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'issued', "Phase 1 initialized: status is 'issued'");
+
+            // Phase 1 Egress Gate Scan:
+            $ticketModel->update($testTicketId, [
+                'status'         => 'departed',
+                'departure_time' => date('Y-m-d 08:15:00'),
+                'start_odometer' => 50000.0,
+            ]);
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'departed' && !empty($ticket['departure_time']), "Phase 1 Complete: Compound Egress recorded");
+
+            // Phase 2: Destination Arrival
+            $_POST['ticket_id'] = $testTicketId;
+            $_POST['dest_odometer'] = 50025.5;
+            $driverCtrl->arriveDestination();
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'arrived_dest', "Phase 2 Complete: Destination Arrival recorded (status 'arrived_dest')");
+            $assert(!empty($ticket['arrival_dest_time']), "Phase 2 Complete: Destination arrival timestamp stamped");
+            $assert((float)$ticket['dest_odometer'] === 50025.5, "Phase 2 Complete: Destination odometer 50025.5 KM recorded");
+
+            // Phase 3: Departure from Destination
+            $_POST['ticket_id'] = $testTicketId;
+            $driverCtrl->departDestination();
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'departed_dest', "Phase 3 Complete: Destination Departure recorded (status 'departed_dest')");
+            $assert(!empty($ticket['departure_dest_time']), "Phase 3 Complete: Destination departure timestamp stamped");
+
+            // Phase 4: Compound Return Ingress
+            $ticketModel->update($testTicketId, [
+                'status'            => 'returned',
+                'arrival_back_time' => date('Y-m-d 16:30:00'),
+                'return_odometer'   => 50052.0,
+                'total_distance_km' => 52.0,
+            ]);
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'returned', "Phase 4 Complete: Compound Ingress recorded (status 'returned')");
+
+            // Section B Completion: Dual Certifications
+            $ticketController = new \App\Controllers\TripTicketController();
+            $ticketController->initController(
+                \Config\Services::request(),
+                \Config\Services::response(),
+                \Config\Services::logger()
+            );
+
+            $_POST = [
+                'start_odometer'            => '50000.0',
+                'return_odometer'           => '50052.0',
+                'fuel_balance_start_liters' => '40.0',
+                'fuel_issued_stock_liters'  => '0.0',
+                'fuel_purchased_liters'     => '10.0',
+                'fuel_purchased_cost'       => '650.00',
+                'fuel_used_liters'          => '6.0',
+                'toll_expense'              => '120.00',
+                'toll_provider'             => 'cash',
+                'driver_certified'          => '1',
+                'passenger_certified'       => '1',
+                'passenger_certifier_name'  => 'Director Maria Gomez',
+            ];
+            $ticketController->updateSectionB($testTicketId);
+            $ticket = $ticketModel->find($testTicketId);
+            $assert($ticket['status'] === 'completed', "Section B Complete: Trip ticket finalized to 'completed'");
+            $assert((float)$ticket['fuel_balance_end_liters'] === 44.0, "Section B Complete: Fuel balance ending (40 + 10 - 6 = 44 L)");
+            $assert((int)$ticket['driver_certified'] === 1 && (int)$ticket['passenger_certified'] === 1, "Section B Complete: Dual certifications verified");
+        } finally {
+            $ticketModel->delete($testTicketId);
+        }
+
+        // -------------------------------------------------------------
+        // Test 7: Mobile Scrollability & Clean UI Checks
+        // -------------------------------------------------------------
+        CLI::write("\n--- Test 7: Mobile Scrollability & Clean Architecture ---", 'yellow');
+        $driverHtml = (string) $driverCtrl->mobileApp();
+        $assert(str_contains($driverHtml, 'phase-stepper'), "4-Phase visual stepper component present in UI");
+        $assert(str_contains($driverHtml, 'id="arriveModal"'), "Phase 2 Destination Arrival modal present");
+        $assert(str_contains($driverHtml, 'id="departModal"'), "Phase 3 Destination Departure modal present");
+        $assert(str_contains($driverHtml, 'name="passenger_certified"'), "Section B Passenger certification present");
+        $assert(str_contains($driverHtml, 'name="driver_certified"'), "Section B Driver certification present");
+        $assert(str_contains($driverHtml, 'overflow-y: scroll') || str_contains($driverHtml, 'overflow-y: auto'), "Touch scrollability CSS constraints present");
+        $assert(!str_contains($driverHtml, 'class="nav-segmented"'), "Duplicated top segmented tabs removed in favor of thumb dock");
+
         CLI::write("\n=========================================================", 'cyan');
         CLI::write("   TEST SUMMARY: {$passCount} PASSED, {$failCount} FAILED", $failCount === 0 ? 'green' : 'red');
         CLI::write("=========================================================\n", 'cyan');

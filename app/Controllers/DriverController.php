@@ -70,9 +70,9 @@ class DriverController extends BaseController
             }
             unset($tkItem);
 
-            // Prefer in-transit (departed), then issued (pending gate departure), then returned (pending Section B)
+            // Prefer in-transit (departed, arrived_dest, departed_dest), then issued (pending gate departure), then returned (pending Section B)
             foreach ($tripTickets as $tk) {
-                if ($tk['status'] === 'departed') {
+                if (in_array($tk['status'], ['departed', 'arrived_dest', 'departed_dest'], true)) {
                     $activeTicket = $tk;
                     break;
                 }
@@ -91,6 +91,20 @@ class DriverController extends BaseController
                         $activeTicket = $tk;
                         break;
                     }
+                }
+            }
+            if (!$activeTicket && !empty($tripTickets)) {
+                $activeTicket = $tripTickets[0];
+            }
+        }
+
+        // Fallback: If logged in as admin/dispatcher or driver has no active ticket, load the latest active system ticket for demo
+        if (!$activeTicket) {
+            $anyActive = $ticketModel->whereIn('status', ['departed', 'arrived_dest', 'departed_dest', 'issued', 'returned'])->orderBy('id', 'DESC')->first();
+            if ($anyActive) {
+                $ticketList = $ticketModel->getTicketsWithDetails(['id' => $anyActive['id']]);
+                if (!empty($ticketList)) {
+                    $activeTicket = $ticketList[0];
                 }
             }
         }
@@ -398,7 +412,8 @@ class DriverController extends BaseController
         }
 
         $referer = $this->request->getServer('HTTP_REFERER') ?? '';
-        if (str_contains($referer, 'driver/trips') || !$this->request->isAJAX()) {
+        $isAjax = method_exists($this->request, 'isAJAX') && $this->request->isAJAX();
+        if (str_contains($referer, 'driver/trips') || !$isAjax) {
             return redirect()->to('/driver/trips')->with(
                 'success',
                 "Incident {$incNo} reported to Dispatch."
@@ -412,5 +427,150 @@ class DriverController extends BaseController
             'pir_number'  => $pirNumber,
             'message'     => 'Incident reported to Dispatch.',
         ]);
+    }
+
+    /**
+     * Phase 2: Driver confirms arrival at event / location.
+     * Stamps arrival_dest_time and transitions status to 'arrived_dest'.
+     */
+    public function arriveDestination()
+    {
+        $ticketModel  = new TripTicketModel();
+        $vehicleModel = new VehicleModel();
+        $isAjax = method_exists($this->request, 'isAJAX') && $this->request->isAJAX();
+
+        $ticketId = (int) ($this->request->getPost('ticket_id') ?: ($_POST['ticket_id'] ?? 0));
+        $ticket   = $ticketModel->find($ticketId);
+
+        if (!$ticket) {
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Trip ticket not found.']);
+            }
+            return redirect()->to('/driver/trips')->with('error', 'Trip ticket not found.');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $postedDestOdo = $this->request->getPost('dest_odometer') ?? ($_POST['dest_odometer'] ?? null);
+        $destOdo = ($postedDestOdo !== null && $postedDestOdo !== '') ? (float) $postedDestOdo : (float) ($ticket['dest_odometer'] ?? 0);
+
+        if ($destOdo <= 0) {
+            $destOdo = (float) ($ticket['start_odometer'] ?? 0);
+        }
+
+        $updateData = [
+            'arrival_dest_time' => $now,
+            'status'            => 'arrived_dest',
+        ];
+        if ($destOdo > 0) {
+            $updateData['dest_odometer'] = $destOdo;
+        }
+
+        $ticketModel->update($ticketId, $updateData);
+
+        if (!empty($ticket['vehicle_id']) && $destOdo > 0) {
+            $veh = $vehicleModel->find($ticket['vehicle_id']);
+            if ($veh && $destOdo > (float) $veh['odometer_km']) {
+                $vehicleModel->update($ticket['vehicle_id'], ['odometer_km' => $destOdo]);
+            }
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $dispatchers = $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll();
+        $notifModel = new \App\Models\NotificationModel();
+        foreach ($dispatchers as $disp) {
+            $notifModel->insert([
+                'user_id'    => $disp['id'],
+                'title'      => "DESTINATION ARRIVAL: {$ticket['ticket_serial_no']}",
+                'message'    => "Vehicle has arrived safely at destination: {$ticket['authorized_destination']} at " . date('M d, Y h:i A', strtotime($now)) . ".",
+                'type'       => 'info',
+                'link'       => "/tickets/{$ticketId}",
+                'is_read'    => 0,
+                'created_at' => $now,
+            ]);
+        }
+
+        \App\Services\AuditLogger::log(
+            \App\Services\AuditLogger::STATUS_CHANGE,
+            "Driver confirmed Arrival at Destination ({$ticket['authorized_destination']}) on ticket {$ticket['ticket_serial_no']} at {$now}.",
+            'trip_ticket',
+            $ticketId,
+            ['arrival_dest_time' => $now, 'dest_odometer' => $destOdo]
+        );
+
+        $msg = "Arrival at {$ticket['authorized_destination']} confirmed! Stamped on DTT {$ticket['ticket_serial_no']}.";
+
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'status'            => 'success',
+                'message'           => $msg,
+                'arrival_dest_time' => $now,
+                'ticket_status'     => 'arrived_dest',
+            ]);
+        }
+
+        return redirect()->to('/driver/trips')->with('success', $msg);
+    }
+
+    /**
+     * Phase 3: Driver confirms departure from destination en route back to compound.
+     * Stamps departure_dest_time and transitions status to 'departed_dest'.
+     */
+    public function departDestination()
+    {
+        $ticketModel = new TripTicketModel();
+        $isAjax = method_exists($this->request, 'isAJAX') && $this->request->isAJAX();
+
+        $ticketId = (int) ($this->request->getPost('ticket_id') ?: ($_POST['ticket_id'] ?? 0));
+        $ticket   = $ticketModel->find($ticketId);
+
+        if (!$ticket) {
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Trip ticket not found.']);
+            }
+            return redirect()->to('/driver/trips')->with('error', 'Trip ticket not found.');
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        $ticketModel->update($ticketId, [
+            'departure_dest_time' => $now,
+            'status'              => 'departed_dest',
+        ]);
+
+        $userModel = new \App\Models\UserModel();
+        $dispatchers = $userModel->where('role', 'dispatcher')->where('status', 'active')->findAll();
+        $notifModel = new \App\Models\NotificationModel();
+        foreach ($dispatchers as $disp) {
+            $notifModel->insert([
+                'user_id'    => $disp['id'],
+                'title'      => "DESTINATION DEPARTURE: {$ticket['ticket_serial_no']}",
+                'message'    => "Vehicle has departed from {$ticket['authorized_destination']} en route back to PIA Compound at " . date('M d, Y h:i A', strtotime($now)) . ".",
+                'type'       => 'info',
+                'link'       => "/tickets/{$ticketId}",
+                'is_read'    => 0,
+                'created_at' => $now,
+            ]);
+        }
+
+        \App\Services\AuditLogger::log(
+            \App\Services\AuditLogger::STATUS_CHANGE,
+            "Driver confirmed Departure from Destination ({$ticket['authorized_destination']}) en route back to compound on ticket {$ticket['ticket_serial_no']} at {$now}.",
+            'trip_ticket',
+            $ticketId,
+            ['departure_dest_time' => $now]
+        );
+
+        $msg = "Departure from {$ticket['authorized_destination']} confirmed. You are en route back to PIA Compound. Please scan QR at Gate #1 upon arrival.";
+
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'status'              => 'success',
+                'message'             => $msg,
+                'departure_dest_time' => $now,
+                'ticket_status'       => 'departed_dest',
+            ]);
+        }
+
+        return redirect()->to('/driver/trips')->with('success', $msg);
     }
 }

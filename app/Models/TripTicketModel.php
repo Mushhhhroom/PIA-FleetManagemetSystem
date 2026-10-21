@@ -41,7 +41,11 @@ class TripTicketModel extends Model
                         ->orderBy('trip_tickets.id', 'DESC');
 
         if (!empty($filters['status'])) {
-            $builder->where('trip_tickets.status', $filters['status']);
+            if (is_array($filters['status'])) {
+                $builder->whereIn('trip_tickets.status', $filters['status']);
+            } else {
+                $builder->where('trip_tickets.status', $filters['status']);
+            }
         }
         if (!empty($filters['driver_id'])) {
             $builder->where('trip_tickets.driver_id', $filters['driver_id']);
@@ -131,8 +135,9 @@ class TripTicketModel extends Model
                     ->groupEnd();
         }
 
-        // Prioritize active/actionable tickets first if multiple match a partial query
-        $builder->orderBy("FIELD(trip_tickets.status, 'issued', 'departed', 'arrived_dest', 'departed_dest', 'returned', 'completed', 'cancelled')", '', false)
+        // Prioritize active/actionable tickets first if multiple match a partial query (portable across MySQL & SQLite3)
+        $statusPrioritySql = "CASE trip_tickets.status WHEN 'issued' THEN 1 WHEN 'departed' THEN 2 WHEN 'arrived_dest' THEN 3 WHEN 'departed_dest' THEN 4 WHEN 'returned' THEN 5 WHEN 'completed' THEN 6 ELSE 7 END";
+        $builder->orderBy($statusPrioritySql, 'ASC', false)
                 ->orderBy('trip_tickets.id', 'DESC');
 
         $ticket = $builder->first();
@@ -152,7 +157,7 @@ class TripTicketModel extends Model
                         ->orWhere('vehicles.vehicle_code', $cleanId)
                         ->orWhere('drivers.driver_code', $cleanId)
                     ->groupEnd()
-                    ->orderBy("FIELD(trip_tickets.status, 'issued', 'departed', 'arrived_dest', 'departed_dest', 'returned', 'completed', 'cancelled')", '', false)
+                    ->orderBy($statusPrioritySql, 'ASC', false)
                     ->orderBy('trip_tickets.id', 'DESC');
 
         return $fallbackBuilder->first();
@@ -161,19 +166,30 @@ class TripTicketModel extends Model
     /**
      * Generate the next e-DTT serial number (e.g. DTT-2026-0008).
      *
-     * MAX-based so deleted tickets can never cause a duplicate serial.
+     * MAX-based and portable across MySQL 8 and SQLite3 so deleted tickets
+     * can never cause a duplicate serial.
      */
     public function generateSerialNo(): string
     {
         $year   = date('Y');
         $prefix = "DTT-{$year}-";
-        $row    = $this->db->table('trip_tickets')
-            ->select("MAX(CAST(SUBSTRING_INDEX(ticket_serial_no, '-', -1) AS UNSIGNED)) AS max_no")
+        $rows   = $this->db->table('trip_tickets')
+            ->select('ticket_serial_no')
             ->like('ticket_serial_no', $prefix, 'after')
             ->get()
-            ->getRow();
+            ->getResultArray();
 
-        $next = (int) ($row->max_no ?? 0) + 1;
+        $maxNo = 0;
+        foreach ($rows as $r) {
+            $serialStr = (string) ($r['ticket_serial_no'] ?? '');
+            $parts     = explode('-', $serialStr);
+            $seq       = (int) end($parts);
+            if ($seq > $maxNo) {
+                $maxNo = $seq;
+            }
+        }
+
+        $next = $maxNo + 1;
         do {
             $serial = sprintf('%s%04d', $prefix, $next++);
         } while ($this->db->table('trip_tickets')->where('ticket_serial_no', $serial)->countAllResults() > 0);

@@ -125,21 +125,25 @@ class TripTicketController extends BaseController
         // Section B Timeline & Odometers
         // NOTE: departure_time (Departure from Compound) and arrival_back_time (Arrival back at Compound)
         // are strictly controlled and auto-stamped by the Compound Gate QR Scanner (GateSecurityController).
-        $arrDestStr    = $this->request->getPost('arrival_dest_time');
-        $depDestStr    = $this->request->getPost('departure_dest_time');
+        $arrDestStr    = $this->request->getPost('arrival_dest_time') ?? ($_POST['arrival_dest_time'] ?? null);
+        $depDestStr    = $this->request->getPost('departure_dest_time') ?? ($_POST['departure_dest_time'] ?? null);
 
-        $startOdo      = (float)$this->request->getPost('start_odometer');
-        $destOdo       = (float)$this->request->getPost('dest_odometer');
-        $returnOdo     = (float)$this->request->getPost('return_odometer');
+        $postedStart   = $this->request->getPost('start_odometer') ?? ($_POST['start_odometer'] ?? null);
+        $postedDest    = $this->request->getPost('dest_odometer') ?? ($_POST['dest_odometer'] ?? null);
+        $postedReturn  = $this->request->getPost('return_odometer') ?? ($_POST['return_odometer'] ?? null);
+
+        $startOdo      = ($postedStart !== null && $postedStart !== '') ? (float)$postedStart : (float)($ticket['start_odometer'] ?? 0);
+        $destOdo       = ($postedDest !== null && $postedDest !== '') ? (float)$postedDest : (float)($ticket['dest_odometer'] ?? 0);
+        $returnOdo     = ($postedReturn !== null && $postedReturn !== '') ? (float)$postedReturn : (float)($ticket['return_odometer'] ?? 0);
         $totalDistKm   = max(0, $returnOdo - $startOdo);
 
         // Section B Fuel Balance Formula:
         // Balance End = Balance Start + Issued from Stock + Purchased on Trip - Used During Trip
-        $fuelStart     = (float)$this->request->getPost('fuel_balance_start_liters');
-        $fuelIssued    = (float)$this->request->getPost('fuel_issued_stock_liters');
-        $fuelPurchased = (float)$this->request->getPost('fuel_purchased_liters');
-        $fuelCost      = (float)$this->request->getPost('fuel_purchased_cost');
-        $fuelUsed      = (float)$this->request->getPost('fuel_used_liters');
+        $fuelStart     = (float)($this->request->getPost('fuel_balance_start_liters') ?? ($_POST['fuel_balance_start_liters'] ?? 0));
+        $fuelIssued    = (float)($this->request->getPost('fuel_issued_stock_liters') ?? ($_POST['fuel_issued_stock_liters'] ?? 0));
+        $fuelPurchased = (float)($this->request->getPost('fuel_purchased_liters') ?? ($_POST['fuel_purchased_liters'] ?? 0));
+        $fuelCost      = (float)($this->request->getPost('fuel_purchased_cost') ?? ($_POST['fuel_purchased_cost'] ?? 0));
+        $fuelUsed      = (float)($this->request->getPost('fuel_used_liters') ?? ($_POST['fuel_used_liters'] ?? 0));
 
         $fuelEnd = round(($fuelStart + $fuelIssued + $fuelPurchased) - $fuelUsed, 2);
 
@@ -157,19 +161,19 @@ class TripTicketController extends BaseController
         }
 
         // Consumables
-        $gearOil  = (float)$this->request->getPost('gear_oil_liters');
-        $lubeOil  = (float)$this->request->getPost('lube_oil_liters');
-        $grease   = (float)$this->request->getPost('grease_units');
+        $gearOil  = (float)($this->request->getPost('gear_oil_liters') ?? ($_POST['gear_oil_liters'] ?? 0));
+        $lubeOil  = (float)($this->request->getPost('lube_oil_liters') ?? ($_POST['lube_oil_liters'] ?? 0));
+        $grease   = (float)($this->request->getPost('grease_units') ?? ($_POST['grease_units'] ?? 0));
 
         // FR-4.1 / FR-6.2: toll expense capture on the trip ticket
-        $tollExpense = max(0, (float)$this->request->getPost('toll_expense'));
-        $tollProvider = $this->request->getPost('toll_provider');
+        $tollExpense = max(0, (float)($this->request->getPost('toll_expense') ?? ($_POST['toll_expense'] ?? 0)));
+        $tollProvider = $this->request->getPost('toll_provider') ?? ($_POST['toll_provider'] ?? null);
         $tollProvider = in_array($tollProvider, ['autosweep', 'easytrip', 'cash'], true) ? $tollProvider : null;
 
         // Digital Certifications
-        $driverCert = (int)$this->request->getPost('driver_certified');
-        $passCert   = (int)$this->request->getPost('passenger_certified');
-        $passName   = trim((string)$this->request->getPost('passenger_certifier_name'));
+        $driverCert = (int)($this->request->getPost('driver_certified') ?? ($_POST['driver_certified'] ?? 0));
+        $passCert   = (int)($this->request->getPost('passenger_certified') ?? ($_POST['passenger_certified'] ?? 0));
+        $passName   = trim((string)($this->request->getPost('passenger_certifier_name') ?? ($_POST['passenger_certifier_name'] ?? '')));
 
         $now = date('Y-m-d H:i:s');
 
@@ -204,8 +208,10 @@ class TripTicketController extends BaseController
         ];
 
         // If trip is returned and certifications completed, mark ticket and VRS completed
-        if ($ticket['status'] === 'returned' && $driverCert && $passCert) {
+        if ($ticket['status'] === 'returned' && $driverCert && ($passCert || !empty($passName))) {
             $updateData['status'] = 'completed';
+            $updateData['passenger_certified'] = 1;
+            $updateData['passenger_certified_at'] = $updateData['passenger_certified_at'] ?: $now;
             $this->requestModel->update($ticket['request_id'], ['status' => 'completed']);
 
             // FR-1.3: completing the trip satisfies the post-trip

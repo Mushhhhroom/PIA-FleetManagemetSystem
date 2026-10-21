@@ -1,3 +1,20 @@
+<?php
+/**
+ * Driver's Trip Ticket Detail View (ADMIN-F-001)
+ *
+ * @var string                     $title
+ * @var array<string, mixed>       $ticket
+ * @var list<array<string, mixed>> $gateLogs
+ * @var bool                       $hasPassedSafety
+ * @var list<array<string, mixed>> $mergedRequests
+ * @var string|null                $userRole
+ */
+$ticket          = $ticket ?? [];
+$gateLogs        = $gateLogs ?? [];
+$hasPassedSafety = $hasPassedSafety ?? false;
+$mergedRequests  = $mergedRequests ?? [];
+$userRole        = $userRole ?? (session()->get('user_role') ?? '');
+?>
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
@@ -87,8 +104,45 @@
                     <div class="mono text-muted small"><?= esc($ticket['driver_code']) ?> &bull; Lic: <?= esc($ticket['license_number']) ?></div>
                 </div>
                 <div class="mb-3">
-                    <span class="text-muted small d-block">Authorized Destination:</span>
-                    <strong class="text-dark small"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($ticket['authorized_destination']) ?></strong>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Authorized Destination:</span>
+                        <div class="d-flex gap-1">
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" id="tktNavDistance" style="font-size: 0.65rem;">-- km</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle mono" id="tktNavEta" style="font-size: 0.65rem;">-- min</span>
+                        </div>
+                    </div>
+                    <strong class="text-dark small d-block mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($ticket['authorized_destination']) ?></strong>
+
+                    <!-- Interactive Road-Snapped Route & Driver Navigation Preview -->
+                    <div class="rounded-3 border overflow-hidden mb-2" style="background: #f8fafc;">
+                        <div id="ticketRouteMap" style="height: 195px; width: 100%; z-index: 1;"></div>
+                        <div class="p-2 bg-white border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-truncate" id="tktNextStep" style="font-size: 0.7rem; max-width: 72%; color: #0f172a;">
+                                <i class="fa-solid fa-route text-primary me-1"></i> Computing road-snapped route...
+                            </span>
+                            <button class="btn btn-xs btn-outline-secondary py-0 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#tktStepsCollapse" style="font-size: 0.68rem;">
+                                <i class="fa-solid fa-list-ol me-1"></i>Steps
+                            </button>
+                        </div>
+                        <div class="collapse border-top bg-light" id="tktStepsCollapse">
+                            <div id="tktTurnSteps" class="p-2 small" style="max-height: 150px; overflow-y: auto; font-size: 0.7rem;"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a id="tktGoogleMapsBtn"
+                           href="https://www.google.com/maps/dir/?api=1&amp;origin=14.657200,121.045000&amp;destination=<?= urlencode($ticket['authorized_destination'] . ', Philippines') ?>&amp;travelmode=driving"
+                           target="_blank" rel="noopener"
+                           class="btn btn-xs btn-outline-primary flex-grow-1 text-center text-decoration-none">
+                            <i class="fa-solid fa-diamond-turn-right me-1"></i> Google Maps
+                        </a>
+                        <a id="tktWazeBtn"
+                           href="https://waze.com/ul?q=<?= urlencode($ticket['authorized_destination']) ?>&amp;navigate=yes"
+                           target="_blank" rel="noopener"
+                           class="btn btn-xs btn-outline-secondary text-center text-decoration-none px-3">
+                            <i class="fa-solid fa-location-arrow text-info me-1"></i> Waze
+                        </a>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <span class="text-muted small d-block">Authorized Purpose:</span>
@@ -227,9 +281,14 @@
                         <input type="number" step="0.1" name="return_odometer" id="return_odometer" class="form-control form-control-sm mono" value="<?= (float)($ticket['return_odometer'] ?? 0) ?>" required>
                     </div>
                     <div class="col-12">
-                        <div class="p-2 rounded bg-light border d-flex align-items-center justify-content-between small">
-                            <span class="text-muted">Calculated Total Distance Travelled:</span>
-                            <span class="mono fw-bold fs-6 text-dark" id="calcDistance"><?= number_format((float)$ticket['total_distance_km'], 1) ?> KM</span>
+                        <div class="p-2 rounded bg-light border d-flex align-items-center justify-content-between flex-wrap gap-2 small">
+                            <div>
+                                <span class="text-muted">Calculated Total Distance Travelled:</span>
+                                <span class="mono fw-bold fs-6 text-dark ms-2" id="calcDistance"><?= number_format((float)$ticket['total_distance_km'], 1) ?> KM</span>
+                            </div>
+                            <button type="button" id="btnApplyRoadDist" class="btn btn-xs btn-outline-primary d-none" title="Auto-compute Destination & Return Odometer using verified OSRM road route distance">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Apply Verified Road Distance (<span id="btnRoadDistLabel">0.0</span> km Round-Trip)
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -256,7 +315,7 @@
                         <input type="number" step="0.01" name="fuel_purchased_liters" id="fuel_purchased" class="form-control form-control-sm mono" value="<?= (float)($ticket['fuel_purchased_liters'] ?? 0) ?>">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small fw-semibold text-dark">Fuel Purchase Cost (â‚±)</label>
+                        <label class="form-label small fw-semibold text-dark">Fuel Purchase Cost (₱)</label>
                         <input type="number" step="0.01" name="fuel_purchased_cost" class="form-control form-control-sm mono" value="<?= (float)($ticket['fuel_purchased_cost'] ?? 0) ?>">
                     </div>
 
@@ -511,6 +570,127 @@ document.addEventListener('DOMContentLoaded', function() {
     [startOdo, returnOdo, fStart, fIssued, fPurchased, fUsed].forEach(input => {
         if (input) input.addEventListener('input', recalculate);
     });
+
+    // Interactive Ticket Route & Turn-by-Turn Navigation Map
+    const tktMapEl = document.getElementById('ticketRouteMap');
+    if (tktMapEl && typeof L !== 'undefined') {
+        const originLat   = 14.657200;
+        const originLng   = 121.045000;
+        const destAddress = <?= json_encode($ticket['authorized_destination'] ?? '') ?>;
+
+        const tktMap = L.map('ticketRouteMap', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([originLat, originLng], 12);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            subdomains: 'abcd'
+        }).addTo(tktMap);
+
+        const routeGroup = L.featureGroup().addTo(tktMap);
+
+        if (destAddress && destAddress.trim() !== '') {
+            fetch('<?= base_url('api/v1/route') ?>?destination=' + encodeURIComponent(destAddress))
+            .then(r => r.json())
+            .then(data => {
+                if (data.status !== 'success') return;
+
+                const hqIcon = L.divIcon({
+                    className: 'tkt-hq-pin',
+                    html: `<div style="background:#0f172a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:11px;"><i class="fa-solid fa-building-shield"></i></div>`,
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                });
+                L.marker([originLat, originLng], { icon: hqIcon })
+                    .bindPopup('<strong>PIA Central Office Motorpool</strong>')
+                    .addTo(routeGroup);
+
+                if (data.destination && data.destination.lat && data.destination.lng) {
+                    const destIcon = L.divIcon({
+                        className: 'tkt-dest-pin',
+                        html: `<div style="background:#dc2626;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:12px;"><i class="fa-solid fa-flag-checkered"></i></div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+                    L.marker([data.destination.lat, data.destination.lng], { icon: destIcon })
+                        .bindPopup(`<strong>${destAddress}</strong>`)
+                        .addTo(routeGroup);
+
+                    const gBtn = document.getElementById('tktGoogleMapsBtn');
+                    if (gBtn) {
+                        gBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${data.destination.lat},${data.destination.lng}&travelmode=driving`;
+                    }
+                    const wBtn = document.getElementById('tktWazeBtn');
+                    if (wBtn) {
+                        wBtn.href = `https://waze.com/ul?ll=${data.destination.lat},${data.destination.lng}&navigate=yes`;
+                    }
+                }
+
+                if (data.leaflet_coords && data.leaflet_coords.length > 1) {
+                    L.polyline(data.leaflet_coords, {
+                        color: '#2563eb',
+                        weight: 4,
+                        opacity: 0.9,
+                        lineJoin: 'round'
+                    }).addTo(routeGroup);
+                }
+
+                tktMap.fitBounds(routeGroup.getBounds().pad(0.18));
+                setTimeout(() => { if (typeof tktMap !== 'undefined') tktMap.invalidateSize(); }, 350);
+
+                document.getElementById('tktNavDistance').innerText = `${data.distance_km} km`;
+                document.getElementById('tktNavEta').innerText      = `~${data.duration_min} min`;
+
+                function getTktManeuverIcon(instruction) {
+                    const text = (instruction || '').toLowerCase();
+                    if (text.includes('arrive') || text.includes('destination') || text.includes('reach')) {
+                        return '<i class="fa-solid fa-flag-checkered text-danger me-1"></i>';
+                    }
+                    if (text.includes('left')) {
+                        return '<i class="fa-solid fa-arrow-turn-left text-primary me-1"></i>';
+                    }
+                    if (text.includes('right')) {
+                        return '<i class="fa-solid fa-arrow-turn-right text-primary me-1"></i>';
+                    }
+                    if (text.includes('u-turn') || text.includes('uturn')) {
+                        return '<i class="fa-solid fa-arrow-rotate-left text-warning me-1"></i>';
+                    }
+                    return '<i class="fa-solid fa-arrow-up text-primary me-1"></i>';
+                }
+
+                if (data.steps && data.steps.length > 0) {
+                    document.getElementById('tktNextStep').innerHTML = `${getTktManeuverIcon(data.steps[0].instruction)} ${data.steps[0].instruction}`;
+                    document.getElementById('tktTurnSteps').innerHTML = data.steps.map((st, idx) => `
+                        <div class="d-flex justify-content-between py-1 ${idx < data.steps.length - 1 ? 'border-bottom' : ''}">
+                            <span>${getTktManeuverIcon(st.instruction)}<strong class="mono text-dark me-1">${idx + 1}.</strong> ${st.instruction}</span>
+                            <span class="mono text-muted ms-2">${st.distance_m >= 1000 ? (st.distance_m / 1000).toFixed(1) + ' km' : st.distance_m + ' m'}</span>
+                        </div>
+                    `).join('');
+                }
+
+                // Enable 1-click Road Distance Odometer Helper in Section B
+                const btnApply = document.getElementById('btnApplyRoadDist');
+                const destOdo  = document.getElementById('dest_odometer');
+                if (btnApply && data.distance_km > 0) {
+                    const oneWay    = parseFloat(data.distance_km);
+                    const roundTrip = (oneWay * 2).toFixed(1);
+                    document.getElementById('btnRoadDistLabel').innerText = roundTrip;
+                    btnApply.classList.remove('d-none');
+                    btnApply.addEventListener('click', function() {
+                        const s = parseFloat(startOdo.value) || 0;
+                        if (destOdo) destOdo.value = (s + oneWay).toFixed(1);
+                        if (returnOdo) returnOdo.value = (s + oneWay * 2).toFixed(1);
+                        if (fUsed && parseFloat(fUsed.value || 0) === 0) {
+                            fUsed.value = ((oneWay * 2) / 10.0).toFixed(2);
+                        }
+                        recalculate();
+                    });
+                }
+            })
+            .catch(() => {});
+        }
+    }
 });
 </script>
 <?= $this->endSection() ?>
