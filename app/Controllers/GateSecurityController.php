@@ -36,7 +36,7 @@ class GateSecurityController extends BaseController
         $recentLogs = $this->gateLogModel->getLogsWithDetails(25);
 
         // Vehicles currently on active duty outside compound
-        $vehiclesOut = $this->ticketModel->getTicketsWithDetails(['status' => 'departed']);
+        $vehiclesOut = $this->ticketModel->getTicketsWithDetails(['status' => ['departed', 'arrived_dest', 'departed_dest']]);
 
         // Vehicles pending departure (enrich with BLOWBAGETS safety status)
         $vehiclesPendingDeparture = $this->ticketModel->getTicketsWithDetails(['status' => 'issued']);

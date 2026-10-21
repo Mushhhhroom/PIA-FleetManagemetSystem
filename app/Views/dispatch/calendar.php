@@ -608,6 +608,60 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- FR-2.2 Unified Single Updatable Allocation Form (Admin / Dispatcher / Approver) -->
+                <?php if (in_array(session()->get('user_role'), ['admin', 'dispatcher', 'approver_admin'])): ?>
+                    <div class="mt-3 p-3 rounded border" style="background: #f8fafc;" id="quickAllocationPanel">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-uppercase fw-bold text-dark" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                <i class="fa-solid fa-pen-to-square text-success me-1"></i> Quick Allocation &bull; Single Updatable Process
+                            </span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">CALENDAR DISPATCH</span>
+                        </div>
+                        <p class="text-muted small mb-2" style="font-size: 0.72rem;">
+                            Directly allocate or reassign the official vehicle and certified driver for this travel schedule in one unified step.
+                        </p>
+                        <form action="<?= base_url('dispatch/calendar/update-allocation') ?>" method="POST" id="quickAllocForm">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="request_id" id="quickAllocRequestId" value="">
+                            <input type="hidden" name="month" value="<?= esc($month) ?>">
+
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold mb-1" for="quickAllocVehicleId" style="font-size: 0.74rem;">Vehicle Asset</label>
+                                    <select name="vehicle_id" id="quickAllocVehicleId" class="form-select form-select-sm" required>
+                                        <option value="">-- Choose Vehicle --</option>
+                                        <?php foreach ($vehicles as $v): ?>
+                                            <?php
+                                                $isDedicated = ($v['fleet_category'] ?? 'pool') === 'dedicated';
+                                                $isInactive = $v['status'] !== 'active';
+                                            ?>
+                                            <option value="<?= $v['id'] ?>" <?= $isInactive ? 'disabled' : '' ?>>
+                                                <?= esc($v['plate_number']) ?> &bull; <?= esc($v['make']) ?> <?= esc($v['model']) ?> (<?= ucfirst($v['type']) ?>) <?= $isDedicated ? '[DEDICATED]' : '' ?> <?= $isInactive ? '[' . strtoupper($v['status']) . ']' : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold mb-1" for="quickAllocDriverId" style="font-size: 0.74rem;">Official Driver</label>
+                                    <select name="driver_id" id="quickAllocDriverId" class="form-select form-select-sm" required>
+                                        <option value="">-- Choose Driver --</option>
+                                        <?php foreach ($drivers as $d): ?>
+                                            <option value="<?= $d['id'] ?>">
+                                                <?= esc($d['first_name'] . ' ' . $d['last_name']) ?> (<?= esc($d['driver_code']) ?>) [<?= ucfirst($d['status']) ?>]
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-sm btn-success w-100" id="btnSaveAllocation">
+                                        <i class="fa-solid fa-check me-1"></i> Save Allocation
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Modal Footer Direct Action -->
@@ -799,6 +853,25 @@
         document.getElementById('modalDriverName').textContent = alloc.driver_name || alloc.driver || 'Unassigned';
         document.getElementById('modalDriverPhone').textContent = alloc.driver_phone ? `Phone: ${alloc.driver_phone}` : (alloc.driver_code ? `Code: ${alloc.driver_code}` : '—');
         document.getElementById('modalTicketSerial').textContent = alloc.ticket_serial_no || (alloc.allocation_status === 'ready_to_allocate' ? 'Not Issued Yet (Ready)' : '—');
+
+        // Populate Single Updatable Allocation Form
+        const reqIdInput = document.getElementById('quickAllocRequestId');
+        const vehSelect  = document.getElementById('quickAllocVehicleId');
+        const drvSelect  = document.getElementById('quickAllocDriverId');
+        const panelEl    = document.getElementById('quickAllocationPanel');
+
+        if (reqIdInput && vehSelect && drvSelect && panelEl) {
+            if (alloc.request_id && (stageNum >= 1 && stageNum <= 5)) {
+                panelEl.style.display = 'block';
+                reqIdInput.value = alloc.request_id;
+                if (alloc.vehicle_id) vehSelect.value = alloc.vehicle_id;
+                else vehSelect.value = '';
+                if (alloc.driver_id) drvSelect.value = alloc.driver_id;
+                else drvSelect.value = '';
+            } else {
+                panelEl.style.display = 'none';
+            }
+        }
 
         // Direct Action Button Configuration
         const actionBtn = document.getElementById('modalPrimaryActionBtn');

@@ -1,3 +1,16 @@
+<?php
+/**
+ * Vehicle Request Slip (VRS) Creation Form (ADMIN-F-018)
+ *
+ * @var string                     $title
+ * @var list<array<string, mixed>> $offices
+ * @var list<array<string, mixed>> $departments
+ * @var list<array<string, mixed>> $drivers
+ */
+$offices     = $offices ?? [];
+$departments = $departments ?? [];
+$drivers     = $drivers ?? [];
+?>
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
@@ -90,9 +103,34 @@
                 <!-- 2. Destination & Purpose -->
                 <div class="row g-3 mb-4">
                     <div class="col-12">
-                        <label class="form-label small fw-semibold text-dark">Official Destination / Location <span class="text-danger">*</span></label>
-                        <input type="text" name="destination" class="form-control form-control-sm" placeholder="e.g. Malacañang Palace Press Briefing Room, Manila" required>
-                        <div class="form-text" style="font-size: 0.72rem;">Specify complete destination address, agency, or regional venue.</div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold text-dark mb-0">Official Destination / Location <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-1" id="vrsRouteMetrics" style="display: none !important;">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" id="vrsDistBadge" style="font-size: 0.68rem;">0.0 km</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle mono" id="vrsEtaBadge" style="font-size: 0.68rem;">0 min ETA</span>
+                            </div>
+                        </div>
+                        <input type="text" name="destination" id="destinationInput" class="form-control form-control-sm" placeholder="e.g. Malacañang Palace Press Briefing Room, Manila" required>
+                        <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+                            <span class="text-muted" style="font-size: 0.7rem;">Quick Landmarks:</span>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="Malacañang Palace Press Briefing Room, Manila">Malacañang / PCO</button>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="Senate of the Philippines, GSIS Bldg, Pasay City">Senate Pasay</button>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="Batasang Pambansa Complex, Quezon City">Batasang Pambansa</button>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="Commission on Audit (COA), Commonwealth Ave, Quezon City">COA QC</button>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="Camp Aguinaldo (NDRRMC / OCD), Quezon City">Camp Aguinaldo</button>
+                            <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="NAIA Terminal 3, Pasay City">NAIA Terminal 3</button>
+                        </div>
+
+                        <!-- Live OSRM Road Route Preview Map -->
+                        <div class="rounded-3 border overflow-hidden mt-2" id="vrsMapWrapper" style="background: #f8fafc;">
+                            <div id="vrsRoutePreviewMap" style="height: 185px; width: 100%; z-index: 1;"></div>
+                            <div class="px-3 py-1 bg-white border-top d-flex justify-content-between align-items-center small" style="font-size: 0.72rem;">
+                                <span id="vrsRouteSummary" class="text-muted">
+                                    <i class="fa-solid fa-route text-primary me-1"></i> Select or type a destination above to preview the road-snapped route from PIA Central Office.
+                                </span>
+                                <span class="mono text-secondary" style="font-size: 0.65rem;">OSRM Keyless Navigation</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-semibold text-dark">Purpose of Travel & Coverage Details <span class="text-danger">*</span></label>
@@ -275,6 +313,109 @@ document.addEventListener('DOMContentLoaded', function() {
 
     depInput.addEventListener('change', evaluateAdvanceNotice);
     evaluateAdvanceNotice(); // run on load
+
+    // Interactive Destination Geocoding & Road Route Preview Map
+    const destInput  = document.getElementById('destinationInput');
+    const vrsMapEl   = document.getElementById('vrsRoutePreviewMap');
+    let vrsDebounce  = null;
+
+    if (vrsMapEl && typeof L !== 'undefined') {
+        const originLat = 14.657200;
+        const originLng = 121.045000;
+        const vrsMap = L.map('vrsRoutePreviewMap', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([originLat, originLng], 12);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            subdomains: 'abcd'
+        }).addTo(vrsMap);
+
+        const vrsLayerGroup = L.featureGroup().addTo(vrsMap);
+
+        function drawOriginPin() {
+            const hqIcon = L.divIcon({
+                className: 'vrs-hq-pin',
+                html: `<div style="background:#0f172a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:11px;"><i class="fa-solid fa-building-shield"></i></div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+            L.marker([originLat, originLng], { icon: hqIcon })
+                .bindPopup('<strong>Origin: PIA Central Office Motorpool</strong><br><span class="small text-muted">Visayas Ave, Quezon City</span>')
+                .addTo(vrsLayerGroup);
+        }
+
+        drawOriginPin();
+
+        async function updateRoutePreview(queryText) {
+            const q = (queryText || '').trim();
+            if (q.length < 3) return;
+
+            try {
+                const res  = await fetch('<?= base_url('api/v1/route') ?>?destination=' + encodeURIComponent(q));
+                const data = await res.json();
+                if (data.status !== 'success') return;
+
+                vrsLayerGroup.clearLayers();
+                drawOriginPin();
+
+                if (data.destination && data.destination.lat && data.destination.lng) {
+                    const destIcon = L.divIcon({
+                        className: 'vrs-dest-pin',
+                        html: `<div style="background:#dc2626;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:12px;"><i class="fa-solid fa-flag-checkered"></i></div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+                    L.marker([data.destination.lat, data.destination.lng], { icon: destIcon })
+                        .bindPopup(`<strong>${q}</strong>`)
+                        .addTo(vrsLayerGroup);
+                }
+
+                if (data.leaflet_coords && data.leaflet_coords.length > 1) {
+                    L.polyline(data.leaflet_coords, {
+                        color: '#2563eb',
+                        weight: 4,
+                        opacity: 0.9,
+                        lineJoin: 'round'
+                    }).addTo(vrsLayerGroup);
+                }
+
+                vrsMap.fitBounds(vrsLayerGroup.getBounds().pad(0.18));
+                setTimeout(() => { if (typeof vrsMap !== 'undefined') vrsMap.invalidateSize(); }, 350);
+
+                const metricsEl = document.getElementById('vrsRouteMetrics');
+                if (metricsEl) metricsEl.style.setProperty('display', 'flex', 'important');
+                document.getElementById('vrsDistBadge').innerText = `${data.distance_km} km one-way (${(data.distance_km * 2).toFixed(1)} km RT)`;
+                document.getElementById('vrsEtaBadge').innerText  = `~${data.duration_min} min ETA`;
+                document.getElementById('vrsRouteSummary').innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> Road route verified: <strong>${data.distance_km} km</strong> from PIA Central Office (~${data.duration_min} mins driving).`;
+            } catch (err) {
+                console.warn('Route preview lookup failed:', err);
+            }
+        }
+
+        if (destInput) {
+            destInput.addEventListener('input', function() {
+                clearTimeout(vrsDebounce);
+                vrsDebounce = setTimeout(() => updateRoutePreview(this.value), 450);
+            });
+        }
+
+        document.querySelectorAll('.vrs-landmark-chip').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const dest = this.getAttribute('data-dest');
+                if (destInput && dest) {
+                    destInput.value = dest;
+                    updateRoutePreview(dest);
+                }
+            });
+        });
+
+        // Trigger preview if input already has text (e.g. browser autofill or validation reload)
+        if (destInput && destInput.value.trim().length >= 3) {
+            updateRoutePreview(destInput.value.trim());
+        }
+    }
 
     // Form submission validation
     vrsForm.addEventListener('submit', function(e) {

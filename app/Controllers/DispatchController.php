@@ -25,6 +25,8 @@ class DispatchController extends BaseController
 
     public function __construct()
     {
+        $this->request           ??= service('request');
+        $this->response          ??= service('response');
         $this->requestModel      = new TripRequestModel();
         $this->ticketModel       = new TripTicketModel();
         $this->vehicleModel      = new VehicleModel();
@@ -129,7 +131,8 @@ class DispatchController extends BaseController
         $mergeCandidates = $this->dispatchEngine->findMergeableRequests($request);
 
         // Parse preselected merge IDs from query parameter (?merge=id1,id2)
-        $mergeParam = $this->request->getGet('merge');
+        $req = $this->request ?? service('request');
+        $mergeParam = $req ? $req->getGet('merge') : null;
         $preselectedMergeIds = [];
         if (!empty($mergeParam)) {
             $preselectedMergeIds = array_filter(array_map('intval', explode(',', $mergeParam)));
@@ -452,7 +455,10 @@ class DispatchController extends BaseController
             ->where('trip_tickets.request_id !=', $requestId)
             ->where('trip_tickets.authorized_departure <=', $ret)
             ->where('trip_tickets.authorized_return >=', $dep)
-            ->where('(trip_tickets.vehicle_id = ' . $vehicleId . ' OR trip_tickets.driver_id = ' . $driverId . ')')
+            ->groupStart()
+                ->where('trip_tickets.vehicle_id', $vehicleId)
+                ->orWhere('trip_tickets.driver_id', $driverId)
+            ->groupEnd()
             ->findAll();
 
         if (empty($overlapping)) {
@@ -1115,6 +1121,166 @@ class DispatchController extends BaseController
             'month'  => $month,
             'data'   => $this->calendarData($month),
         ]);
+    }
+
+    /**
+     * Unified Single Updatable Process for Every Dispatch Vehicle and Driver from Calendar.
+     * Allows dispatchers/admins to reassign or directly allocate any trip right from the calendar modal.
+     */
+    public function updateAllocation()
+    {
+        $requestId = (int)$this->request->getPost('request_id');
+        $vehicleId = (int)$this->request->getPost('vehicle_id');
+        $driverId  = (int)$this->request->getPost('driver_id');
+        $month     = $this->request->getPost('month') ?: date('Y-m');
+
+        if (!$requestId || !$vehicleId || !$driverId) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', 'Please select both an authorized vehicle and driver to update allocation.');
+        }
+
+        $request = $this->requestModel->getRequestByIdWithDetails($requestId);
+        if (!$request) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', 'Vehicle request not found.');
+        }
+
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        $driver  = $this->driverModel->find($driverId);
+
+        if (!$vehicle || !$driver) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', 'Selected vehicle or driver not found.');
+        }
+
+        // 1. Strict Driver Availability Check
+        $driverCheck = $this->dispatchEngine->checkDriverAvailability(
+            $driverId,
+            $request['departure_time'],
+            $request['return_time'],
+            $requestId
+        );
+        if (!$driverCheck['available']) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', "Driver Unavailable: {$driverCheck['reason']}");
+        }
+
+        // 2. PMS Lockout Check
+        $pmsRecord = $this->pmsModel->where('vehicle_id', $vehicleId)->first();
+        if ($pmsRecord && (int)$pmsRecord['is_locked'] === 1) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', "Security Lockout: Vehicle {$vehicle['plate_number']} is locked for 5,000 KM PMS.");
+        }
+
+        // 3. Double-Booking Check
+        $conflict = $this->findBookingConflict($requestId, $vehicleId, $driverId, $request);
+        if ($conflict) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', $conflict);
+        }
+
+        // 4. Vehicle Capacity Verification
+        $capacity = $this->dispatchEngine->getVehicleCapacity($vehicle);
+        $passCount = (int)$request['passenger_count'];
+        if ($passCount > $capacity) {
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('error', "Capacity Exceeded: Request requires {$passCount} seats, but {$vehicle['plate_number']} only seats {$capacity}.");
+        }
+
+        // Check if ticket already exists or needs creation
+        if (!empty($request['ticket_id'])) {
+            // Update existing ticket
+            $ticketId = (int)$request['ticket_id'];
+            $oldTicket = $this->ticketModel->find($ticketId);
+
+            // Re-generate cryptographic token for new asset pairing
+            $qrToken = $this->qrService->generateToken(
+                $oldTicket['ticket_serial_no'],
+                $vehicle['plate_number'],
+                $driver['driver_code'],
+                $request['departure_time']
+            );
+
+            $this->ticketModel->update($ticketId, [
+                'vehicle_id'     => $vehicleId,
+                'driver_id'      => $driverId,
+                'qr_crypt_token' => $qrToken,
+                'start_odometer' => (float)$vehicle['odometer_km'],
+            ]);
+
+            // If previous driver was different, free them
+            if ((int)$oldTicket['driver_id'] !== $driverId) {
+                $this->driverModel->update($oldTicket['driver_id'], ['status' => 'available']);
+            }
+            $this->driverModel->update($driverId, ['status' => 'on_trip']);
+
+            AuditLogger::log(
+                AuditLogger::ADMIN_ACTION,
+                "Allocation updated on Calendar for VRS {$request['request_number']} (e-DTT {$oldTicket['ticket_serial_no']}) to vehicle {$vehicle['plate_number']} and driver {$driver['first_name']} {$driver['last_name']}.",
+                'trip_tickets',
+                $ticketId
+            );
+
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('success', "Allocation updated: VRS {$request['request_number']} assigned to vehicle {$vehicle['plate_number']} and driver {$driver['first_name']} {$driver['last_name']}.");
+        } else {
+            // Needs initial dispatch from approved status
+            if ($request['status'] !== 'approved') {
+                $this->requestModel->update($requestId, [
+                    'status'             => 'approved',
+                    'admin_action'       => 'approved',
+                    'admin_remarks'      => 'Authorized via Calendar Allocation',
+                ]);
+            }
+
+            $serialNo = $this->ticketModel->generateSerialNo();
+            $qrToken = $this->qrService->generateToken(
+                $serialNo,
+                $vehicle['plate_number'],
+                $driver['driver_code'],
+                $request['departure_time']
+            );
+
+            $currentFuelLiters = ((float)($vehicle['current_fuel_level'] ?? 80) / 100.0) * (float)($vehicle['fuel_capacity_liters'] ?? 70);
+
+            $ticketId = $this->ticketModel->insert([
+                'ticket_serial_no'          => $serialNo,
+                'request_id'                => $requestId,
+                'vehicle_id'                => $vehicleId,
+                'driver_id'                 => $driverId,
+                'qr_crypt_token'            => $qrToken,
+                'status'                    => 'issued',
+                'authorized_departure'      => $request['departure_time'],
+                'authorized_return'         => $request['return_time'],
+                'authorized_passengers'     => $request['passenger_names'],
+                'authorized_destination'    => $request['destination'],
+                'authorized_purpose'        => $request['purpose'],
+                'admin_approver_name'       => $request['admin_approver_name'] ?? 'Atty. Julius S. De Peralta',
+                'start_odometer'            => (float)$vehicle['odometer_km'],
+                'fuel_balance_start_liters' => round($currentFuelLiters, 2),
+                'fuel_issued_stock_liters'  => 0.00,
+                'fuel_purchased_liters'     => 0.00,
+                'fuel_used_liters'          => 0.00,
+                'fuel_balance_end_liters'   => round($currentFuelLiters, 2),
+            ]);
+
+            $this->requestModel->update($requestId, [
+                'status'    => 'dispatched',
+                'ticket_id' => $ticketId,
+            ]);
+
+            $this->driverModel->update($driverId, ['status' => 'on_trip']);
+
+            AuditLogger::log(
+                AuditLogger::VRS_DISPATCHED,
+                "VRS {$request['request_number']} dispatched directly via Calendar Allocation under e-DTT {$serialNo} with vehicle {$vehicle['plate_number']} + driver {$driver['first_name']} {$driver['last_name']}.",
+                'trip_requests',
+                $requestId
+            );
+
+            return redirect()->to("/dispatch/calendar?month={$month}")
+                ->with('success', "Dispatched successfully: VRS {$request['request_number']} allocated to {$vehicle['plate_number']} and {$driver['first_name']} {$driver['last_name']} (e-DTT #{$serialNo}).");
+        }
     }
 }
 

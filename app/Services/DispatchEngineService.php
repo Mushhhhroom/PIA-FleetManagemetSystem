@@ -226,7 +226,8 @@ class DispatchEngineService
             ->where('tt.driver_id', $driverId)
             ->whereIn('tt.status', ['issued', 'departed', 'arrived_dest', 'departed_dest'])
             ->groupStart()
-                ->where("tt.authorized_departure <= '{$retTime}' AND tt.authorized_return >= '{$depTime}'")
+                ->where('tt.authorized_departure <=', $retTime)
+                ->where('tt.authorized_return >=', $depTime)
             ->groupEnd();
 
         if ($excludeRequestId) {
@@ -272,7 +273,13 @@ class DispatchEngineService
             ->whereIn('tr.status', ['pending_dispatcher', 'pending_admin', 'approved'])
             ->where('tr.ticket_id IS NULL')
             ->where('tr.departure_time <=', $retTime)
-            ->where('(tr.return_time >= "' . $depTime . '" OR (tr.return_time IS NULL AND tr.departure_time >= "' . $depTime . '"))');
+            ->groupStart()
+                ->where('tr.return_time >=', $depTime)
+                ->orGroupStart()
+                    ->where('tr.return_time IS NULL')
+                    ->where('tr.departure_time >=', $depTime)
+                ->groupEnd()
+            ->groupEnd();
 
         if (!empty($excludeRequestIds)) {
             $builder->whereNotIn('tr.id', $excludeRequestIds);
@@ -352,7 +359,8 @@ class DispatchEngineService
             ->select('vehicle_id, driver_id')
             ->whereIn('status', ['issued', 'departed', 'arrived_dest', 'departed_dest'])
             ->groupStart()
-                ->where("authorized_departure <= '{$retTime}' AND authorized_return >= '{$depTime}'")
+                ->where('authorized_departure <=', $retTime)
+                ->where('authorized_return >=', $depTime)
             ->groupEnd()
             ->get()->getResultArray();
 

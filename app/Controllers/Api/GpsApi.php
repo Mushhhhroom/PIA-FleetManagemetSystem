@@ -115,10 +115,19 @@ class GpsApi extends BaseController
             if (!$recentIncident) {
                 $incNo = 'INC-SPD-' . date('Ymd-His');
                 $severity = $speed > 100 ? 'severe' : ($speed > 90 ? 'moderate' : 'minor');
+
+                $driverId = $vehicle['current_driver_id'] ?: null;
+                if (!$driverId && $tripId) {
+                    $tkt = (new \App\Models\TripTicketModel())->find($tripId);
+                    if ($tkt && !empty($tkt['driver_id'])) {
+                        $driverId = (int) $tkt['driver_id'];
+                    }
+                }
+
                 $incidentModel->insert([
                     'incident_no'     => $incNo,
                     'vehicle_id'      => $vehicleId,
-                    'driver_id'       => $vehicle['current_driver_id'],
+                    'driver_id'       => $driverId,
                     'trip_id'         => $tripId,
                     'incident_date'   => date('Y-m-d H:i:s'),
                     'severity'        => $severity,
@@ -131,9 +140,9 @@ class GpsApi extends BaseController
                 $overspeedAlert = true;
 
                 // Penalize safety score
-                if (!empty($vehicle['current_driver_id'])) {
+                if (!empty($driverId)) {
                     $driverModel = new DriverModel();
-                    $driver = $driverModel->find($vehicle['current_driver_id']);
+                    $driver = $driverModel->find($driverId);
                     if ($driver) {
                         $newScore = max(60.00, (float)$driver['safety_score'] - 1.50);
                         $driverModel->update($driver['id'], ['safety_score' => $newScore]);
