@@ -24,7 +24,7 @@ function doReq($url, $method = 'GET', $fields = [], $cookie = '') {
 
 function resetReq12($pdo) {
     $future = date('Y-m-d H:i:s', strtotime('+4 hours'));
-    $pdo->prepare("UPDATE trip_requests SET status = 'pending_dispatcher', sla_deadline = ?, dispatcher_action = NULL, dispatcher_action_at = NULL, dispatcher_remarks = NULL, dispatcher_approver_id = 8, admin_action = NULL, admin_action_at = NULL, admin_remarks = NULL WHERE id = 12")->execute([$future]);
+    $pdo->prepare("UPDATE trip_requests SET status = 'pending_dispatcher', ticket_id = NULL, sla_deadline = ?, dispatcher_action = NULL, dispatcher_action_at = NULL, dispatcher_remarks = NULL, dispatcher_approver_id = 8, admin_action = NULL, admin_action_at = NULL, admin_remarks = NULL WHERE id = 12")->execute([$future]);
 }
 
 echo "==========================================================" . PHP_EOL;
@@ -34,8 +34,8 @@ echo "==========================================================" . PHP_EOL;
 // TEST 1: Dispatcher Endorsement from /approvals modal (Tier 1 review)
 echo PHP_EOL . "--- TEST 1: Dispatcher Endorses from /approvals modal ---" . PHP_EOL;
 resetReq12($pdo);
-$cookieDisp = __DIR__ . '/c_disp.txt';
-if (file_exists($cookieDisp)) unlink($cookieDisp);
+$cookieDisp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'c_disp.txt';
+if (file_exists($cookieDisp)) @unlink($cookieDisp);
 
 $login = doReq('http://localhost:8090/login', 'GET', [], $cookieDisp);
 preg_match('/name=["\']csrf_test_name["\']\s+value=["\']([^"\']+)["\']/', $login['body'], $m);
@@ -64,8 +64,8 @@ echo "Result: " . ($success && !$blocked && $statusTier1['status'] === 'pending_
 
 // TEST 2: Admin Division Head Authorization on /approvals modal (Tier 2 review)
 echo PHP_EOL . "--- TEST 2: Admin Division Head Authorizes Tier 2 ---" . PHP_EOL;
-$cookieAdm = __DIR__ . '/c_adm.txt';
-if (file_exists($cookieAdm)) unlink($cookieAdm);
+$cookieAdm = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'c_adm.txt';
+if (file_exists($cookieAdm)) @unlink($cookieAdm);
 
 $login = doReq('http://localhost:8090/login', 'GET', [], $cookieAdm);
 preg_match('/name=["\']csrf_test_name["\']\s+value=["\']([^"\']+)["\']/', $login['body'], $m);
@@ -90,7 +90,8 @@ echo "Result: " . ($statusTier2['status'] === 'approved' ? "[PASS - AUTHORIZED F
 
 // Check Dispatch queue
 $inDispatch = doReq('http://localhost:8090/dispatch', 'GET', [], $cookieDisp);
-echo "In Dispatch Queue for Vehicle/Driver Assignment: " . (str_contains($inDispatch['body'], 'VRS-2026-0012') ? "[YES - PASS]" : "[NO - FAIL]") . PHP_EOL;
+$reqNo = $pdo->query("SELECT request_number FROM trip_requests WHERE id = 12")->fetchColumn();
+echo "In Dispatch Queue for Vehicle/Driver Assignment: " . (str_contains($inDispatch['body'], $reqNo) ? "[YES - PASS]" : "[NO - FAIL]") . PHP_EOL;
 
 // TEST 3: Dispatcher Endorsement directly from /requests/12 view
 echo PHP_EOL . "--- TEST 3: Dispatcher Endorses directly from /requests/12 View ---" . PHP_EOL;
@@ -110,8 +111,8 @@ echo "HTTP Code: {$action['code']} | Redirect: {$action['redirect']}" . PHP_EOL;
 echo "Status in DB: {$statusView['status']} (dispatcher_action: {$statusView['dispatcher_action']})" . PHP_EOL;
 echo "Result: " . ($statusView['status'] === 'pending_admin' ? "[PASS - ENDORSED FROM SLIP VIEW]" : "[FAIL]") . PHP_EOL;
 
-if (file_exists($cookieDisp)) unlink($cookieDisp);
-if (file_exists($cookieAdm)) unlink($cookieAdm);
+if (file_exists($cookieDisp)) @unlink($cookieDisp);
+if (file_exists($cookieAdm)) @unlink($cookieAdm);
 
 // Final Reset so demo is ready
 resetReq12($pdo);

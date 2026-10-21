@@ -14,8 +14,8 @@ $roles = [
 echo "=== TESTING ROLE-BASED LOGIN REDIRECTION ===" . PHP_EOL;
 
 foreach ($roles as $email => $info) {
-    $cookie = __DIR__ . '/cookie_' . md5($email) . '.txt';
-    if (file_exists($cookie)) unlink($cookie);
+    $cookie = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cookie_' . md5($email) . '.txt';
+    if (file_exists($cookie)) @unlink($cookie);
 
     // Get CSRF
     $ch = curl_init('http://localhost:8090/login');
@@ -47,10 +47,13 @@ foreach ($roles as $email => $info) {
 }
 
 // Test CSV Export
+$adminCookie = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cookie_admin.txt';
+if (file_exists($adminCookie)) @unlink($adminCookie);
+
 $ch = curl_init('http://localhost:8090/login');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_COOKIEJAR, __DIR__ . '/cookie_admin.txt');
-curl_setopt($ch, CURLOPT_COOKIEFILE, __DIR__ . '/cookie_admin.txt');
+curl_setopt($ch, CURLOPT_COOKIEJAR, $adminCookie);
+curl_setopt($ch, CURLOPT_COOKIEFILE, $adminCookie);
 // Fetch login page for CSRF token
 $loginHtml = curl_exec($ch);
 preg_match('/name=["\']csrf_test_name["\']\s+value=["\']([^"\']+)["\']/', $loginHtml, $m);
@@ -73,7 +76,7 @@ $csv = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-if (file_exists(__DIR__ . '/cookie_admin.txt')) unlink(__DIR__ . '/cookie_admin.txt');
+if (file_exists($adminCookie)) @unlink($adminCookie);
 
 echo PHP_EOL . "=== TESTING COA CSV EXPORT ===" . PHP_EOL;
 echo "HTTP Code: " . $httpCode . PHP_EOL;

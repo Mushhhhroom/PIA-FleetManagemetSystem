@@ -1,8 +1,9 @@
 @echo off
-title FleetPulse FMS Server (Port 8090)
+title PIA-AFMS Fleet Management System (Port 8090)
 cd /d "%~dp0"
 echo ============================================================
-echo   FleetPulse - Fleet Management System
+echo   PIA-AFMS - Philippine Information Agency
+echo   Automated Fleet Management Information System
 echo   Framework: CodeIgniter 4 (PHP 8.4)
 echo   Database: MySQL (fleet_db)
 echo ============================================================

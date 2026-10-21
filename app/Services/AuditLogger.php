@@ -35,6 +35,7 @@ class AuditLogger
     public const USER_ACCOUNT_CREATED  = 'user_account_created';
     public const USER_ACCOUNT_UPDATED  = 'user_account_updated';
     public const USER_ACCOUNT_TOGGLED  = 'user_account_status_changed';
+    public const ADMIN_ACTION          = 'admin_action';
 
     /**
      * Write an immutable audit entry. Returns true when persisted.

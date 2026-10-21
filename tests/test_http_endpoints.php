@@ -1,7 +1,7 @@
 <?php
 
-$cookieFile = __DIR__ . '/cookie.txt';
-if (file_exists($cookieFile)) unlink($cookieFile);
+$cookieFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cookie_http_test.txt';
+if (file_exists($cookieFile)) @unlink($cookieFile);
 
 $ch = curl_init('http://localhost:8090/login');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
