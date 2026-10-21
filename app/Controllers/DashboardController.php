@@ -75,12 +75,18 @@ class DashboardController extends BaseController
         $db = \Config\Database::connect();
         $sixMonthsAgo = date('Y-m-01 00:00:00', strtotime('-5 months'));
         
-        $monthlyTrips = $db->table('trip_tickets')
-            ->select("DATE_FORMAT(created_at, '%b %Y') as month_label, DATE_FORMAT(created_at, '%Y-%m') as ym, COUNT(*) as ticket_count")
+        $rawTickets = $db->table('trip_tickets')
+            ->select('created_at')
             ->where('created_at >=', $sixMonthsAgo)
-            ->groupBy('ym, month_label')
-            ->orderBy('ym', 'ASC')
             ->get()->getResultArray();
+
+        $monthCounts = [];
+        foreach ($rawTickets as $rt) {
+            if (!empty($rt['created_at'])) {
+                $ym = date('Y-m', strtotime($rt['created_at']));
+                $monthCounts[$ym] = ($monthCounts[$ym] ?? 0) + 1;
+            }
+        }
 
         // Fill in missing months if any
         $analyticsMonths = [];
@@ -89,15 +95,9 @@ class DashboardController extends BaseController
             $ym = date('Y-m', strtotime("-{$i} months"));
             $label = date('M Y', strtotime("-{$i} months"));
             $analyticsMonths[] = $label;
-            $found = false;
-            foreach ($monthlyTrips as $mt) {
-                if ($mt['ym'] === $ym) {
-                    $analyticsTicketCounts[] = (int)$mt['ticket_count'];
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
+            if (isset($monthCounts[$ym])) {
+                $analyticsTicketCounts[] = (int)$monthCounts[$ym];
+            } else {
                 $analyticsTicketCounts[] = ($i === 0 ? max(1, $completedTrips + $activeTrips) : rand(3, 8));
             }
         }
