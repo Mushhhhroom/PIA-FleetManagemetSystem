@@ -253,24 +253,47 @@
         .sidebar-link {
             display: flex;
             align-items: center;
-            gap: 11px;
-            padding: 9px 12px;
-            min-height: 42px; /* Touch target accessibility */
+            gap: 10px;
+            padding: 8px 12px;
+            min-height: 40px; /* Touch target accessibility */
             color: #94a3b8;
-            font-size: 0.82rem;
+            font-size: 0.81rem;
             font-weight: 500;
             text-decoration: none;
             border-radius: 7px;
             transition: all 0.15s ease;
             margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
         }
 
         .sidebar-link i {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             width: 18px;
+            min-width: 18px;
+            flex-shrink: 0;
             text-align: center;
             color: #64748b;
             transition: color 0.15s ease;
+        }
+
+        .sidebar-link .link-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-link .badge {
+            flex-shrink: 0;
+            margin-left: auto;
+            font-size: 0.58rem;
+            padding: 2px 6px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            line-height: 1.2;
         }
 
         .sidebar-link:hover {
@@ -1027,7 +1050,7 @@
             'vehicles' => 'Fleet Assets', 'drivers' => 'Fleet Assets',
             'tracking' => 'Fleet Assets', 'fuel'    => 'Fleet Assets', 'maintenance' => 'Fleet Assets',
             'audit'    => 'COA & Compliance', 'compliance' => 'COA & Compliance',
-            'users'    => 'Administration', 'admin' => 'Administration', 'dashboard' => 'Overview',
+            'admin/modules' => 'Administration', 'users' => 'Administration', 'admin' => 'Administration', 'dashboard' => 'Overview',
         ];
         $currentUri   = uri_string();
         $crumbSection = 'Overview';
@@ -1091,16 +1114,23 @@
             </span>
         </div>
 
-        <!-- Dynamic Role-Tailored Navigation (Eliminates Redundancy) -->
+        <!-- Dynamic Role-Tailored Navigation (Eliminates Redundancy & Enforces Module Controls) -->
+        <?php
+            $canShow = fn(string $modKey): bool => \App\Services\ModuleControlService::isModuleEnabled($modKey, $userRole);
+            $isModOffline = fn(string $modKey): bool => !\App\Services\ModuleControlService::isModuleEnabled($modKey);
+        ?>
         <nav class="sidebar-nav">
 
             <!-- ============================================================
                  1 · OVERVIEW
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin']) && $canShow('dashboard')): ?>
                 <div class="nav-section-title">Overview</div>
                 <a href="<?= base_url('dashboard') ?>" class="sidebar-link <?= uri_string() === '' || uri_string() === 'dashboard' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-chart-line"></i> Command Center
+                    <i class="fa-solid fa-chart-line"></i> <span class="link-label">Command Center</span>
+                    <?php if ($isModOffline('dashboard') && $userRole === 'admin'): ?>
+                        <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                    <?php endif; ?>
                 </a>
             <?php endif; ?>
 
@@ -1113,39 +1143,61 @@
                 </button>
                 <div class="nav-group" data-nav-group-body="workflow">
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_admin', 'auditor'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'requestor', 'approver_admin', 'auditor']) && $canShow('requests')): ?>
                     <a href="<?= base_url('requests') ?>" class="sidebar-link <?= strpos(uri_string(), 'requests') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-file-signature"></i> Vehicle Requests (VRS)
+                        <i class="fa-solid fa-file-signature"></i> <span class="link-label">Vehicle Requests (VRS)</span>
+                        <?php if ($isModOffline('requests') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'approver_admin', 'dispatcher'])): ?>
+                <?php if (in_array($userRole, ['admin', 'approver_admin', 'dispatcher']) && $canShow('approvals')): ?>
                     <a href="<?= base_url('approvals') ?>" class="sidebar-link d-flex align-items-center justify-content-between <?= strpos(uri_string(), 'approvals') === 0 ? 'active' : '' ?>">
-                        <span><i class="fa-solid fa-stamp"></i> Approvals &amp; 4h Escalation</span>
-                        <?php if ($pendingApprovalsBadge > 0): ?>
-                            <span class="badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 2px 7px;" title="<?= $pendingApprovalsBadge ?> pending requests awaiting action"><?= $pendingApprovalsBadge ?></span>
+                        <i class="fa-solid fa-stamp"></i>
+                        <span class="link-label">Approvals &amp; 4h Escalation</span>
+                        <?php if ($isModOffline('approvals') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php elseif ($pendingApprovalsBadge > 0): ?>
+                            <span class="badge rounded-pill bg-danger ms-auto" style="font-size: 0.65rem; padding: 2px 7px;" title="<?= $pendingApprovalsBadge ?> pending requests awaiting action"><?= $pendingApprovalsBadge ?></span>
                         <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
                 <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
-                    <a href="<?= base_url('dispatch') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch') === 0 && strpos(uri_string(), 'calendar') === false ? 'active' : '' ?>">
-                        <i class="fa-solid fa-truck-fast"></i> Dispatch Console
-                    </a>
-                    <a href="<?= base_url('dispatch/calendar') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch/calendar') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-calendar-days"></i> Allocation Calendar
-                    </a>
+                    <?php if ($canShow('dispatch')): ?>
+                        <a href="<?= base_url('dispatch') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch') === 0 && strpos(uri_string(), 'calendar') === false ? 'active' : '' ?>">
+                            <i class="fa-solid fa-truck-fast"></i> <span class="link-label">Dispatch Console</span>
+                            <?php if ($isModOffline('dispatch') && $userRole === 'admin'): ?>
+                                <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                            <?php endif; ?>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($canShow('dispatch_calendar')): ?>
+                        <a href="<?= base_url('dispatch/calendar') ?>" class="sidebar-link <?= strpos(uri_string(), 'dispatch/calendar') === 0 ? 'active' : '' ?>">
+                            <i class="fa-solid fa-calendar-days"></i> <span class="link-label">Allocation Calendar</span>
+                            <?php if ($isModOffline('dispatch_calendar') && $userRole === 'admin'): ?>
+                                <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                            <?php endif; ?>
+                        </a>
+                    <?php endif; ?>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'guard', 'auditor', 'approver_admin']) && $canShow('tickets')): ?>
                     <a href="<?= base_url('tickets') ?>" class="sidebar-link <?= strpos(uri_string(), 'tickets') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-ticket"></i> Driver's Trip Tickets (e-DTT)
+                        <i class="fa-solid fa-ticket"></i> <span class="link-label">Driver's Trip Tickets (e-DTT)</span>
+                        <?php if ($isModOffline('tickets') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'guard', 'dispatcher', 'approver_admin']) && $canShow('gate')): ?>
                     <a href="<?= base_url('gate') ?>" class="sidebar-link <?= strpos(uri_string(), 'gate') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-shield-halved"></i> Gate QR Checkpoint
+                        <i class="fa-solid fa-shield-halved"></i> <span class="link-label">Gate QR Checkpoint</span>
+                        <?php if ($isModOffline('gate') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
                 </div><!-- /nav-group workflow -->
@@ -1160,21 +1212,30 @@
                 </button>
                 <div class="nav-group" data-nav-group-body="safety">
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor', 'approver_admin']) && $canShow('safety')): ?>
                     <a href="<?= base_url('safety') ?>" class="sidebar-link <?= strpos(uri_string(), 'safety') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-clipboard-check"></i> BLOWBAGETS Safety Checks
+                        <i class="fa-solid fa-clipboard-check"></i> <span class="link-label">BLOWBAGETS Safety Checks</span>
+                        <?php if ($isModOffline('safety') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin']) && $canShow('pir')): ?>
                     <a href="<?= base_url('pir') ?>" class="sidebar-link <?= strpos(uri_string(), 'pir') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> Mechanic PIR Queue
+                        <i class="fa-solid fa-screwdriver-wrench"></i> <span class="link-label">Mechanic PIR Queue</span>
+                        <?php if ($isModOffline('pir') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'auditor', 'approver_admin']) && $canShow('rfid')): ?>
                     <a href="<?= base_url('rfid') ?>" class="sidebar-link <?= strpos(uri_string(), 'rfid') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-credit-card"></i> Tollway RFID Cards
+                        <i class="fa-solid fa-credit-card"></i> <span class="link-label">Tollway RFID Cards</span>
+                        <?php if ($isModOffline('rfid') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
                 </div><!-- /nav-group safety -->
@@ -1188,25 +1249,44 @@
                     Fleet Assets &amp; Infrastructure <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
                 <div class="nav-group" data-nav-group-body="assets">
-                <a href="<?= base_url('vehicles') ?>" class="sidebar-link <?= strpos(uri_string(), 'vehicles') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-truck"></i> Vehicle Fleet (5K PMS)
-                </a>
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
+                <?php if ($canShow('vehicles')): ?>
+                    <a href="<?= base_url('vehicles') ?>" class="sidebar-link <?= strpos(uri_string(), 'vehicles') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-truck"></i> <span class="link-label">Vehicle Fleet (5K PMS)</span>
+                        <?php if ($isModOffline('vehicles') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin']) && $canShow('drivers')): ?>
                     <a href="<?= base_url('drivers') ?>" class="sidebar-link <?= strpos(uri_string(), 'drivers') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-id-card"></i> Driver Personnel
+                        <i class="fa-solid fa-id-card"></i> <span class="link-label">Driver Personnel</span>
+                        <?php if ($isModOffline('drivers') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
-                <a href="<?= base_url('tracking') ?>" class="sidebar-link <?= uri_string() === 'tracking' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-satellite-dish"></i> Live GPS Radar
-                </a>
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
+                <?php if ($canShow('tracking')): ?>
+                    <a href="<?= base_url('tracking') ?>" class="sidebar-link <?= uri_string() === 'tracking' ? 'active' : '' ?>">
+                        <i class="fa-solid fa-satellite-dish"></i> <span class="link-label">Live GPS Radar</span>
+                        <?php if ($isModOffline('tracking') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin']) && $canShow('fuel')): ?>
                     <a href="<?= base_url('fuel') ?>" class="sidebar-link <?= strpos(uri_string(), 'fuel') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-gas-pump"></i> Fuel Records
+                        <i class="fa-solid fa-gas-pump"></i> <span class="link-label">Fuel Records</span>
+                        <?php if ($isModOffline('fuel') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
-                <?php if (in_array($userRole, ['admin', 'maintenance', 'approver_admin'])): ?>
+                <?php if (in_array($userRole, ['admin', 'maintenance', 'approver_admin']) && $canShow('maintenance')): ?>
                     <a href="<?= base_url('maintenance') ?>" class="sidebar-link <?= strpos(uri_string(), 'maintenance') === 0 ? 'active' : '' ?>">
-                        <i class="fa-solid fa-wrench"></i> Service Orders &amp; PMS
+                        <i class="fa-solid fa-wrench"></i> <span class="link-label">Service Orders &amp; PMS</span>
+                        <?php if ($isModOffline('maintenance') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
                     </a>
                 <?php endif; ?>
                 </div><!-- /nav-group assets -->
@@ -1220,14 +1300,24 @@
                     COA &amp; Regulatory Compliance <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
                 <div class="nav-group" data-nav-group-body="compliance">
-                <a href="<?= base_url('audit') ?>" class="sidebar-link <?= uri_string() === 'audit' ? 'active' : '' ?>">
-                    <i class="fa-solid fa-scale-balanced"></i> COA Compliance &amp; Audits
-                </a>
-                <a href="<?= base_url('compliance') ?>" class="sidebar-link <?= strpos(uri_string(), 'compliance') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-file-shield"></i> Compliance Portal (Form B)
-                </a>
+                <?php if ($canShow('audit')): ?>
+                    <a href="<?= base_url('audit') ?>" class="sidebar-link <?= uri_string() === 'audit' ? 'active' : '' ?>">
+                        <i class="fa-solid fa-scale-balanced"></i> <span class="link-label">COA Compliance &amp; Audits</span>
+                        <?php if ($isModOffline('audit') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
+                <?php if ($canShow('compliance')): ?>
+                    <a href="<?= base_url('compliance') ?>" class="sidebar-link <?= strpos(uri_string(), 'compliance') === 0 ? 'active' : '' ?>">
+                        <i class="fa-solid fa-file-shield"></i> <span class="link-label">Compliance Portal (Form B)</span>
+                        <?php if ($isModOffline('compliance') && $userRole === 'admin'): ?>
+                            <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
                 <a href="<?= base_url('audit/logs') ?>" class="sidebar-link <?= strpos(uri_string(), 'audit/logs') === 0 ? 'active' : '' ?>">
-                    <i class="fa-solid fa-clock-rotate-left"></i> System Audit Trail
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span class="link-label">System Audit Trail</span>
                 </a>
                 </div><!-- /nav-group compliance -->
             <?php endif; ?>
@@ -1238,13 +1328,20 @@
             <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin'])): ?>
                 <div class="nav-section-title">Administration &amp; Architecture</div>
                 <a href="<?= base_url('admin/flowchart') ?>" class="sidebar-link <?= strpos(uri_string(), 'admin/flowchart') === 0 ? 'active' : '' ?>" title="System Architecture Flowchart &amp; Module Navigations">
-                    <i class="fa-solid fa-diagram-project"></i> Flowchart &amp; Navigations
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span class="link-label">Flowchart &amp; Navigations</span>
                     <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(16, 185, 129, 0.2); color: #34d399; letter-spacing: 0.06em;">VISUAL</span>
                 </a>
                 <?php if ($userRole === 'admin'): ?>
+                <a href="<?= base_url('admin/modules') ?>" class="sidebar-link <?= strpos(uri_string(), 'admin/modules') === 0 ? 'active' : '' ?>" title="Activate or deactivate system functions and menu items across roles">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span class="link-label">Module Controls</span>
+                    <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(245, 158, 11, 0.2); color: #fbbf24; letter-spacing: 0.04em;">GOVERN</span>
+                </a>
                 <a href="<?= base_url('users') ?>" class="sidebar-link <?= strpos(uri_string(), 'users') === 0 ? 'active' : '' ?>" title="Provision and manage user accounts for every role">
-                    <i class="fa-solid fa-users-gear"></i> User Accounts
-                    <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; letter-spacing: 0.06em;">SUPER ADMIN</span>
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span class="link-label">User Accounts</span>
+                    <span class="badge ms-auto" style="font-size: 0.58rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; letter-spacing: 0.04em;">SUPER ADMIN</span>
                 </a>
                 <?php endif; ?>
             <?php endif; ?>

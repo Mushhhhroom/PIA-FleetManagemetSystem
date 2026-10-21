@@ -23,8 +23,27 @@ class RoleFilter implements FilterInterface
 
         $userRole = $session->get('user_role') ?? 'dispatcher';
 
-        // 2. Drivers and Guards have dedicated specialized operational interfaces
+        // 2. Dynamic Super Admin Module & Function Deactivation Guard (Feature Flagging & Bug Containment)
         $uri = $request->getUri()->getPath();
+        if ($userRole !== 'admin') {
+            $matchedModule = \App\Services\ModuleControlService::findModuleByUri($uri);
+            if ($matchedModule && !\App\Services\ModuleControlService::isModuleEnabled($matchedModule['module_key'], $userRole)) {
+                $reason = \App\Services\ModuleControlService::getMaintenanceReason($matchedModule['module_key']);
+                $landing = match ($userRole) {
+                    'driver'         => '/driver/trips',
+                    'guard'          => '/gate',
+                    'maintenance'    => '/maintenance',
+                    'dispatcher'     => '/dispatch',
+                    'requestor'      => '/requests',
+                    'approver_admin' => '/approvals',
+                    'auditor'        => '/audit',
+                    default          => '/',
+                };
+                return redirect()->to($landing)->with('error', "Module Notice: {$matchedModule['module_name']} is temporarily deactivated by the Super Admin for maintenance/bug fixing. Reason: {$reason}");
+            }
+        }
+
+        // 3. Drivers and Guards have dedicated specialized operational interfaces
         if ($userRole === 'driver') {
             // 'safety' = BLOWBAGETS checklist (FR-5.1); 'mfa'/'notif' = account services
             $allowed = ['driver', 'logout', 'api', 'tickets', 'safety', 'mfa', 'notif'];

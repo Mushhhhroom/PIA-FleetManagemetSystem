@@ -30,8 +30,10 @@ $routes->group('api/v1', static function ($routes) {
     $routes->get('tracking/(:num)/trail', 'ApiController::getVehicleTrail/$1');
     $routes->post('tracking/simulate-step', 'ApiController::simulateStep');
 
-    // Route Geometry & Road Distance Calculation API
+    // Route Geometry, Geocoding & Map Provider Configuration API
     $routes->match(['get', 'post'], 'route', 'ApiController::calculateRoute');
+    $routes->get('geocode', 'ApiController::geocode');
+    $routes->get('map/config', 'ApiController::getMapConfig');
 
     // Telemetry Ingestion & Log History
     $routes->get('telemetry', 'ApiController::getTelemetry');
@@ -87,6 +89,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('driver/trips', 'DriverController::mobileApp');
     $routes->post('driver/status', 'DriverController::updateDutyStatus');
     $routes->post('driver/incident', 'DriverController::reportIncident');
+    $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
+    $routes->post('driver/depart-dest', 'DriverController::departDestination');
 
     // =========================================================================
     // PHILIPPINE INFORMATION AGENCY - MOTORPOOL FLEET WORKFLOW (BRD & SDD)
@@ -157,6 +161,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // FR-2.2 — Interactive Dispatch Allocation Calendar (shared anti-double-booking view)
     $routes->get('dispatch/calendar', 'DispatchController::calendar', ['filter' => 'role:admin,dispatcher,approver_admin']);
     $routes->get('dispatch/calendar/feed', 'DispatchController::calendarFeed', ['filter' => 'role:admin,dispatcher,approver_admin']);
+    $routes->post('dispatch/calendar/update-allocation', 'DispatchController::updateAllocation', ['filter' => 'role:admin,dispatcher,approver_admin']);
 
     // FR-5.1 / FR-5.2 — Mandatory BLOWBAGETS pre-trip safety checklist
     $routes->group('', ['filter' => 'role:admin,dispatcher,driver,auditor,approver_admin'], static function ($routes) {
@@ -194,6 +199,15 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('(:num)/toggle', 'UserController::toggle/$1');
     });
 
+    // Super Admin Module & Menu Controls — SUPER ADMIN ONLY
+    $routes->group('admin/modules', ['filter' => 'role:admin'], static function ($routes) {
+        $routes->get('', 'Admin\ModuleControlController::index');
+        $routes->post('toggle', 'Admin\ModuleControlController::toggle');
+        $routes->post('toggle-role', 'Admin\ModuleControlController::toggleRole');
+        $routes->post('update-reason', 'Admin\ModuleControlController::updateReason');
+        $routes->post('reset', 'Admin\ModuleControlController::resetDefaults');
+    });
+
     // Flowchart and System Visualizer — Super Admin, Motorpool Dispatcher & Tier 2 Approver
     $routes->get('admin/flowchart', 'UserController::flowchart', ['filter' => 'role:admin,dispatcher,approver_admin']);
 
@@ -216,5 +230,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
 $routes->group('api/v1', static function ($routes) {
     $routes->post('driver/fuel', 'Api\FuelApi::log');
     $routes->post('driver/incident', 'DriverController::reportIncident');
+    $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
+    $routes->post('driver/depart-dest', 'DriverController::departDestination');
     $routes->match(['get', 'post'], 'gps/ping', 'Api\GpsApi::ping');
 });
