@@ -105,7 +105,8 @@ $drivers     = $drivers ?? [];
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="form-label small fw-semibold text-dark mb-0">Official Destination / Location <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-1" id="vrsRouteMetrics" style="display: none !important;">
+                            <div class="d-flex gap-1 align-items-center" id="vrsRouteMetrics" style="display: none !important;">
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle mono" style="font-size: 0.65rem;"><i class="fa-solid fa-map-location-dot me-1"></i>Google Maps</span>
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" id="vrsDistBadge" style="font-size: 0.68rem;">0.0 km</span>
                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle mono" id="vrsEtaBadge" style="font-size: 0.68rem;">0 min ETA</span>
                             </div>
@@ -121,14 +122,21 @@ $drivers     = $drivers ?? [];
                             <button type="button" class="btn btn-xs btn-light border py-0 px-2 vrs-landmark-chip" style="font-size: 0.68rem;" data-dest="NAIA Terminal 3, Pasay City">NAIA Terminal 3</button>
                         </div>
 
-                        <!-- Live OSRM Road Route Preview Map -->
+                        <!-- Live Google Maps Road Route Preview Map -->
                         <div class="rounded-3 border overflow-hidden mt-2" id="vrsMapWrapper" style="background: #f8fafc;">
-                            <div id="vrsRoutePreviewMap" style="height: 185px; width: 100%; z-index: 1;"></div>
+                            <div id="vrsRoutePreviewMap" style="height: 200px; width: 100%; z-index: 1;"></div>
                             <div class="px-3 py-1 bg-white border-top d-flex justify-content-between align-items-center small" style="font-size: 0.72rem;">
                                 <span id="vrsRouteSummary" class="text-muted">
-                                    <i class="fa-solid fa-route text-primary me-1"></i> Select or type a destination above to preview the road-snapped route from PIA Central Office.
+                                    <i class="fa-solid fa-route text-primary me-1"></i> Select or type an event location above to preview the route from PIA Central Office.
                                 </span>
-                                <span class="mono text-secondary" style="font-size: 0.65rem;">OSRM Keyless Navigation</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a id="vrsGoogleMapsLink" href="#" target="_blank" rel="noopener" class="btn btn-xs btn-outline-danger py-0 px-2 fw-semibold" style="font-size: 0.68rem; display: none;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Google Maps
+                                    </a>
+                                    <span class="mono text-muted" style="font-size: 0.65rem;">
+                                        <i class="fa-solid fa-map-location-dot text-danger me-1"></i>Google Maps Engine
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -327,9 +335,11 @@ document.addEventListener('DOMContentLoaded', function() {
             attributionControl: false
         }).setView([originLat, originLng], 12);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            subdomains: 'abcd'
+        // Google Maps Primary Tile Layer
+        const googleVrsLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['0', '1', '2', '3'],
+            attribution: '&copy; Google Maps'
         }).addTo(vrsMap);
 
         const vrsLayerGroup = L.featureGroup().addTo(vrsMap);
@@ -389,6 +399,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('vrsDistBadge').innerText = `${data.distance_km} km one-way (${(data.distance_km * 2).toFixed(1)} km RT)`;
                 document.getElementById('vrsEtaBadge').innerText  = `~${data.duration_min} min ETA`;
                 document.getElementById('vrsRouteSummary').innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> Road route verified: <strong>${data.distance_km} km</strong> from PIA Central Office (~${data.duration_min} mins driving).`;
+                const gLink = document.getElementById('vrsGoogleMapsLink');
+                if (gLink) {
+                    gLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q + ', Philippines');
+                    gLink.style.display = 'inline-block';
+                }
             } catch (err) {
                 console.warn('Route preview lookup failed:', err);
             }

@@ -173,9 +173,48 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-12">
-                        <label class="text-muted small d-block">Official Destination</label>
-                        <div class="fw-semibold text-dark fs-6">
+                        <label class="text-muted small d-block">Official Destination / Event Location</label>
+                        <div class="fw-semibold text-dark fs-6 mb-2">
                             <i class="fa-solid fa-location-dot text-danger me-2"></i><?= esc($request['destination']) ?>
+                        </div>
+
+                        <!-- Google Maps Event Location & Travel Corridor Card -->
+                        <div class="rounded-3 border overflow-hidden mt-2" style="background: #f8fafc;">
+                            <div class="p-2 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle mono" style="font-size: 0.68rem;">
+                                        <i class="fa-solid fa-map-location-dot me-1"></i> Google Maps
+                                    </span>
+                                    <span class="small fw-semibold text-dark" style="font-size: 0.75rem;">Event Location &amp; Travel Corridor</span>
+                                </div>
+                                <div class="d-flex gap-1 align-items-center flex-wrap">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle mono" id="vrsShowDistBadge" style="font-size: 0.68rem;">-- km</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle mono" id="vrsShowEtaBadge" style="font-size: 0.68rem;">-- min ETA</span>
+                                    <a id="vrsShowGoogleLink"
+                                       href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($request['destination'] . ', Philippines') ?>"
+                                       target="_blank" rel="noopener"
+                                       class="btn btn-xs btn-outline-danger py-1 px-2 fw-semibold text-decoration-none"
+                                       style="font-size: 0.68rem;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> View on Google Maps
+                                    </a>
+                                    <a id="vrsShowDirectionsLink"
+                                       href="https://www.google.com/maps/dir/?api=1&origin=14.657200,121.045000&destination=<?= urlencode($request['destination'] . ', Philippines') ?>&travelmode=driving"
+                                       target="_blank" rel="noopener"
+                                       class="btn btn-xs btn-light border py-1 px-2 fw-semibold text-decoration-none"
+                                       style="font-size: 0.68rem;">
+                                        <i class="fa-solid fa-diamond-turn-right text-primary me-1"></i> Directions
+                                    </a>
+                                </div>
+                            </div>
+                            <div id="vrsShowMap" style="height: 220px; width: 100%; z-index: 1;"></div>
+                            <div class="px-3 py-1 bg-white border-top d-flex justify-content-between align-items-center small" style="font-size: 0.72rem;">
+                                <span class="text-muted" id="vrsShowSummary">
+                                    <i class="fa-solid fa-route text-primary me-1"></i> Origin: <strong>PIA Central Office Motorpool</strong> &rarr; Event: <strong><?= esc($request['destination']) ?></strong>
+                                </span>
+                                <span class="mono text-muted" style="font-size: 0.65rem;">
+                                    Google Maps Routing Engine
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12">
@@ -514,4 +553,82 @@
     </div>
 <?php endif; ?>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const vrsShowMapEl = document.getElementById('vrsShowMap');
+    if (!vrsShowMapEl || typeof L === 'undefined') return;
+
+    const originLat   = 14.657200;
+    const originLng   = 121.045000;
+    const destination = <?= json_encode($request['destination'] ?? '') ?>;
+
+    const vrsShowMap = L.map('vrsShowMap', {
+        zoomControl: true,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: true,
+        touchZoom: true
+    }).setView([originLat, originLng], 12);
+
+    // Google Maps Primary Tile Layer
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['0', '1', '2', '3'],
+        attribution: '&copy; Google Maps'
+    }).addTo(vrsShowMap);
+
+    const layerGroup = L.featureGroup().addTo(vrsShowMap);
+
+    const hqIcon = L.divIcon({
+        className: 'vrs-hq-pin',
+        html: `<div title="PIA Central Office Motorpool" style="background:#0f172a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:11px;"><i class="fa-solid fa-building-shield"></i></div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+    });
+    L.marker([originLat, originLng], { icon: hqIcon })
+        .bindPopup('<strong>Origin: PIA Central Office Motorpool</strong><br><span class="small text-muted">Visayas Ave, Quezon City</span>')
+        .addTo(layerGroup);
+
+    if (destination && destination.trim() !== '') {
+        fetch('<?= base_url('api/v1/route') ?>?destination=' + encodeURIComponent(destination))
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== 'success') return;
+
+                if (data.destination && data.destination.lat && data.destination.lng) {
+                    const destIcon = L.divIcon({
+                        className: 'vrs-dest-pin',
+                        html: `<div title="${destination}" style="background:#dc2626;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:12px;"><i class="fa-solid fa-flag-checkered"></i></div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+                    L.marker([data.destination.lat, data.destination.lng], { icon: destIcon })
+                        .bindPopup(`<strong>Event Location</strong><br><span class="small text-dark">${destination}</span>`)
+                        .addTo(layerGroup);
+                }
+
+                if (data.leaflet_coords && data.leaflet_coords.length > 1) {
+                    L.polyline(data.leaflet_coords, {
+                        color: '#2563eb',
+                        weight: 4,
+                        opacity: 0.9,
+                        lineJoin: 'round'
+                    }).addTo(layerGroup);
+                }
+
+                vrsShowMap.fitBounds(layerGroup.getBounds().pad(0.2));
+                setTimeout(() => { if (typeof vrsShowMap !== 'undefined') vrsShowMap.invalidateSize(); }, 350);
+
+                const distBadge = document.getElementById('vrsShowDistBadge');
+                const etaBadge  = document.getElementById('vrsShowEtaBadge');
+                if (distBadge) distBadge.innerText = `${data.distance_km} km`;
+                if (etaBadge)  etaBadge.innerText  = `~${data.duration_min} min ETA`;
+            })
+            .catch(err => console.warn('VRS event map route load error:', err));
+    }
+});
+</script>
 <?= $this->endSection() ?>

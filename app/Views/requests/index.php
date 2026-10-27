@@ -109,8 +109,16 @@
                                 <div class="text-muted" style="font-size: 0.72rem;">Filed by: <?= esc($r['requestor_name']) ?></div>
                             </td>
                             <td>
-                                <div class="fw-medium text-dark small text-truncate" style="max-width: 240px;" title="<?= esc($r['destination']) ?>">
-                                    <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($r['destination']) ?>
+                                <div class="d-flex align-items-center justify-content-between gap-1" style="max-width: 250px;">
+                                    <span class="fw-medium text-dark small text-truncate" title="<?= esc($r['destination']) ?>">
+                                        <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($r['destination']) ?>
+                                    </span>
+                                    <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($r['destination'] . ', Philippines') ?>"
+                                       target="_blank" rel="noopener"
+                                       class="text-danger text-opacity-75 flex-shrink-0"
+                                       title="View event location on Google Maps">
+                                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.68rem;"></i>
+                                    </a>
                                 </div>
                                 <div class="text-muted small text-truncate" style="max-width: 240px; font-size: 0.72rem;" title="<?= esc($r['purpose']) ?>">
                                     <?= esc($r['purpose']) ?>
