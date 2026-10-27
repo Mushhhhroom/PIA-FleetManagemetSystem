@@ -638,15 +638,25 @@ class ApiController extends BaseController
     public function getMapConfig()
     {
         $routeService = new RouteService();
+        $googleKey    = trim((string) env('GOOGLE_MAPS_API_KEY', ''));
 
         return $this->corsResponse([
-            'status'     => 'success',
-            'origin'     => [
+            'status'      => 'success',
+            'origin'      => [
                 'lat'   => RouteService::ORIGIN_LAT,
                 'lng'   => RouteService::ORIGIN_LNG,
                 'label' => RouteService::ORIGIN_LABEL,
             ],
-            'api_status' => $routeService->getApiStatus(),
+            'api_status'  => $routeService->getApiStatus(),
+            'google_maps' => [
+                'has_api_key' => $routeService->hasValidKey($googleKey),
+                'tile_layers' => [
+                    'roadmap'   => 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+                    'satellite' => 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+                    'hybrid'    => 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+                    'terrain'   => 'https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+                ],
+            ],
         ]);
     }
 

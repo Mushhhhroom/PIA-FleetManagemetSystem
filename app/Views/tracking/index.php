@@ -26,7 +26,7 @@ $apiStatus = $apiStatus ?? [];
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
         <div class="mono" style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
-            PIA Motorpool &bull; OpenStreetMap Telematics
+            PIA Motorpool &bull; Google Maps Telematics Radar
         </div>
         <h1 class="page-title mb-1">Live GPS Fleet Radar</h1>
         <p class="text-muted small mb-0">Real-time government vehicle locations, active e-DTT assignments, and GPS breadcrumb trails.</p>
@@ -36,8 +36,10 @@ $apiStatus = $apiStatus ?? [];
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <!-- Map View Selector -->
         <div class="btn-group btn-group-sm" role="group" aria-label="Map Layer View">
-            <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnMapRoad" onclick="setMapLayer('street')">Street Map</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapSat" onclick="setMapLayer('satellite')">Satellite</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary active" id="btnMapGoogleRoad" onclick="setMapLayer('google_road')"><i class="fa-solid fa-map me-1 text-primary"></i>Google Maps</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapGoogleSat" onclick="setMapLayer('google_sat')"><i class="fa-solid fa-satellite me-1 text-info"></i>Hybrid</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapGoogleTerrain" onclick="setMapLayer('google_terrain')"><i class="fa-solid fa-mountain me-1 text-secondary"></i>Terrain</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnMapOsm" onclick="setMapLayer('osm')">OSM</button>
         </div>
 
         <!-- Auto-Stream Telemetry Toggle -->
@@ -184,17 +186,30 @@ $apiStatus = $apiStatus ?? [];
     let isStreamActive = true;
     let streamTimer = null;
 
-    // OpenStreetMap / CartoDB Voyager Street Layer (Keyless, Zero API Key Errors)
-    const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // Google Maps Primary Tile Layers (Roadmap, Satellite Hybrid, Terrain)
+    const googleRoadLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['0', '1', '2', '3'],
+        attribution: '&copy; Google Maps'
+    });
+
+    const googleHybridLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['0', '1', '2', '3'],
+        attribution: '&copy; Google Maps'
+    });
+
+    const googleTerrainLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['0', '1', '2', '3'],
+        attribution: '&copy; Google Maps'
+    });
+
+    // Fallback OpenStreetMap / CartoDB Layer
+    const osmLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd',
         attribution: '&copy; OpenStreetMap &copy; CARTO'
-    });
-
-    // Esri World Imagery Satellite Layer
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        attribution: '&copy; Esri World Imagery'
     });
 
     const map = L.map('telematicsMap', {
@@ -202,7 +217,8 @@ $apiStatus = $apiStatus ?? [];
         attributionControl: true
     }).setView([14.6572, 121.0450], 12);
 
-    streetLayer.addTo(map);
+    let activeTileLayer = googleRoadLayer;
+    activeTileLayer.addTo(map);
 
     let markers = {};
     const markerGroup = L.featureGroup().addTo(map);
@@ -222,16 +238,36 @@ $apiStatus = $apiStatus ?? [];
         .addTo(map);
 
     function setMapLayer(type) {
-        document.getElementById('btnMapRoad').classList.toggle('active', type === 'street');
-        document.getElementById('btnMapSat').classList.toggle('active', type === 'satellite');
+        ['btnMapGoogleRoad', 'btnMapGoogleSat', 'btnMapGoogleTerrain', 'btnMapOsm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        });
 
-        if (type === 'satellite') {
-            map.removeLayer(streetLayer);
-            satelliteLayer.addTo(map);
-        } else {
-            map.removeLayer(satelliteLayer);
-            streetLayer.addTo(map);
+        if (activeTileLayer) {
+            map.removeLayer(activeTileLayer);
         }
+
+        switch (type) {
+            case 'google_sat':
+                activeTileLayer = googleHybridLayer;
+                document.getElementById('btnMapGoogleSat')?.classList.add('active');
+                break;
+            case 'google_terrain':
+                activeTileLayer = googleTerrainLayer;
+                document.getElementById('btnMapGoogleTerrain')?.classList.add('active');
+                break;
+            case 'osm':
+                activeTileLayer = osmLayer;
+                document.getElementById('btnMapOsm')?.classList.add('active');
+                break;
+            case 'google_road':
+            default:
+                activeTileLayer = googleRoadLayer;
+                document.getElementById('btnMapGoogleRoad')?.classList.add('active');
+                break;
+        }
+
+        activeTileLayer.addTo(map);
     }
 
     function getPinColor(status) {

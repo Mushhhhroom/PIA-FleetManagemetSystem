@@ -583,9 +583,10 @@ document.addEventListener('DOMContentLoaded', function() {
             attributionControl: false
         }).setView([originLat, originLng], 12);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            subdomains: 'abcd'
+        L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['0', '1', '2', '3'],
+            attribution: '&copy; Google Maps'
         }).addTo(tktMap);
 
         const routeGroup = L.featureGroup().addTo(tktMap);

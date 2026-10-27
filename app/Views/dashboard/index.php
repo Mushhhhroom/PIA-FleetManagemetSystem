@@ -430,16 +430,12 @@ $officeRequests        = $officeRequests ?? [];
             attributionControl: true
         }).setView([HQ_LAT, HQ_LNG], 12);
 
-        // Standard OpenStreetMap Tile Layer (100% Free, Zero API Key errors)
-        const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        // Google Maps Primary Tile Layer
+        const googleLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['0', '1', '2', '3'],
+            attribution: '&copy; Google Maps'
         }).addTo(map);
-
-        // Fallback tile handler if network drops
-        osmLayer.on('tileerror', function(error, tile) {
-            console.warn('Map tile failed to load, maintaining local fallback.');
-        });
 
         // Add PIA Central Office Compound Headquarters Pin
         const hqIcon = L.divIcon({

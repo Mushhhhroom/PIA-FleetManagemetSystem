@@ -857,7 +857,8 @@ $isSectionBCompleted = ($status === 'completed') || (!empty($activeTicket['drive
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Authorized Destination &amp; Navigation</span>
-                            <div class="d-flex gap-1">
+                            <div class="d-flex gap-1 align-items-center">
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 mono" style="font-size: 0.65rem;"><i class="fa-solid fa-map-location-dot me-1"></i>Google Maps</span>
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mono" id="driverNavDistance" style="font-size: 0.68rem;">-- km</span>
                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mono" id="driverNavEta" style="font-size: 0.68rem;">-- min</span>
                             </div>
@@ -2360,9 +2361,11 @@ $isSectionBCompleted = ($status === 'completed') || (!empty($activeTicket['drive
                 touchZoom: true
             }).setView([originLat, originLng], 13);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
-                subdomains: 'abcd'
+            // Google Maps Primary Driving Layer
+            const googleDriverLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['0', '1', '2', '3'],
+                attribution: '&copy; Google Maps'
             }).addTo(driverMap);
 
             const navLayerGroup = L.featureGroup().addTo(driverMap);

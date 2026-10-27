@@ -173,14 +173,14 @@ class RouteService
         $hasOrs    = $this->hasValidKey($this->orsApiKey);
 
         return [
-            'active_provider'        => $hasGoogle ? 'google_maps_with_osrm_fallback' : ($hasOrs ? 'openrouteservice_with_osrm_fallback' : 'osrm_openstreetmap_keyless'),
-            'tile_provider'          => 'OpenStreetMap / CartoDB Voyager & Esri World Imagery (Keyless)',
-            'routing_engine'         => $this->osrmUrl,
-            'geocoding_engine'       => 'PIA Philippine Landmark Gazetteer + OpenStreetMap Nominatim',
+            'active_provider'        => $hasGoogle ? 'google_maps_directions' : ($hasOrs ? 'openrouteservice_with_osrm_fallback' : 'osrm_openstreetmap_keyless'),
+            'tile_provider'          => 'Google Maps Roadmap & Satellite + CartoDB Voyager / OSM',
+            'routing_engine'         => $hasGoogle ? 'Google Maps Directions API (Primary)' : $this->osrmUrl,
+            'geocoding_engine'       => $hasGoogle ? 'Google Maps Geocoding API + PIA Gazetteer' : 'PIA Philippine Landmark Gazetteer + OpenStreetMap Nominatim',
             'google_maps_configured' => $hasGoogle,
             'ors_configured'         => $hasOrs,
             'telematics_auth_mode'   => $this->hasValidKey($this->telematicsApiKey) ? 'api_key_or_session' : 'open_internal',
-            'api_key_errors'         => 'none (keyless fallback active)',
+            'api_key_errors'         => $hasGoogle ? 'none (Google Maps API active)' : 'none (Google Maps tiles & keyless engine active)',
         ];
     }
 
@@ -361,7 +361,15 @@ class RouteService
 
         $client = $this->getHttpClient(6, 4);
 
-        // 1. Primary: OSRM Full-Resolution Road Geometry + Turn-by-Turn Steps
+        // 1. Primary: Google Maps Directions API (when GOOGLE_MAPS_API_KEY is configured)
+        if ($this->hasValidKey($this->googleMapsApiKey)) {
+            $googleRoute = $this->getGoogleMapsRoute($originLat, $originLng, $destLat, $destLng, $includeSteps);
+            if ($googleRoute !== null) {
+                return self::$memoryCache[$cacheKey] = $googleRoute;
+            }
+        }
+
+        // 2. Secondary: OSRM Full-Resolution Road Geometry + Turn-by-Turn Steps
         try {
             $stepsParam = $includeSteps ? 'true' : 'false';
             $url = rtrim($this->osrmUrl, '/') . "/{$originLng},{$originLat};{$destLng},{$destLat}"
@@ -613,6 +621,168 @@ class RouteService
                 'duration_s'    => round((float) ($step['duration'] ?? 0)),
                 'lat'           => isset($loc[1]) ? (float) $loc[1] : null,
                 'lng'           => isset($loc[0]) ? (float) $loc[0] : null,
+            ];
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Queries Google Maps Directions API for routing, duration, distance, and turn steps.
+     *
+     * @return array{
+     *     distance_km: float,
+     *     duration_min: float,
+     *     geometry: list<array{0: float, 1: float}>,
+     *     leaflet_coords: list<array{0: float, 1: float}>,
+     *     steps: list<array<string, mixed>>,
+     *     bearing_deg: float,
+     *     source: string
+     * }|null
+     */
+    protected function getGoogleMapsRoute(
+        float $originLat,
+        float $originLng,
+        float $destLat,
+        float $destLng,
+        bool $includeSteps = true
+    ): ?array {
+        try {
+            $client = $this->getHttpClient(6, 4);
+            $url = 'https://maps.googleapis.com/maps/api/directions/json?' . http_build_query([
+                'origin'      => "{$originLat},{$originLng}",
+                'destination' => "{$destLat},{$destLng}",
+                'mode'        => 'driving',
+                'region'      => 'ph',
+                'key'         => $this->googleMapsApiKey,
+            ]);
+
+            $response = $client->get($url);
+            if ($response->getStatusCode() === 200) {
+                $data = json_decode($response->getBody(), true);
+                if (($data['status'] ?? '') === 'OK' && !empty($data['routes'][0])) {
+                    $route = $data['routes'][0];
+                    $leg   = $route['legs'][0] ?? [];
+
+                    $distM = (float) ($leg['distance']['value'] ?? 0);
+                    $durS  = (float) ($leg['duration']['value'] ?? 0);
+
+                    // Decode overview polyline points into [lat, lng]
+                    $encodedPolyline = (string) ($route['overview_polyline']['points'] ?? '');
+                    $leafletCoords   = self::decodeGooglePolyline($encodedPolyline);
+
+                    // If overview polyline was empty, reconstruct from leg steps
+                    if (empty($leafletCoords) && !empty($leg['steps'])) {
+                        foreach ($leg['steps'] as $st) {
+                            $stepPoly = (string) ($st['polyline']['points'] ?? '');
+                            if ($stepPoly !== '') {
+                                foreach (self::decodeGooglePolyline($stepPoly) as $pt) {
+                                    $leafletCoords[] = $pt;
+                                }
+                            }
+                        }
+                    }
+
+                    // GeoJSON coordinates format: [lng, lat]
+                    $geoJsonCoords = array_map(
+                        static fn(array $pt): array => [(float) $pt[1], (float) $pt[0]],
+                        $leafletCoords
+                    );
+
+                    $steps = $includeSteps ? $this->parseGoogleSteps($leg['steps'] ?? []) : [];
+                    $nextPt = $leafletCoords[1] ?? [$destLat, $destLng];
+
+                    return [
+                        'distance_km'    => round($distM / 1000.0, 2),
+                        'duration_min'   => round($durS / 60.0, 1),
+                        'geometry'       => $geoJsonCoords,
+                        'leaflet_coords' => $leafletCoords,
+                        'steps'          => $steps,
+                        'bearing_deg'    => $this->computeBearing($originLat, $originLng, $nextPt[0], $nextPt[1]),
+                        'source'         => 'google_directions',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silently fall back to OSRM on any Google API error / quota limit
+        }
+
+        return null;
+    }
+
+    /**
+     * Decodes a Google Maps encoded polyline string into an array of [lat, lng] coordinates.
+     *
+     * @param string $encoded
+     * @return list<array{0: float, 1: float}>
+     */
+    public static function decodeGooglePolyline(string $encoded): array
+    {
+        $length = strlen($encoded);
+        $index = 0;
+        $points = [];
+        $lat = 0;
+        $lng = 0;
+
+        while ($index < $length) {
+            $shift = 0;
+            $result = 0;
+            do {
+                $b = ord($encoded[$index++]) - 63;
+                $result |= ($b & 0x1f) << $shift;
+                $shift += 5;
+            } while ($b >= 0x20 && $index < $length);
+            $dlat = (($result & 1) ? ~($result >> 1) : ($result >> 1));
+            $lat += $dlat;
+
+            $shift = 0;
+            $result = 0;
+            do {
+                if ($index >= $length) {
+                    break;
+                }
+                $b = ord($encoded[$index++]) - 63;
+                $result |= ($b & 0x1f) << $shift;
+                $shift += 5;
+            } while ($b >= 0x20 && $index < $length);
+            $dlng = (($result & 1) ? ~($result >> 1) : ($result >> 1));
+            $lng += $dlng;
+
+            $points[] = [round($lat * 1e-5, 6), round($lng * 1e-5, 6)];
+        }
+
+        return $points;
+    }
+
+    /**
+     * Parses Google Directions leg steps into clean turn-by-turn navigation instructions.
+     *
+     * @param array<int, array<string, mixed>> $rawSteps
+     * @return list<array<string, mixed>>
+     */
+    protected function parseGoogleSteps(array $rawSteps): array
+    {
+        $parsed = [];
+        foreach ($rawSteps as $step) {
+            $rawHtml = (string) ($step['html_instructions'] ?? '');
+            $cleanInstruction = strip_tags($rawHtml);
+            $cleanInstruction = html_entity_decode($cleanInstruction, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $cleanInstruction = trim(preg_replace('/\s+/', ' ', $cleanInstruction));
+
+            $maneuver = (string) ($step['maneuver'] ?? '');
+            $distM    = round((float) ($step['distance']['value'] ?? 0));
+            $durS     = round((float) ($step['duration']['value'] ?? 0));
+            $startLoc = $step['start_location'] ?? [];
+
+            $parsed[] = [
+                'instruction'   => $cleanInstruction ?: 'Continue on road',
+                'road_name'     => '',
+                'maneuver_type' => $maneuver ?: 'continue',
+                'modifier'      => $maneuver,
+                'distance_m'    => $distM,
+                'duration_s'    => $durS,
+                'lat'           => isset($startLoc['lat']) ? (float) $startLoc['lat'] : null,
+                'lng'           => isset($startLoc['lng']) ? (float) $startLoc['lng'] : null,
             ];
         }
 
