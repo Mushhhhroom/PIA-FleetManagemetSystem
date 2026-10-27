@@ -17,16 +17,16 @@ class TelemetryModel extends Model
     ];
     protected $useTimestamps = false;
 
-    public function getLatestForVehicle($vehicleId)
+    public function getLatestForVehicle(int|string $vehicleId)
     {
-        return $this->where('vehicle_id', $vehicleId)
+        return $this->where('vehicle_id', (int) $vehicleId)
                     ->orderBy('id', 'DESC')
                     ->first();
     }
 
-    public function getVehicleBreadcrumbs($vehicleId, $limit = 30)
+    public function getVehicleBreadcrumbs(int|string $vehicleId, int $limit = 30)
     {
-        return $this->where('vehicle_id', $vehicleId)
+        return $this->where('vehicle_id', (int) $vehicleId)
                     ->orderBy('id', 'DESC')
                     ->limit($limit)
                     ->findAll();

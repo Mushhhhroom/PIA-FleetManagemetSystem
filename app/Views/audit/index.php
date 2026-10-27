@@ -151,9 +151,9 @@
                             </td>
                             <td>
                                 <div class="mono small" style="font-size: 0.72rem;">
-                                    <?= (float)$t['fuel_balance_start_liters'] ?>L + <?= (float)$t['fuel_purchased_liters'] ?>L - <?= (float)$t['fuel_used_liters'] ?>L = <strong><?= (float)$t['fuel_balance_end_liters'] ?>L</strong>
+                                    <?= (float)$t['fuel_balance_start_liters'] ?>L<?= ((float)($t['fuel_issued_stock_liters'] ?? 0) > 0) ? ' + ' . (float)$t['fuel_issued_stock_liters'] . 'L (stk)' : '' ?> + <?= (float)$t['fuel_purchased_liters'] ?>L - <?= (float)$t['fuel_used_liters'] ?>L = <strong><?= (float)$t['fuel_balance_end_liters'] ?>L</strong>
                                 </div>
-                                <div class="mono text-muted" style="font-size: 0.68rem;">₱<?= number_format((float)$t['fuel_purchased_cost'], 2) ?> purchased</div>
+                                <div class="mono text-muted" style="font-size: 0.68rem;">₱<?= number_format((float)$t['fuel_purchased_cost'], 2) ?> purchased<?php if ((float)($t['toll_expense'] ?? 0) > 0): ?> &bull; ₱<?= number_format((float)$t['toll_expense'], 2) ?> toll<?php endif; ?></div>
                             </td>
                             <td>
                                 <div class="mono small fw-bold">

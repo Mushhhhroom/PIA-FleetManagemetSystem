@@ -76,7 +76,7 @@ class ApiController extends BaseController
      * GET /api/v1/vehicles/(:num)
      * Returns individual vehicle details
      */
-    public function getVehicle($id)
+    public function getVehicle(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->find($id);
@@ -211,7 +211,7 @@ class ApiController extends BaseController
      * GET /api/v1/tracking/(:num)
      * Returns tracking state and active road route for a specific vehicle
      */
-    public function getVehicleTracking($id)
+    public function getVehicleTracking(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->select('vehicles.*,
@@ -270,7 +270,7 @@ class ApiController extends BaseController
      * Returns recent GPS breadcrumb trail coordinates AND active planned road route
      * for drawing both historical trail and forward navigation polylines on the map.
      */
-    public function getVehicleTrail($id)
+    public function getVehicleTrail(int|string $id)
     {
         $limit          = min(200, max(5, (int) ($this->request->getGet('limit') ?: 60)));
         $telemetryModel = new TelemetryModel();

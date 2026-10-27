@@ -100,6 +100,7 @@ class RoleFilter implements FilterInterface
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        unset($request, $response, $arguments);
         // No post-processing needed
     }
 }

@@ -74,7 +74,7 @@ class MaintenanceController extends BaseController
         return redirect()->to('/maintenance')->with('success', "Work order {$refNo} created.");
     }
 
-    public function updateStatus($id)
+    public function updateStatus(int|string $id)
     {
         $maintenanceModel = new MaintenanceModel();
         $vehicleModel = new VehicleModel();
@@ -100,6 +100,21 @@ class MaintenanceController extends BaseController
                 'last_service_date' => date('Y-m-d'),
                 'next_service_km'   => $currentOdo + 10000.00,
             ]);
+
+            // Unlock and reset vehicle PMS status upon maintenance completion (FR-5.3)
+            $pmsModel = new \App\Models\PmsRecordModel();
+            $pms = $pmsModel->where('vehicle_id', $record['vehicle_id'])->first();
+            if ($pms) {
+                $interval = (float)($pms['pms_interval_km'] ?: 5000.00);
+                $pmsModel->update($pms['id'], [
+                    'last_pms_odometer' => $currentOdo,
+                    'next_pms_odometer' => $currentOdo + $interval,
+                    'last_pms_date'     => date('Y-m-d'),
+                    'status'            => 'ok',
+                    'is_locked'         => 0,
+                    'notes'             => 'Serviced via Work Order ' . $record['reference_no'],
+                ]);
+            }
         } elseif ($newStatus === 'in_progress') {
             $vehicleModel->update($record['vehicle_id'], ['status' => 'maintenance']);
         }

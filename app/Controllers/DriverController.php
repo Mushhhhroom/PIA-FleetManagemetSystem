@@ -230,7 +230,7 @@ class DriverController extends BaseController
         return redirect()->to('/drivers')->with('success', 'Driver ' . $data['first_name'] . ' ' . $data['last_name'] . ' registered successfully.');
     }
 
-    public function show($id)
+    public function show(int|string $id)
     {
         $driverModel = new DriverModel();
         $driver = $driverModel->find($id);
@@ -257,7 +257,7 @@ class DriverController extends BaseController
         ]);
     }
 
-    public function edit($id)
+    public function edit(int|string $id)
     {
         $driverModel = new DriverModel();
         $driver = $driverModel->find($id);
@@ -272,7 +272,7 @@ class DriverController extends BaseController
         ]);
     }
 
-    public function update($id)
+    public function update(int|string $id)
     {
         $driverModel = new DriverModel();
         $driver = $driverModel->find($id);
@@ -313,7 +313,7 @@ class DriverController extends BaseController
         return redirect()->to('/drivers/' . $id)->with('success', 'Driver profile updated.');
     }
 
-    public function delete($id)
+    public function delete(int|string $id)
     {
         $driverModel = new DriverModel();
         $driver = $driverModel->find($id);

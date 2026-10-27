@@ -20,11 +20,13 @@ class AddReferenceNameUniqueIndexes extends Migration
 
     public function up()
     {
+        /** @var \CodeIgniter\Database\BaseConnection $db */
+        $db = $this->db;
         foreach ($this->indexes as [$table, $column, $index]) {
-            if (!$this->db->tableExists($table) || !$this->db->fieldExists($column, $table)) {
+            if (!$db->tableExists($table) || !$db->fieldExists($column, $table)) {
                 continue;
             }
-            $exists = $this->db->query(
+            $exists = $db->query(
                 "SELECT COUNT(*) AS c FROM information_schema.STATISTICS
                  WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ? AND non_unique = 0",
                 [$table, $column]
@@ -32,23 +34,25 @@ class AddReferenceNameUniqueIndexes extends Migration
             if ((int) $exists > 0) {
                 continue; // already unique — never stack duplicate constraints
             }
-            $this->db->query("ALTER TABLE `{$table}` ADD UNIQUE `{$index}` (`{$column}`)");
+            $db->query("ALTER TABLE `{$table}` ADD UNIQUE `{$index}` (`{$column}`)");
         }
     }
 
     public function down()
     {
-        foreach ($this->indexes as [$table, $column, $index]) {
-            if (!$this->db->tableExists($table)) {
+        /** @var \CodeIgniter\Database\BaseConnection $db */
+        $db = $this->db;
+        foreach ($this->indexes as [$table, , $index]) {
+            if (!$db->tableExists($table)) {
                 continue;
             }
-            $exists = $this->db->query(
+            $exists = $db->query(
                 "SELECT COUNT(*) AS c FROM information_schema.STATISTICS
                  WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?",
                 [$table, $index]
             )->getRow()->c ?? 0;
             if ((int) $exists > 0) {
-                $this->db->query("ALTER TABLE `{$table}` DROP INDEX `{$index}`");
+                $db->query("ALTER TABLE `{$table}` DROP INDEX `{$index}`");
             }
         }
     }

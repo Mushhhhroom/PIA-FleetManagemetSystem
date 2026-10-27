@@ -19,7 +19,9 @@ $dbName = $argv[5] ?? 'fleet_db';
 $dumpFile = __DIR__ . '/fleet_db_demo.sql';
 
 mysqli_report(MYSQLI_REPORT_OFF);
-$dbh = @new mysqli($host, $user, $pass, '', (int) $port, null, MYSQLI_CLIENT_SSL);
+$dbh = mysqli_init();
+$dbh->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
+@$dbh->real_connect($host, $user, $pass, '', (int) $port, null, MYSQLI_CLIENT_SSL);
 
 if ($dbh->connect_errno) {
     fwrite(STDERR, "CONNECT FAILED [{$dbh->connect_errno}]: {$dbh->connect_error}\n");

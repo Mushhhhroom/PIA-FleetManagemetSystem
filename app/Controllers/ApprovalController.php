@@ -96,7 +96,7 @@ class ApprovalController extends BaseController
         return view('approvals/index', $data);
     }
 
-    public function action($id)
+    public function action(int|string $id)
     {
         $session = session();
         $userRole = $session->get('user_role');
@@ -316,7 +316,7 @@ class ApprovalController extends BaseController
      * this override — otherwise one person could skip the Admin Head's final
      * authority and dispatch the trip alone.
      */
-    public function emergencyOverride($id)
+    public function emergencyOverride(int|string $id)
     {
         $session  = session();
         $userRole = $session->get('user_role');

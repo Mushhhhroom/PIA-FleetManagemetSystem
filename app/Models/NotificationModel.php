@@ -17,17 +17,17 @@ class NotificationModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = '';
 
-    public function getUserNotifications($userId, $limit = 10)
+    public function getUserNotifications(int|string $userId, int $limit = 10)
     {
-        return $this->where('user_id', $userId)
+        return $this->where('user_id', (int) $userId)
                     ->orderBy('id', 'DESC')
                     ->limit($limit)
                     ->findAll();
     }
 
-    public function getUnreadCount($userId)
+    public function getUnreadCount(int|string $userId)
     {
-        return $this->where('user_id', $userId)
+        return $this->where('user_id', (int) $userId)
                     ->where('is_read', 0)
                     ->countAllResults();
     }

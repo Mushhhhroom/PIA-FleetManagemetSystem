@@ -38,7 +38,7 @@ class RfidCardModel extends Model
     public function getLowBalanceCards(): array
     {
         return $this->where('status', 'active')
-                    ->where('balance <', db_escape($this->db, 'low_balance_threshold'), false)
+                    ->where('balance < low_balance_threshold', null, false)
                     ->findAll();
     }
 

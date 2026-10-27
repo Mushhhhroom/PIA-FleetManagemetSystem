@@ -173,7 +173,7 @@ class ComplianceController extends BaseController
                 $this->notificationModel->insert([
                     'user_id'    => $head['id'],
                     'title'      => "REGULATORY EXPIRY ALERT (FR-7.1): {$v['plate_number']}",
-                    'message'    => "{$v['vehicle_code']} {$v['make']} {$v['model']} — {$detail}. Comply before the 30-day alert window closes.",
+                    'message'    => "{$v['vehicle_code']} ({$v['plate_number']}) {$v['make']} {$v['model']} — {$detail}. Comply before the 30-day alert window closes.",
                     'type'       => 'warning',
                     'link'       => '/compliance',
                     'is_read'    => 0,
@@ -253,8 +253,8 @@ class ComplianceController extends BaseController
 
         $rows = $this->ticketModel
             ->select('trip_tickets.*, trip_requests.destination, trip_requests.purpose,
-                      trip_requests.passenger_names, trip_requests.departure_time,
-                      trip_requests.return_time, trip_requests.requestor_name,
+                      trip_requests.passenger_names, trip_requests.departure_time AS requested_departure,
+                      trip_requests.return_time AS requested_return, trip_requests.requestor_name,
                       vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model,
                       drivers.first_name, drivers.last_name, drivers.license_number')
             ->join('trip_requests', 'trip_requests.id = trip_tickets.request_id', 'left')
@@ -310,9 +310,18 @@ class ComplianceController extends BaseController
             ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
             ->where('trip_tickets.created_at >=', $start)
             ->where('trip_tickets.created_at <=', $end)
+            ->where('trip_tickets.status !=', 'cancelled')
             ->where('trip_tickets.total_distance_km >', 0)
             ->orderBy('trip_tickets.fuel_efficiency_kml', 'ASC')
             ->findAll();
+
+        foreach ($rows as &$r) {
+            $dist = (float) $r['total_distance_km'];
+            $fuelCost = (float) ($r['fuel_purchased_cost'] ?? 0);
+            $tollCost = (float) ($r['toll_expense'] ?? 0);
+            $r['cpk'] = $dist > 0 ? round(($fuelCost + $tollCost) / $dist, 2) : 0.00;
+        }
+        unset($r);
 
         return $rows;
     }
@@ -428,7 +437,10 @@ class ComplianceController extends BaseController
     }
 
     /** Printable CNU certificate. */
-    public function certificate($id)
+    /**
+     * @param int|string $id
+     */
+    public function certificate(int|string $id)
     {
         $cert = $this->cnuModel
             ->select('non_usage_certificates.*, vehicles.plate_number, vehicles.vehicle_code,

@@ -113,7 +113,7 @@ class DispatchController extends BaseController
         return view('dispatch/index', $data);
     }
 
-    public function assign($requestId)
+    public function assign(int|string $requestId)
     {
         $request = $this->requestModel->getRequestByIdWithDetails($requestId);
         if (!$request) {
@@ -149,7 +149,7 @@ class DispatchController extends BaseController
         return view('dispatch/assign', $data);
     }
 
-    public function storeAssignment($requestId)
+    public function storeAssignment(int|string $requestId)
     {
         $request = $this->requestModel->getRequestByIdWithDetails($requestId);
         if (!$request || $request['status'] !== 'approved') {
@@ -483,7 +483,7 @@ class DispatchController extends BaseController
     /**
      * Single-click denial for a request with an unavailable/conflicted driver.
      */
-    public function denyDriverConflict($requestId)
+    public function denyDriverConflict(int|string $requestId)
     {
         $request = $this->requestModel->getRequestByIdWithDetails($requestId);
         if (!$request || in_array($request['status'], ['dispatched', 'completed', 'rejected', 'cancelled'], true)) {
@@ -556,8 +556,8 @@ class DispatchController extends BaseController
             );
 
             if (!$check['available']) {
-                $driver = $this->driverModel->find($r['requested_driver_id']);
-                $driverName = $driver ? "{$driver['first_name']} {$driver['last_name']}" : "Driver #{$r['requested_driver_id']}";
+
+
                 $denyNote = "Auto-denied by Dispatch Console: {$check['reason']} Please resubmit your request with an available driver.";
 
                 $this->requestModel->update($r['id'], [

@@ -207,7 +207,10 @@ class RequestController extends BaseController
         return redirect()->to("/requests/{$requestId}")->with('success', $msg);
     }
 
-    public function show($id)
+    /**
+     * @param int|string $id
+     */
+    public function show(int|string $id)
     {
         $request = $this->requestModel->getRequestByIdWithDetails($id);
         if (!$request) {
@@ -224,7 +227,7 @@ class RequestController extends BaseController
         return view('requests/show', $data);
     }
 
-    public function printVrs($id)
+    public function printVrs(int|string $id)
     {
         $request = $this->requestModel->getRequestByIdWithDetails($id);
         if (!$request) {

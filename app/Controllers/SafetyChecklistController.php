@@ -39,7 +39,7 @@ class SafetyChecklistController extends BaseController
     /**
      * Show the BLOWBAGETS checklist for a trip ticket (FR-5.1).
      */
-    public function create($ticketId)
+    public function create(int|string $ticketId)
     {
         // Drivers exclusively use the native mobile website (/driver/trips)
         $session = session();
@@ -71,7 +71,7 @@ class SafetyChecklistController extends BaseController
      *  - Any fail  → vehicle locked to Under Maintenance, PIR auto-routed
      *                 to the mechanic queue, trip activation blocked.
      */
-    public function store($ticketId)
+    public function store(int|string $ticketId)
     {
         $session   = session();
         $userId    = $session->get('user_id');
@@ -141,7 +141,7 @@ class SafetyChecklistController extends BaseController
 
         // 3. Route a PIR ticket to the mechanic queue
         $pirNumber = $this->pirModel->generatePirNumber();
-        $pirId = $this->pirModel->insert([
+        $this->pirModel->insert([
             'pir_number'          => $pirNumber,
             'vehicle_id'          => (int) $ticket['vehicle_id'],
             'trip_ticket_id'      => (int) $ticketId,

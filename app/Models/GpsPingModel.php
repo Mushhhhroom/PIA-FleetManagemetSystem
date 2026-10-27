@@ -16,7 +16,7 @@ class GpsPingModel extends Model
     ];
     protected $useTimestamps = false;
 
-    public function getRecentTrail($vehicleId, $limit = 50)
+    public function getRecentTrail(int|string $vehicleId, int $limit = 50)
     {
         return $this->where('vehicle_id', $vehicleId)
                     ->orderBy('recorded_at', 'DESC')

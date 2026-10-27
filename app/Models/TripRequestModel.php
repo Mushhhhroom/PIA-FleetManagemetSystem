@@ -26,7 +26,7 @@ class TripRequestModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    public function getRequestsWithDetails($filters = [], $limit = null)
+    public function getRequestsWithDetails(array $filters = [], ?int $limit = null)
     {
         $builder = $this->select('trip_requests.*,
                                   offices.office_code, offices.office_name, offices.office_type,
@@ -65,7 +65,7 @@ class TripRequestModel extends Model
         return $builder->findAll();
     }
 
-    public function getRequestByIdWithDetails($id)
+    public function getRequestByIdWithDetails(int|string $id)
     {
         return $this->select('trip_requests.*,
                               offices.office_code, offices.office_name, offices.office_type, offices.address AS office_address,
@@ -118,7 +118,7 @@ class TripRequestModel extends Model
 
         $next = $maxNo + 1;
         do {
-            $number = sprintf('%s%04d', $prefix, $next++);
+            $number = \sprintf('%s%04d', $prefix, $next++);
         } while ($this->db->table('trip_requests')->where('request_number', $number)->countAllResults() > 0);
 
         return $number;

@@ -32,7 +32,7 @@ class TripTicketController extends BaseController
     {
         $session = session();
         $userRole = $session->get('user_role');
-        $userId   = $session->get('user_id');
+
 
         // Drivers exclusively use the native mobile website (/driver/trips)
         if ($userRole === 'driver') {
@@ -57,7 +57,10 @@ class TripTicketController extends BaseController
         return view('tickets/index', $data);
     }
 
-    public function show($id)
+    /**
+     * @param int|string $id
+     */
+    public function show(int|string $id)
     {
         // Drivers exclusively use the native mobile website (/driver/trips)
         if (session()->get('user_role') === 'driver') {
@@ -78,7 +81,7 @@ class TripTicketController extends BaseController
         $mergedRequests = [];
         if (!empty($ticket['merged_request_ids'])) {
             $mergedIds = json_decode($ticket['merged_request_ids'], true);
-            if (!empty($mergedIds) && is_array($mergedIds)) {
+            if (!empty($mergedIds) && \is_array($mergedIds)) {
                 $mergedRequests = $this->requestModel
                     ->select('trip_requests.*, offices.office_name, departments.department_name')
                     ->join('offices', 'offices.id = trip_requests.office_id', 'left')
@@ -100,7 +103,10 @@ class TripTicketController extends BaseController
         return view('tickets/show', $data);
     }
 
-    public function printDtt($id)
+    /**
+     * @param int|string $id
+     */
+    public function printDtt(int|string $id)
     {
         $ticket = $this->ticketModel->getTicketByIdWithDetails($id);
         if (!$ticket) {
@@ -115,7 +121,10 @@ class TripTicketController extends BaseController
         return view('tickets/print_dtt', $data);
     }
 
-    public function updateSectionB($id)
+    /**
+     * @param int|string $id
+     */
+    public function updateSectionB(int|string $id)
     {
         $ticket = $this->ticketModel->find($id);
         if (!$ticket) {
@@ -145,15 +154,17 @@ class TripTicketController extends BaseController
         $fuelCost      = (float)($this->request->getPost('fuel_purchased_cost') ?? ($_POST['fuel_purchased_cost'] ?? 0));
         $fuelUsed      = (float)($this->request->getPost('fuel_used_liters') ?? ($_POST['fuel_used_liters'] ?? 0));
 
-        $fuelEnd = round(($fuelStart + $fuelIssued + $fuelPurchased) - $fuelUsed, 2);
+        $fuelEnd = round($fuelStart + $fuelIssued + $fuelPurchased - $fuelUsed, 2);
 
         // Fuel Efficiency Calculation & Anomaly Detection (>20% deviation)
         $fuelEfficiency = ($fuelUsed > 0 && $totalDistKm > 0) ? round($totalDistKm / $fuelUsed, 2) : 0.00;
 
-        // Expected benchmark ~ 9-11 km/L for diesel vans/pickups
+        // Expected benchmark ~ 9-11 km/L for diesel vans/pickups (FR-7.3 & FR-8.4)
         $expectedKml = 10.00;
         $isAnomaly = 0;
-        if ($fuelEfficiency > 0) {
+        if ($fuelUsed > 0 && $totalDistKm <= 0) {
+            $isAnomaly = 1; // Severe consumption anomaly: Fuel consumed with 0 km vehicle movement
+        } elseif ($fuelEfficiency > 0) {
             $deviation = abs($fuelEfficiency - $expectedKml) / $expectedKml;
             if ($deviation > 0.20) {
                 $isAnomaly = 1;
@@ -168,7 +179,7 @@ class TripTicketController extends BaseController
         // FR-4.1 / FR-6.2: toll expense capture on the trip ticket
         $tollExpense = max(0, (float)($this->request->getPost('toll_expense') ?? ($_POST['toll_expense'] ?? 0)));
         $tollProvider = $this->request->getPost('toll_provider') ?? ($_POST['toll_provider'] ?? null);
-        $tollProvider = in_array($tollProvider, ['autosweep', 'easytrip', 'cash'], true) ? $tollProvider : null;
+        $tollProvider = \in_array($tollProvider, ['autosweep', 'easytrip', 'cash'], true) ? $tollProvider : null;
 
         // Digital Certifications
         $driverCert = (int)($this->request->getPost('driver_certified') ?? ($_POST['driver_certified'] ?? 0));
@@ -218,7 +229,7 @@ class TripTicketController extends BaseController
             // documentation requirement of an emergency override
             $request = $this->requestModel->find($ticket['request_id']);
             if ($request && !empty($request['is_emergency_override'])
-                && in_array($request['post_trip_doc_status'], ['pending', 'overdue'], true)) {
+                && \in_array($request['post_trip_doc_status'], ['pending', 'overdue'], true)) {
                 $this->requestModel->update($ticket['request_id'], ['post_trip_doc_status' => 'submitted']);
             }
 
@@ -233,8 +244,37 @@ class TripTicketController extends BaseController
 
         $this->ticketModel->update($id, $updateData);
 
+        // Ensure vehicle odometer and PMS tracking stay synchronized with verified return odometer
+        if ($returnOdo > 0) {
+            $vehicle = $this->vehicleModel->find($ticket['vehicle_id']);
+            if ($vehicle && $returnOdo > (float)$vehicle['odometer_km']) {
+                $this->vehicleModel->update($ticket['vehicle_id'], [
+                    'odometer_km' => $returnOdo,
+                ]);
+
+                $pmsModel = new \App\Models\PmsRecordModel();
+                $pms = $pmsModel->where('vehicle_id', $ticket['vehicle_id'])->first();
+                if ($pms) {
+                    $nextPms = (float)$pms['next_pms_odometer'];
+                    $diff = $nextPms - $returnOdo;
+                    $pmsStatus = 'ok';
+                    $isLocked = 0;
+                    if ($diff <= 0) {
+                        $pmsStatus = 'overdue';
+                        $isLocked = 1;
+                    } elseif ($diff <= 500) {
+                        $pmsStatus = 'due_soon';
+                    }
+                    $pmsModel->update($pms['id'], [
+                        'status'    => $pmsStatus,
+                        'is_locked' => $isLocked,
+                    ]);
+                }
+            }
+        }
+
         // FR-6.2: record the toll deduction against the vehicle's RFID card
-        if ($tollExpense > 0 && in_array($tollProvider, ['autosweep', 'easytrip'], true)) {
+        if ($tollExpense > 0 && \in_array($tollProvider, ['autosweep', 'easytrip'], true)) {
             $rfid = new \App\Controllers\RfidController();
             $newBalance = $rfid->recordToll(
                 (int) $ticket['vehicle_id'],
@@ -266,8 +306,10 @@ class TripTicketController extends BaseController
      *
      * Logs passenger pick-up delays; once a delay reaches the 15-minute
      * standard rule, all dispatchers are automatically notified.
+     *
+     * @param int|string $id
      */
-    public function logDelay($id)
+    public function logDelay(int|string $id)
     {
         $ticket = $this->ticketModel->find($id);
         if (!$ticket) {
@@ -298,7 +340,7 @@ class TripTicketController extends BaseController
         $isDriver = session()->get('user_role') === 'driver' || str_contains($this->request->getServer('HTTP_REFERER') ?? '', 'driver/trips');
 
         if ($notified) {
-            $notificationModel = new \App\Models\NotificationModel();
+            $notificationModel = new NotificationModel();
             $userModel = new \App\Models\UserModel();
             foreach ($userModel->whereIn('role', ['dispatcher', 'admin'])->where('status', 'active')->findAll() as $disp) {
                 $notificationModel->insert([

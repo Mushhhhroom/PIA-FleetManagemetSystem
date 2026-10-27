@@ -84,6 +84,21 @@ class VehicleController extends BaseController
         ];
 
         $vehicleModel->insert($data);
+        $newVehicleId = (int)($vehicleModel->getInsertID() ?: 0);
+        if ($newVehicleId > 0) {
+            $pmsModel = new \App\Models\PmsRecordModel();
+            $initialOdo = (float)$data['odometer_km'];
+            $pmsModel->insert([
+                'vehicle_id'        => $newVehicleId,
+                'last_pms_odometer' => $initialOdo,
+                'next_pms_odometer' => $initialOdo + 5000.00,
+                'pms_interval_km'   => 5000.00,
+                'is_locked'         => 0,
+                'status'            => 'ok',
+                'last_pms_date'     => date('Y-m-d'),
+                'notes'             => 'Initial baseline PMS schedule on registration.',
+            ]);
+        }
 
         \App\Services\AuditLogger::log(
             \App\Services\AuditLogger::STATUS_CHANGE,
@@ -95,7 +110,7 @@ class VehicleController extends BaseController
         return redirect()->to('/vehicles')->with('success', 'Vehicle ' . $data['vehicle_code'] . ' successfully registered.');
     }
 
-    public function show($id)
+    public function show(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->select('vehicles.*, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone, drivers.license_number')
@@ -129,7 +144,7 @@ class VehicleController extends BaseController
         ]);
     }
 
-    public function edit($id)
+    public function edit(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->find($id);
@@ -148,7 +163,7 @@ class VehicleController extends BaseController
         ]);
     }
 
-    public function update($id)
+    public function update(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->find($id);
@@ -212,7 +227,7 @@ class VehicleController extends BaseController
         return redirect()->to('/vehicles/' . $id)->with('success', 'Vehicle details updated successfully.');
     }
 
-    public function delete($id)
+    public function delete(int|string $id)
     {
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->find($id);

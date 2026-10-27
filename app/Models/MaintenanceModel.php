@@ -19,7 +19,7 @@ class MaintenanceModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    public function getRecordsWithVehicle($limit = null)
+    public function getRecordsWithVehicle(?int $limit = null)
     {
         $builder = $this->select('maintenance_records.*, vehicles.vehicle_code, vehicles.plate_number, vehicles.make, vehicles.model')
                         ->join('vehicles', 'vehicles.id = maintenance_records.vehicle_id', 'left')

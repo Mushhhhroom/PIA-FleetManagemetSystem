@@ -108,7 +108,7 @@ flowchart TD
 ```
 
 ### 4.1 Technology Stack
-- **Backend Language:** PHP 8.2+
+- **Backend Language:** PHP 8.5.12 (PHP 8.2+ compatible)
 - **Application Framework:** CodeIgniter 4 (CI4) MVC
 - **Authentication & Security:** CodeIgniter Shield with `Argon2id` password hashing and RFC 6238 TOTP Multi-Factor Authentication for privileged roles.
 - **Presentation Tier:** CodeIgniter Views & View Cells styled with responsive Bootstrap 5 / Tailwind CSS.

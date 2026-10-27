@@ -13,6 +13,7 @@ class PurgeDummyData extends BaseCommand
 
     public function run(array $params)
     {
+        unset($params);
         $db = \Config\Database::connect();
         $now = date('Y-m-d H:i:s');
 

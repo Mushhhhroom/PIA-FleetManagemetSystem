@@ -14,6 +14,7 @@ class SlaWatch extends BaseCommand
 
     public function run(array $params)
     {
+        unset($params);
         CLI::write('Running PIA-AFMS SLA watcher (BRD FR-1.3 / FR-1.4)...', 'yellow');
 
         $slaService = new SlaService();

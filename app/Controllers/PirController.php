@@ -40,7 +40,7 @@ class PirController extends BaseController
         return view('pir/index', $data);
     }
 
-    public function show($id)
+    public function show(int|string $id)
     {
         $pir = $this->pirModel->getWithVehicle($id);
         if (!$pir) {
@@ -59,7 +59,7 @@ class PirController extends BaseController
      * FR-5.3: record workflow progression — pre-inspection findings,
      * post-repair evaluation, and final release back to Available.
      */
-    public function update($id)
+    public function update(int|string $id)
     {
         $pir = $this->pirModel->find($id);
         if (!$pir) {

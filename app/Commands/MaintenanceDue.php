@@ -15,6 +15,7 @@ class MaintenanceDue extends BaseCommand
 
     public function run(array $params)
     {
+        unset($params);
         CLI::write('Checking fleet maintenance schedules...', 'yellow');
 
         $vehicleModel = new VehicleModel();

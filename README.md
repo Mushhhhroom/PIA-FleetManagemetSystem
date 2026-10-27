@@ -121,7 +121,7 @@ Problems with it can be raised on our forum, or as issues in the main repository
 
 ## Server Requirements
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+PHP version 8.5.12 (or 8.2+) is required (active deployment: PHP 8.5.12 on Zend Engine v4.5.12), with the following extensions installed:
 
 - [intl](http://php.net/manual/en/intl.requirements.php)
 - [mbstring](http://php.net/manual/en/mbstring.installation.php)

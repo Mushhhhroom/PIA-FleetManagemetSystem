@@ -27,12 +27,12 @@ class TripTicketModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    public function getTicketsWithDetails($filters = [], $limit = null)
+    public function getTicketsWithDetails(array $filters = [], ?int $limit = null)
     {
         $builder = $this->select('trip_tickets.*,
                                   vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.fuel_type,
                                   drivers.driver_code, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
-                                  trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination,
+                                  trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination, trip_requests.purpose,
                                   offices.office_code, offices.office_name')
                         ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                         ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')
@@ -61,7 +61,7 @@ class TripTicketModel extends Model
         return $builder->findAll();
     }
 
-    public function getTicketByIdWithDetails($id)
+    public function getTicketByIdWithDetails(int|string $id)
     {
         return $this->select('trip_tickets.*,
                               vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.year, vehicles.fuel_type, vehicles.odometer_km AS vehicle_current_odometer,
@@ -79,7 +79,7 @@ class TripTicketModel extends Model
                     ->first();
     }
 
-    public function findByTokenOrSerial($identifier)
+    public function findByTokenOrSerial(string $identifier)
     {
         $cleanId = trim((string)$identifier);
         if ($cleanId === '') {

@@ -1,3 +1,25 @@
+<?php
+/**
+ * @var string $title
+ * @var string $month
+ * @var string $prevMonth
+ * @var string $nextMonth
+ * @var array $allocations
+ * @var array $awaitingAllocation
+ * @var array $kpi
+ * @var array $vehicles
+ * @var array $drivers
+ * @var string|null $userRole
+ */
+$month = (string)($month ?? date('Y-m'));
+$prevMonth = (string)($prevMonth ?? date('Y-m', strtotime($month . '-01 -1 month')));
+$nextMonth = (string)($nextMonth ?? date('Y-m', strtotime($month . '-01 +1 month')));
+$allocations = (array)($allocations ?? []);
+$drivers = (array)($drivers ?? []);
+$vehicles = (array)($vehicles ?? []);
+$kpi = (array)($kpi ?? []);
+$awaitingAllocation = (array)($awaitingAllocation ?? []);
+?>
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>

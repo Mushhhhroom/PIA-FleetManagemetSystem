@@ -203,7 +203,7 @@ class UserController extends BaseController
     // ------------------------------------------------------------------
 
     /** Edit account form (password reset optional). */
-    public function edit($id)
+    public function edit(int|string $id)
     {
         if ($denied = $this->guardSuperAdmin()) {
             return $denied;
@@ -223,7 +223,7 @@ class UserController extends BaseController
     }
 
     /** Update account details, role, status and (optionally) the password. */
-    public function update($id)
+    public function update(int|string $id)
     {
         if ($denied = $this->guardSuperAdmin()) {
             return $denied;
@@ -327,7 +327,7 @@ class UserController extends BaseController
     // ------------------------------------------------------------------
 
     /** Toggle account availability (deactivation blocks further sign-ins). */
-    public function toggle($id)
+    public function toggle(int|string $id)
     {
         if ($denied = $this->guardSuperAdmin()) {
             return $denied;

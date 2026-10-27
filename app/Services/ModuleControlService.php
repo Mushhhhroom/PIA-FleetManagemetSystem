@@ -35,7 +35,7 @@ class ModuleControlService
                 $row['disabled_roles_array'] = $disabledRoles;
                 self::$cachedModules[$row['module_key']] = $row;
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             // Fail open defensively if DB table is unavailable
             self::$cachedModules = [];
             foreach (ModuleControlModel::DEFAULT_MODULES as $mod) {

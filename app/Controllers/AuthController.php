@@ -173,7 +173,8 @@ class AuthController extends BaseController
             AuditLogger::LOGIN_SUCCESS,
             "Successful login for {$user['email']} ({$user['role']})",
             'user',
-            (int) $user['id']
+            (int) $user['id'],
+            ['ip_address' => $ip]
         );
 
         $targetRoute = match ($user['role']) {
@@ -220,6 +221,9 @@ class AuthController extends BaseController
 
         $userModel = new UserModel();
         $user = $userModel->find($userId);
+        if (!$user) {
+            return redirect()->to('/login');
+        }
 
         $data = [
             'title'   => 'Multi-Factor Authentication (TOTP)',
@@ -253,6 +257,9 @@ class AuthController extends BaseController
 
         $userModel = new UserModel();
         $user = $userModel->find($userId);
+        if (!$user) {
+            return redirect()->to('/login');
+        }
 
         $secret = trim((string) $this->request->getPost('secret'));
         $code   = trim((string) $this->request->getPost('code'));

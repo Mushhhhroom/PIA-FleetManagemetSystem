@@ -255,6 +255,12 @@ class GateSecurityController extends BaseController
                 'current_driver_id' => $driverId,
             ]);
 
+            if ($driverId > 0) {
+                $this->driverModel->update($driverId, [
+                    'status' => 'on_trip',
+                ]);
+            }
+
             \App\Services\AuditLogger::log(
                 \App\Services\AuditLogger::STATUS_CHANGE,
                 "Compound Gate EGRESS QR Scan: {$ticket['ticket_serial_no']} ({$ticket['plate_number']}) validated by {$guardName}. Automated Departure Date/Time stamped: {$now}.",

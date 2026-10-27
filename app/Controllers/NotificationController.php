@@ -50,7 +50,7 @@ class NotificationController extends BaseController
     }
 
     /** Mark a single notification as read (ownership enforced). */
-    public function markRead($id)
+    public function markRead(int|string $id)
     {
         $userId = (int) session()->get('user_id');
         $row = $this->notificationModel

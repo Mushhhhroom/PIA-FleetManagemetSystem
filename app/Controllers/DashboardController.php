@@ -50,10 +50,11 @@ class DashboardController extends BaseController
 
         $openMaintenance = $maintenanceModel->whereIn('status', ['scheduled', 'in_progress'])->countAllResults();
 
-        // Total fuel expenditure & volume
-        $fuelSummary   = $fuelModel->selectSum('total_cost')->selectSum('liters')->first();
-        $totalFuelCost = (float)($fuelSummary['total_cost'] ?? 0);
-        $totalFuelLiters = (float)($fuelSummary['liters'] ?? 0);
+        // Total fuel expenditure & volume (combines bulk fuel receipts and official trip ticket purchases)
+        $fuelSummary     = $fuelModel->selectSum('total_cost')->selectSum('liters')->first();
+        $ticketFuel      = $ticketModel->selectSum('fuel_purchased_cost')->selectSum('fuel_purchased_liters')->first();
+        $totalFuelCost   = (float)($fuelSummary['total_cost'] ?? 0) + (float)($ticketFuel['fuel_purchased_cost'] ?? 0);
+        $totalFuelLiters = (float)($fuelSummary['liters'] ?? 0) + (float)($ticketFuel['fuel_purchased_liters'] ?? 0);
 
         // Total distance traveled across completed tickets
         $distanceSummary = $ticketModel->selectSum('total_distance_km')->first();
@@ -88,18 +89,14 @@ class DashboardController extends BaseController
             }
         }
 
-        // Fill in missing months if any
+        // Fill in missing months with exact, true database counts (FR-8.2 / Audit Standards)
         $analyticsMonths = [];
         $analyticsTicketCounts = [];
         for ($i = 5; $i >= 0; $i--) {
             $ym = date('Y-m', strtotime("-{$i} months"));
             $label = date('M Y', strtotime("-{$i} months"));
             $analyticsMonths[] = $label;
-            if (isset($monthCounts[$ym])) {
-                $analyticsTicketCounts[] = (int)$monthCounts[$ym];
-            } else {
-                $analyticsTicketCounts[] = ($i === 0 ? max(1, $completedTrips + $activeTrips) : rand(3, 8));
-            }
+            $analyticsTicketCounts[] = isset($monthCounts[$ym]) ? (int)$monthCounts[$ym] : 0;
         }
 
         // Office Request Distribution for Analytics

@@ -36,8 +36,8 @@ class AuditController extends BaseController
         $rushRequests = $this->requestModel->where('is_rush_request', 1)->countAllResults();
         $standardRequests = max(0, $totalRequests - $rushRequests);
 
-        // 3. Fuel Anomaly Flags (>20% deviation)
-        $anomalies = $this->ticketModel->getTicketsWithDetails(['status' => 'completed']);
+        // 3. Fuel Anomaly Flags (>20% deviation or severe consumption anomaly)
+        $anomalies = $this->ticketModel->getTicketsWithDetails();
         $flaggedAnomalies = array_filter($anomalies, fn($t) => (int)($t['fuel_anomaly_flag'] ?? 0) === 1);
 
         // 4. PMS Status Summary
@@ -81,16 +81,22 @@ class AuditController extends BaseController
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
         $out = fopen('php://output', 'w');
-        // CSV Header following COA Fleet Audit specifications
+        // CSV Header following COA Fleet Audit & BRD FR-8.2 / FR-8.3 specifications
         fputcsv($out, [
             'Ticket Serial No', 'VRS Request No', 'Office / Division', 'Plate Number',
             'Driver Name', 'Destination', 'Purpose', 'Departure Date/Time',
             'Return Date/Time', 'Start Odometer (KM)', 'Return Odometer (KM)', 'Total Distance (KM)',
             'Fuel Start (L)', 'Fuel Purchased (L)', 'Fuel Purchased Cost (PHP)', 'Fuel Used (L)',
-            'Fuel End (L)', 'Fuel Efficiency (KM/L)', 'Fuel Anomaly Flag', 'Driver Certified', 'Passenger Certified'
+            'Fuel End (L)', 'Fuel Efficiency (KM/L)', 'Toll Expense (PHP)', 'Toll Provider',
+            'Cost Per KM (PHP)', 'Fuel Anomaly Flag', 'Driver Certified', 'Passenger Certified'
         ]);
 
         foreach ($trips as $t) {
+            $dist = (float)($t['total_distance_km'] ?? 0);
+            $fuelCost = (float)($t['fuel_purchased_cost'] ?? 0);
+            $tollExpense = (float)($t['toll_expense'] ?? 0);
+            $cpk = $dist > 0 ? round(($fuelCost + $tollExpense) / $dist, 2) : 0.00;
+
             fputcsv($out, [
                 $t['ticket_serial_no'] ?? '',
                 $t['request_number'] ?? '',
@@ -101,15 +107,18 @@ class AuditController extends BaseController
                 $t['purpose'] ?? '',
                 $t['departure_time'] ?? $t['authorized_departure'] ?? '',
                 $t['arrival_back_time'] ?? $t['authorized_return'] ?? '',
-                $t['start_odometer'] ?? '0.00',
-                $t['return_odometer'] ?? '0.00',
-                $t['total_distance_km'] ?? '0.00',
-                $t['fuel_balance_start_liters'] ?? '0.00',
-                $t['fuel_purchased_liters'] ?? '0.00',
-                $t['fuel_purchased_cost'] ?? '0.00',
-                $t['fuel_used_liters'] ?? '0.00',
-                $t['fuel_balance_end_liters'] ?? '0.00',
-                $t['fuel_efficiency_kml'] ?? '0.00',
+                number_format((float)($t['start_odometer'] ?? 0), 2, '.', ''),
+                number_format((float)($t['return_odometer'] ?? 0), 2, '.', ''),
+                number_format($dist, 2, '.', ''),
+                number_format((float)($t['fuel_balance_start_liters'] ?? 0), 2, '.', ''),
+                number_format((float)($t['fuel_purchased_liters'] ?? 0), 2, '.', ''),
+                number_format($fuelCost, 2, '.', ''),
+                number_format((float)($t['fuel_used_liters'] ?? 0), 2, '.', ''),
+                number_format((float)($t['fuel_balance_end_liters'] ?? 0), 2, '.', ''),
+                number_format((float)($t['fuel_efficiency_kml'] ?? 0), 2, '.', ''),
+                number_format($tollExpense, 2, '.', ''),
+                $t['toll_provider'] ? strtoupper((string)$t['toll_provider']) : '—',
+                number_format($cpk, 2, '.', ''),
                 ((int)($t['fuel_anomaly_flag'] ?? 0) === 1) ? 'YES (>20% DEVIATION)' : 'NO',
                 ((int)($t['driver_certified'] ?? 0) === 1) ? 'YES' : 'NO',
                 ((int)($t['passenger_certified'] ?? 0) === 1) ? 'YES' : 'NO',

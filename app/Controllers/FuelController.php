@@ -102,7 +102,7 @@ class FuelController extends BaseController
         return redirect()->to('/fuel')->with('success', 'Fuel purchase logged successfully.');
     }
 
-    public function viewReceipt($filename)
+    public function viewReceipt(string $filename)
     {
         $safeName = basename($filename);
         $path = WRITEPATH . 'uploads/receipts/' . $safeName;

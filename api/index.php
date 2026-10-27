@@ -14,7 +14,7 @@ use Config\Paths;
  * fallbacks so the application runs seamlessly on Vercel.
  */
 
-$minPhpVersion = '8.2';
+$minPhpVersion = '8.5.12';
 if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
     header('HTTP/1.1 503 Service Unavailable.', true, 503);
     echo 'Your PHP version must be ' . $minPhpVersion . ' or higher to run CodeIgniter. Current version: ' . PHP_VERSION;

@@ -32,7 +32,6 @@ class DispatchEngineService
     {
         $type  = strtolower($vehicle['type'] ?? '');
         $model = strtolower($vehicle['model'] ?? '');
-        $make  = strtolower($vehicle['make'] ?? '');
 
         if (str_contains($type, 'van') || str_contains($model, 'hiace') || str_contains($model, 'urvan') || str_contains($model, 'transit') || str_contains($model, 'sprinter')) {
             return 15;

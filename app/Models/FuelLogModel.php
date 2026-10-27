@@ -19,7 +19,7 @@ class FuelLogModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    public function getLogsWithDetails($limit = null)
+    public function getLogsWithDetails(?int $limit = null)
     {
         $builder = $this->select('fuel_logs.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
                         ->join('vehicles', 'vehicles.id = fuel_logs.vehicle_id', 'left')

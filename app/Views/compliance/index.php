@@ -117,6 +117,8 @@
                     <th>Distance (km)</th>
                     <th>Fuel Used (L)</th>
                     <th>km/L</th>
+                    <th>Toll (₱)</th>
+                    <th>CPK (₱/km)</th>
                     <th>Flag</th>
                 </tr>
             </thead>
@@ -132,6 +134,8 @@
                             <td class="mono"><?= number_format((float) $t['total_distance_km'], 2) ?></td>
                             <td class="mono"><?= number_format((float) $t['fuel_used_liters'], 2) ?></td>
                             <td class="mono fw-bold"><?= number_format((float) $t['fuel_efficiency_kml'], 2) ?></td>
+                            <td class="mono"><?= number_format((float) ($t['toll_expense'] ?? 0), 2) ?></td>
+                            <td class="mono fw-semibold"><?= number_format((float) ($t['cpk'] ?? 0), 2) ?></td>
                             <td>
                                 <?php if ((int) $t['fuel_anomaly_flag'] === 1): ?>
                                     <span class="badge bg-danger">&gt;20% DEVIATION</span>

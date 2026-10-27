@@ -102,7 +102,7 @@ class ModuleControlController extends BaseController
      */
     public function toggle()
     {
-        if ($guard = $this->guardSuperAdmin()) {
+        if ($this->guardSuperAdmin()) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized'])->setStatusCode(403);
         }
 
@@ -150,7 +150,7 @@ class ModuleControlController extends BaseController
      */
     public function toggleRole()
     {
-        if ($guard = $this->guardSuperAdmin()) {
+        if ($this->guardSuperAdmin()) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized'])->setStatusCode(403);
         }
 

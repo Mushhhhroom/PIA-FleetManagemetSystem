@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use CodeIgniter\Database\BaseConnection;
 
 /**
  * NFR-3 System Auditability

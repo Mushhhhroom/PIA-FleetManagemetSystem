@@ -4,7 +4,7 @@ cd /d "%~dp0"
 echo ============================================================
 echo   PIA-AFMS - Philippine Information Agency
 echo   Automated Fleet Management Information System
-echo   Framework: CodeIgniter 4 (PHP 8.4)
+echo   Framework: CodeIgniter 4 (PHP 8.5.12)
 echo   Database: MySQL (fleet_db)
 echo ============================================================
 echo.

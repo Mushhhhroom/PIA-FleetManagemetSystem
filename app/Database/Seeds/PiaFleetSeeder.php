@@ -115,7 +115,7 @@ class PiaFleetSeeder extends Seeder
         // Get Office IDs for mapping
         $adminOffice = $this->db->table('offices')->where('office_code', 'CO-ADMIN')->get()->getRow();
         $newsOffice  = $this->db->table('offices')->where('office_code', 'CO-NID')->get()->getRow();
-        $carOffice   = $this->db->table('offices')->where('office_code', 'RO-CAR')->get()->getRow();
+
 
         // 2. Official Government RBAC Users
         $piaUsers = [
@@ -426,7 +426,7 @@ class PiaFleetSeeder extends Seeder
         $tier1User = $dispUser;
 
         $hiace = $this->db->table('vehicles')->where('plate_number', 'SJL-4192')->get()->getRow() ?? $allVehicles[0];
-        $fortuner = $this->db->table('vehicles')->where('plate_number', 'SAB-8821')->get()->getRow() ?? ($allVehicles[1] ?? $allVehicles[0]);
+
         $driverSantos = $this->db->table('drivers')->where('driver_code', 'DRV-101')->get()->getRow();
         $driverReyes  = $this->db->table('drivers')->where('driver_code', 'DRV-102')->get()->getRow();
 

@@ -17,7 +17,7 @@ class SecurityQrService
      */
     public function generateToken(string $serialNo, string $plateNumber, string $driverCode, string $departureTime): string
     {
-        $payload = sprintf("%s|%s|%s|%s", $serialNo, strtoupper($plateNumber), $driverCode, $departureTime);
+        $payload = \sprintf("%s|%s|%s|%s", $serialNo, strtoupper($plateNumber), $driverCode, $departureTime);
         $signature = hash_hmac('sha256', $payload, $this->secretKey);
 
         // Format: Base64URL(Payload) . "." . Signature
@@ -46,7 +46,7 @@ class SecurityQrService
         }
 
         $parts = explode('|', $payload);
-        if (count($parts) < 4) {
+        if (\count($parts) < 4) {
             return null;
         }
 

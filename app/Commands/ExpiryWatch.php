@@ -14,6 +14,7 @@ class ExpiryWatch extends BaseCommand
 
     public function run(array $params)
     {
+        unset($params);
         CLI::write('Scanning fleet for LTO/GSIS expiries within 30 days (FR-7.1)...', 'yellow');
 
         $compliance = new ComplianceController();

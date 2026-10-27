@@ -18,7 +18,7 @@ class GateLogModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = '';
 
-    public function getLogsWithDetails($limit = 50)
+    public function getLogsWithDetails(int $limit = 50)
     {
         return $this->select('gate_logs.*,
                              trip_tickets.ticket_serial_no, trip_tickets.status AS ticket_status,

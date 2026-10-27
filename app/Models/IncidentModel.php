@@ -19,7 +19,7 @@ class IncidentModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    public function getIncidentsWithDetails($limit = null)
+    public function getIncidentsWithDetails(?int $limit = null)
     {
         $builder = $this->select('incidents.*, vehicles.vehicle_code, vehicles.plate_number, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name')
                         ->join('vehicles', 'vehicles.id = incidents.vehicle_id', 'left')
