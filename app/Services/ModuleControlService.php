@@ -23,7 +23,7 @@ class ModuleControlService
         try {
             $model = new ModuleControlModel();
             $model->ensureInitialized();
-            $rows = $model->findAll();
+            $rows = $model->orderBy('id', 'ASC')->findAll();
 
             self::$cachedModules = [];
             foreach ($rows as $row) {
@@ -103,15 +103,23 @@ class ModuleControlService
 
     /**
      * Find module by route prefix or URI string.
+     * Matches the most specific route prefix first to prevent shorter prefixes
+     * from shadowing nested sub-modules (e.g. dispatch/calendar vs dispatch).
      */
     public static function findModuleByUri(string $uri): ?array
     {
         $modules = self::getAllModules();
         $cleanUri = trim(preg_replace('#^index\.php/?#i', '', trim($uri, '/')), '/');
 
-        foreach ($modules as $mod) {
-            $prefix = trim($mod['route_prefix'], '/');
-            if ($cleanUri === $prefix || str_starts_with($cleanUri, $prefix . '/')) {
+        // Sort by route_prefix length descending so more specific paths match first
+        $sorted = $modules;
+        uasort($sorted, static function ($a, $b) {
+            return strlen($b['route_prefix'] ?? '') <=> strlen($a['route_prefix'] ?? '');
+        });
+
+        foreach ($sorted as $mod) {
+            $prefix = trim($mod['route_prefix'] ?? '', '/');
+            if ($prefix !== '' && ($cleanUri === $prefix || str_starts_with($cleanUri, $prefix . '/'))) {
                 return $mod;
             }
         }

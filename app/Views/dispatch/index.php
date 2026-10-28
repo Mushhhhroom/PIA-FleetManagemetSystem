@@ -124,7 +124,7 @@
                         </td>
                         <td>
                             <?php if (!empty($r['justification_file'])): ?>
-                                <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.72rem;">
+                                <a href="<?= base_url('requests/' . $r['id'] . '/justification') ?>" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.72rem;">
                                     <i class="fa-solid fa-paperclip me-1"></i> Inspect File
                                 </a>
                             <?php else: ?>
@@ -432,7 +432,7 @@
                                                 <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
                                             <?php endif; ?>
                                         </div>
-                                        <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                        <a href="<?= base_url('requests/' . $r['id'] . '/justification') ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
                                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect File
                                         </a>
                                     </div>

@@ -64,7 +64,7 @@
                             <th>VRS No / Control</th>
                             <th>Requesting Division & Official</th>
                             <th>Destination & Purpose</th>
-                            <th>Schedule</th>
+                            <th>Schedule & Specifications</th>
                             <th>SLA Countdown (4h)</th>
                             <th class="text-end">Action</th>
                         </tr>
@@ -89,10 +89,23 @@
                                                  <i class="fa-solid fa-bolt"></i> RUSH (BR-03)
                                             </span>
                                         <?php endif; ?>
+                                        <?php if (!empty($r['department_code'])): ?>
+                                            <span class="badge bg-light text-dark border mono" style="font-size: 0.65rem;">
+                                                <?= esc($r['department_code']) ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
-                                        <div class="text-muted" style="font-size: 0.72rem;"><?= esc($r['requestor_name']) ?></div>
+                                        <?php if (!empty($r['department_name'])): ?>
+                                            <div class="text-primary small" style="font-size: 0.72rem;"><?= esc($r['department_name']) ?></div>
+                                        <?php endif; ?>
+                                        <div class="text-muted" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-user me-1"></i><?= esc($r['requestor_name']) ?>
+                                            <?php if (!empty($r['requestor_designation'])): ?>
+                                                &bull; <span class="fst-italic"><?= esc($r['requestor_designation']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="fw-semibold text-dark small text-truncate" style="max-width: 240px;">
@@ -101,11 +114,27 @@
                                         <div class="text-muted small text-truncate" style="max-width: 240px; font-size: 0.72rem;">
                                             <?= esc($r['purpose']) ?>
                                         </div>
+                                        <div class="text-muted small mt-1" style="font-size: 0.70rem;">
+                                            <i class="fa-solid fa-users me-1"></i><?= esc($r['passenger_count']) ?> Passenger(s)
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="mono small" style="font-size: 0.76rem;">
-                                            <?= date('M d, h:i A', strtotime($r['departure_time'])) ?>
+                                            <i class="fa-regular fa-calendar-check text-primary me-1"></i><?= date('M d, h:i A', strtotime($r['departure_time'])) ?>
                                         </div>
+                                        <div class="mono text-muted" style="font-size: 0.70rem;">
+                                            to <?= date('M d, h:i A', strtotime($r['return_time'])) ?>
+                                        </div>
+                                        <?php if (!empty($r['requested_vehicle_type'])): ?>
+                                            <div class="small mt-1" style="font-size: 0.70rem;">
+                                                <span class="badge bg-light text-dark border"><i class="fa-solid fa-car me-1"></i><?= ucfirst(esc($r['requested_vehicle_type'])) ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($r['requested_driver_name'])): ?>
+                                            <div class="text-muted small mt-1" style="font-size: 0.70rem;">
+                                                <i class="fa-solid fa-id-card me-1"></i>Driver: <?= esc($r['requested_driver_name']) ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge <?= $r['sla_info']['class'] ?> small py-1 px-2">
@@ -114,6 +143,9 @@
                                     </td>
                                     <td class="text-end table-action-cell">
                                         <div class="table-actions">
+                                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-primary" title="View Checking VRS Request (Full Details)">
+                                                <i class="fa-solid fa-file-lines me-1"></i> View Checking VRS
+                                            </a>
                                             <?php if (empty($canActTier1)): ?>
                                                 <span class="badge bg-secondary py-1 px-2" title="Tier 1 approval authority rests with the Motorpool Dispatcher.">
                                                     <i class="fa-solid fa-eye me-1"></i> View Only
@@ -150,7 +182,7 @@
                             <th>VRS No</th>
                             <th>Requesting Office & Tier 1 Endorser</th>
                             <th>Destination & Purpose</th>
-                            <th>Schedule</th>
+                            <th>Schedule & Specifications</th>
                             <th>SLA Countdown (24h)</th>
                             <th class="text-end">Action</th>
                         </tr>
@@ -177,7 +209,12 @@
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark small"><?= esc($r['office_name'] ?? 'Central Office') ?></div>
+                                        <div class="fw-semibold text-dark small"><?= esc($r['department_name'] ?? $r['office_name'] ?? 'Central Office') ?></div>
+                                        <?php if (!empty($r['requestor_designation'])): ?>
+                                            <div class="text-muted small" style="font-size: 0.70rem;">
+                                                <?= esc($r['requestor_designation']) ?>
+                                            </div>
+                                        <?php endif; ?>
                                         <div class="text-muted small" style="font-size: 0.72rem;">
                                             <?php if (($r['dispatcher_action'] ?? null) === 'approved'): ?>
                                                 <i class="fa-solid fa-check-double text-success me-1"></i>Endorsed by: <?= esc($r['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?>
@@ -200,8 +237,21 @@
                                     </td>
                                     <td>
                                         <div class="mono small" style="font-size: 0.76rem;">
-                                            <?= date('M d, h:i A', strtotime($r['departure_time'])) ?>
+                                            <i class="fa-regular fa-calendar-check text-primary me-1"></i><?= date('M d, h:i A', strtotime($r['departure_time'])) ?>
                                         </div>
+                                        <div class="mono text-muted" style="font-size: 0.70rem;">
+                                            to <?= date('M d, h:i A', strtotime($r['return_time'])) ?>
+                                        </div>
+                                        <?php if (!empty($r['requested_vehicle_type'])): ?>
+                                            <div class="small mt-1" style="font-size: 0.70rem;">
+                                                <span class="badge bg-light text-dark border"><i class="fa-solid fa-car me-1"></i><?= ucfirst(esc($r['requested_vehicle_type'])) ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($r['requested_driver_name'])): ?>
+                                            <div class="text-muted small mt-1" style="font-size: 0.70rem;">
+                                                <i class="fa-solid fa-id-card me-1"></i>Driver: <?= esc($r['requested_driver_name']) ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge <?= $r['sla_info']['class'] ?> small py-1 px-2">
@@ -210,6 +260,9 @@
                                     </td>
                                     <td class="text-end table-action-cell">
                                         <div class="table-actions">
+                                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-primary" title="View Checking VRS Request (Full Details)">
+                                                <i class="fa-solid fa-file-lines me-1"></i> View Checking VRS
+                                            </a>
                                             <?php if (empty($canActTier2)): ?>
                                                 <span class="badge bg-secondary py-1 px-2" title="Tier 2 authorization rests with the Administrative Division Head.">
                                                     <i class="fa-solid fa-eye me-1"></i> View Only
@@ -271,8 +324,8 @@
                                     <td class="mono small text-muted"><?= $r['admin_action_at'] ? date('M d, Y h:i A', strtotime($r['admin_action_at'])) : date('M d, Y', strtotime($r['updated_at'])) ?></td>
                                     <td class="text-end table-action-cell">
                                         <div class="table-actions">
-                                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-secondary">
-                                                <i class="fa-solid fa-eye me-1"></i> View
+                                            <a href="<?= base_url('requests/' . $r['id']) ?>" class="btn btn-sm btn-outline-primary" title="View Checking VRS Request (Full Details)">
+                                                <i class="fa-solid fa-file-lines me-1"></i> View Checking VRS
                                             </a>
                                         </div>
                                     </td>
@@ -338,28 +391,84 @@
 
         <?php if (!empty($canActTier1)): ?>
             <div class="modal fade text-start" id="actionModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content border-0 shadow">
-                        <div class="modal-header bg-light">
-                            <h6 class="modal-title fw-bold text-dark">
-                                <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check: <?= esc($r['request_number']) ?>
-                            </h6>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-header bg-light d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="modal-title fw-bold text-dark mb-0">
+                                    <i class="fa-solid fa-file-circle-check text-primary me-1"></i> Tier 1 Dispatcher Review &amp; Document Check
+                                </h6>
+                                <span class="mono small text-muted fw-bold"><?= esc($r['request_number']) ?></span>
+                                <?php if ((int)$r['is_rush_request'] === 1): ?>
+                                    <span class="badge bg-danger text-white ms-1" style="font-size: 0.65rem;"><i class="fa-solid fa-bolt"></i> RUSH (BR-03)</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="<?= base_url('requests/' . $r['id']) ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="Open complete checking VRS page in new tab">
+                                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> View Checking VRS Request
+                                </a>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
                         </div>
                         <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
                             <?= csrf_field() ?>
                             <input type="hidden" name="redirect_to" value="<?= base_url('approvals') ?>">
                             <div class="modal-body p-4">
+                                <!-- Specifications & Requesting Profile -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-white h-100">
+                                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.68rem;">Requesting Official &amp; Office</div>
+                                            <div class="fw-bold text-dark small mt-1"><?= esc($r['requestor_name']) ?></div>
+                                            <?php if (!empty($r['requestor_designation'])): ?>
+                                                <div class="text-muted small" style="font-size: 0.72rem;"><?= esc($r['requestor_designation']) ?></div>
+                                            <?php endif; ?>
+                                            <div class="small text-primary mt-1" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-building me-1"></i><?= esc($r['department_name'] ?? $r['office_name'] ?? 'Central Office') ?>
+                                            </div>
+                                            <?php if (!empty($r['requestor_email']) || !empty($r['requestor_phone'])): ?>
+                                                <div class="text-muted small mt-1" style="font-size: 0.70rem;">
+                                                    <i class="fa-solid fa-envelope me-1"></i><?= esc($r['requestor_email'] ?? '—') ?>
+                                                    <?php if (!empty($r['requestor_phone'])): ?>
+                                                        <span class="ms-2"><i class="fa-solid fa-phone me-1"></i><?= esc($r['requestor_phone']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-white h-100">
+                                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.68rem;">Schedule &amp; Preferences</div>
+                                            <div class="mono small text-dark mt-1" style="font-size: 0.75rem;">
+                                                <i class="fa-regular fa-calendar-check text-primary me-1"></i><strong>Departure:</strong> <?= date('M d, Y h:i A', strtotime($r['departure_time'])) ?>
+                                            </div>
+                                            <div class="mono small text-dark mt-1" style="font-size: 0.75rem;">
+                                                <i class="fa-regular fa-calendar-xmark text-secondary me-1"></i><strong>Return:</strong> <?= date('M d, Y h:i A', strtotime($r['return_time'])) ?>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                                                <span class="badge bg-light text-dark border small">
+                                                    <i class="fa-solid fa-car me-1"></i>Type: <?= ucfirst(esc($r['requested_vehicle_type'] ?? 'Any')) ?>
+                                                </span>
+                                                <?php if (!empty($r['requested_driver_name'])): ?>
+                                                    <span class="badge bg-light text-dark border small">
+                                                        <i class="fa-solid fa-id-card me-1"></i>Pref. Driver: <?= esc($r['requested_driver_name']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
-                                    <div class="small text-muted">Destination:</div>
-                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                    <div class="small text-muted fw-semibold">Destination / Route:</div>
+                                    <div class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($r['destination']) ?></div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="small text-muted">Purpose:</div>
+                                    <div class="small text-muted fw-semibold">Specific Purpose / Mission Itinerary:</div>
                                     <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="small text-muted">Passengers:</div>
+                                    <div class="small text-muted fw-semibold">Passenger Manifest (<?= esc($r['passenger_count']) ?> passenger<?= (int)$r['passenger_count'] === 1 ? '' : 's' ?>):</div>
                                     <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
                                 </div>
                                 <div class="mb-3">
@@ -374,7 +483,7 @@
                                                     <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
                                                 <?php endif; ?>
                                             </div>
-                                            <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                            <a href="<?= base_url('requests/' . $r['id'] . '/justification') ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
                                                 <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect Document
                                             </a>
                                         </div>
@@ -454,13 +563,24 @@
 
         <?php if (!empty($canActTier2) && (int)$r['requestor_id'] !== (int)($userId ?? 0) && !((($r['dispatcher_action'] ?? null) === 'approved') && (int)($r['dispatcher_approver_id'] ?? 0) === (int)($userId ?? 0))): ?>
             <div class="modal fade text-start" id="adminModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content border-0 shadow">
-                        <div class="modal-header bg-light">
-                            <h6 class="modal-title fw-bold text-dark">
-                                Authorize VRS: <?= esc($r['request_number']) ?>
-                            </h6>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-header bg-light d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="modal-title fw-bold text-dark mb-0">
+                                    <i class="fa-solid fa-stamp text-success me-1"></i> Tier 2 Administrative Division Authorization
+                                </h6>
+                                <span class="mono small text-muted fw-bold"><?= esc($r['request_number']) ?></span>
+                                <?php if ((int)$r['is_rush_request'] === 1): ?>
+                                    <span class="badge bg-danger text-white ms-1" style="font-size: 0.65rem;"><i class="fa-solid fa-bolt"></i> RUSH (BR-03)</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="<?= base_url('requests/' . $r['id']) ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="Open complete checking VRS page in new tab">
+                                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> View Checking VRS Request
+                                </a>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
                         </div>
                         <form action="<?= base_url('approvals/' . $r['id'] . '/action') ?>" method="POST">
                             <?= csrf_field() ?>
@@ -470,6 +590,9 @@
                                 <div class="alert alert-success border-success-subtle p-2 px-3 rounded small mb-3">
                                     <i class="fa-solid fa-circle-check text-success me-1"></i>
                                     <strong>Tier 1 Endorsement Verified:</strong> <?= esc($r['dispatcher_approver_name'] ?? 'Motorpool Dispatcher') ?> endorsed this trip on <?= date('M d, Y h:i A', strtotime($r['dispatcher_action_at'])) ?>.
+                                    <?php if (!empty($r['dispatcher_remarks'])): ?>
+                                        <div class="mt-1 text-dark small"><em>"<?= esc($r['dispatcher_remarks']) ?>"</em></div>
+                                    <?php endif; ?>
                                 </div>
                                 <?php else: ?>
                                 <div class="alert alert-warning p-2 px-3 rounded small mb-3">
@@ -482,13 +605,85 @@
                                     <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
+
+                                <!-- Specifications & Requesting Profile -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-white h-100">
+                                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.68rem;">Requesting Official &amp; Office</div>
+                                            <div class="fw-bold text-dark small mt-1"><?= esc($r['requestor_name']) ?></div>
+                                            <?php if (!empty($r['requestor_designation'])): ?>
+                                                <div class="text-muted small" style="font-size: 0.72rem;"><?= esc($r['requestor_designation']) ?></div>
+                                            <?php endif; ?>
+                                            <div class="small text-primary mt-1" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-building me-1"></i><?= esc($r['department_name'] ?? $r['office_name'] ?? 'Central Office') ?>
+                                            </div>
+                                            <?php if (!empty($r['requestor_email']) || !empty($r['requestor_phone'])): ?>
+                                                <div class="text-muted small mt-1" style="font-size: 0.70rem;">
+                                                    <i class="fa-solid fa-envelope me-1"></i><?= esc($r['requestor_email'] ?? '—') ?>
+                                                    <?php if (!empty($r['requestor_phone'])): ?>
+                                                        <span class="ms-2"><i class="fa-solid fa-phone me-1"></i><?= esc($r['requestor_phone']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-white h-100">
+                                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.68rem;">Schedule &amp; Preferences</div>
+                                            <div class="mono small text-dark mt-1" style="font-size: 0.75rem;">
+                                                <i class="fa-regular fa-calendar-check text-primary me-1"></i><strong>Departure:</strong> <?= date('M d, Y h:i A', strtotime($r['departure_time'])) ?>
+                                            </div>
+                                            <div class="mono small text-dark mt-1" style="font-size: 0.75rem;">
+                                                <i class="fa-regular fa-calendar-xmark text-secondary me-1"></i><strong>Return:</strong> <?= date('M d, Y h:i A', strtotime($r['return_time'])) ?>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                                                <span class="badge bg-light text-dark border small">
+                                                    <i class="fa-solid fa-car me-1"></i>Type: <?= ucfirst(esc($r['requested_vehicle_type'] ?? 'Any')) ?>
+                                                </span>
+                                                <?php if (!empty($r['requested_driver_name'])): ?>
+                                                    <span class="badge bg-light text-dark border small">
+                                                        <i class="fa-solid fa-id-card me-1"></i>Pref. Driver: <?= esc($r['requested_driver_name']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
-                                    <div class="small text-muted">Destination:</div>
-                                    <div class="fw-bold text-dark"><?= esc($r['destination']) ?></div>
+                                    <div class="small text-muted fw-semibold">Destination / Route:</div>
+                                    <div class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($r['destination']) ?></div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="small text-muted">Passengers (<?= esc($r['passenger_count']) ?>):</div>
+                                    <div class="small text-muted fw-semibold">Specific Purpose / Mission Itinerary:</div>
+                                    <div class="small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['purpose'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted fw-semibold">Passenger Manifest (<?= esc($r['passenger_count']) ?> passenger<?= (int)$r['passenger_count'] === 1 ? '' : 's' ?>):</div>
                                     <div class="mono small text-dark p-2 rounded bg-light border"><?= nl2br(esc($r['passenger_names'])) ?></div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="small text-muted fw-semibold mb-1">
+                                        <i class="fa-solid fa-file-lines text-primary me-1"></i> Document Check for VRS:
+                                    </div>
+                                    <?php if (!empty($r['justification_file'])): ?>
+                                        <div class="alert alert-info border-info-subtle p-2 px-3 small mb-0 rounded d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <strong>Attached Document / Justification:</strong>
+                                                <?php if (!empty($r['justification_notes'])): ?>
+                                                    <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <a href="<?= base_url('requests/' . $r['id'] . '/justification') ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect Document
+                                            </a>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="p-2 px-3 rounded bg-light border small text-muted">
+                                            <i class="fa-solid fa-circle-info text-secondary me-1"></i> Standard VRS Filing &mdash; verified travel itinerary and passenger specifications.
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label small fw-semibold text-dark">Administrative Division Authorization Notes</label>
@@ -501,7 +696,7 @@
                                     Disapprove
                                 </button>
                                 <button type="submit" name="action" value="approve" class="btn btn-sm btn-success px-4 fw-semibold">
-                                    <i class="fa-solid fa-stamp me-1"></i> Officially Authorize & Send to Dispatch
+                                    <i class="fa-solid fa-stamp me-1"></i> Officially Authorize &amp; Send to Dispatch
                                 </button>
                             </div>
                         </form>

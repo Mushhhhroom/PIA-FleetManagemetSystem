@@ -121,9 +121,46 @@ class RequestController extends BaseController
                 return redirect()->back()->withInput()->with('error', 'Emergency Justification Document (PDF or image) is mandatory for same-day requests under BR-03.');
             }
 
-            // Save uploaded justification file
-            $newFileName = $justificationFileObj->getRandomName();
-            $justificationFileObj->move(FCPATH . 'uploads/justifications', $newFileName);
+        }
+
+        // Secure file handling & strict validation against RCE / Arbitrary Upload
+        if ($justificationFileObj && $justificationFileObj->isValid() && !$justificationFileObj->hasMoved()) {
+            // 1. Max size validation (10 MB)
+            if ($justificationFileObj->getSizeByUnit('kb') > 10240) {
+                return redirect()->back()->withInput()->with('error', 'File size exceeds maximum permitted limit of 10 MB.');
+            }
+
+            // 2. Whitelist file extensions
+            $clientExt = strtolower($justificationFileObj->getClientExtension());
+            $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+            if (!in_array($clientExt, $allowedExtensions, true)) {
+                return redirect()->back()->withInput()->with('error', 'Security Policy Violation: Only authentic PDF, PNG, and JPEG files are permitted.');
+            }
+
+            // 3. Inspect real magic bytes via finfo to prevent extension/MIME spoofing
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $realMime = $finfo->file($justificationFileObj->getTempName());
+            $mimeToExt = [
+                'application/pdf' => 'pdf',
+                'image/jpeg'      => 'jpg',
+                'image/png'       => 'png',
+            ];
+
+            if (!isset($mimeToExt[$realMime])) {
+                return redirect()->back()->withInput()->with('error', 'Security Policy Violation: Uploaded file contents do not match an authentic PDF or image format.');
+            }
+
+            // 4. Force extension derived strictly from verified MIME type (never trust client-supplied extension)
+            $forcedExt = $mimeToExt[$realMime];
+            $newFileName = 'justification_' . date('Ymd_His') . '_' . bin2hex(random_bytes(10)) . '.' . $forcedExt;
+
+            // 5. Store outside the public web root in WRITEPATH/uploads/justifications
+            $targetDir = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'justifications';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0750, true);
+            }
+
+            $justificationFileObj->move($targetDir, $newFileName);
             $justificationFile = 'uploads/justifications/' . $newFileName;
         }
 
@@ -212,9 +249,18 @@ class RequestController extends BaseController
      */
     public function show(int|string $id)
     {
+        $session = session();
+        $userRole = (string) $session->get('user_role');
+        $userId   = (int) $session->get('user_id');
+
         $request = $this->requestModel->getRequestByIdWithDetails($id);
         if (!$request) {
             return redirect()->to('/requests')->with('error', 'Vehicle Request Slip not found.');
+        }
+
+        // Ownership authorization: requestors can only view their own requests
+        if ($userRole === 'requestor' && (int) $request['requestor_id'] !== $userId) {
+            return redirect()->to('/requests')->with('error', 'Access restricted: You cannot view requests filed by other staff members.');
         }
 
         $request['sla_info'] = SlaService::formatSlaCountdown($request['sla_deadline']);
@@ -229,9 +275,17 @@ class RequestController extends BaseController
 
     public function printVrs(int|string $id)
     {
+        $session = session();
+        $userRole = (string) $session->get('user_role');
+        $userId   = (int) $session->get('user_id');
+
         $request = $this->requestModel->getRequestByIdWithDetails($id);
         if (!$request) {
             return redirect()->to('/requests')->with('error', 'Vehicle Request Slip not found.');
+        }
+
+        if ($userRole === 'requestor' && (int) $request['requestor_id'] !== $userId) {
+            return redirect()->to('/requests')->with('error', 'Access restricted: You cannot print requests filed by other staff members.');
         }
 
         $data = [
@@ -240,5 +294,103 @@ class RequestController extends BaseController
         ];
 
         return view('requests/print_vrs', $data);
+    }
+
+    /**
+     * Securely stream an emergency justification document.
+     * Enforces authentication, authorization, and path traversal prevention.
+     */
+    public function justification(int|string $id)
+    {
+        $session = session();
+        $userRole = (string) $session->get('user_role');
+        $userId   = (int) $session->get('user_id');
+
+        $request = $this->requestModel->find((int) $id);
+        if (!$request || empty($request['justification_file'])) {
+            return redirect()->to('/requests')->with('error', 'Justification document not found.');
+        }
+
+        // Requestors can only download justification documents for their own requests
+        if ($userRole === 'requestor' && (int) $request['requestor_id'] !== $userId) {
+            return redirect()->to('/requests')->with('error', 'Access restricted: You cannot view documents from other staff members.');
+        }
+
+        $baseName = basename((string) $request['justification_file']);
+
+        // Check protected writable directory first, then legacy public directory
+        $privatePath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'justifications' . DIRECTORY_SEPARATOR . $baseName;
+        $legacyPath  = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'justifications' . DIRECTORY_SEPARATOR . $baseName;
+
+        $targetPath = is_file($privatePath) ? $privatePath : (is_file($legacyPath) ? $legacyPath : null);
+
+        if (!$targetPath || !is_file($targetPath)) {
+            return redirect()->to('/requests/' . (int) $id)->with('error', 'The requested file could not be found on storage.');
+        }
+
+        $ext = strtolower(pathinfo($targetPath, PATHINFO_EXTENSION));
+        $contentTypes = [
+            'pdf'  => 'application/pdf',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+        ];
+
+        $contentType = $contentTypes[$ext] ?? 'application/octet-stream';
+
+        return $this->response
+            ->setHeader('Content-Type', $contentType)
+            ->setHeader('Content-Disposition', 'inline; filename="' . esc($baseName) . '"')
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setBody(file_get_contents($targetPath));
+    }
+
+    /**
+     * Securely route legacy URLs (/uploads/justifications/<filename>)
+     */
+    public function serveJustificationFile(string $filename)
+    {
+        $session = session();
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login');
+        }
+
+        $baseName = basename($filename);
+        $request = $this->requestModel->like('justification_file', $baseName)->first();
+        if ($request) {
+            return $this->justification((int) $request['id']);
+        }
+
+        $userRole = (string) $session->get('user_role');
+        if ($userRole === 'requestor') {
+            return redirect()->to('/requests')->with('error', 'Access restricted.');
+        }
+
+        $privatePath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'justifications' . DIRECTORY_SEPARATOR . $baseName;
+        $legacyPath  = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'justifications' . DIRECTORY_SEPARATOR . $baseName;
+
+        $targetPath = is_file($privatePath) ? $privatePath : (is_file($legacyPath) ? $legacyPath : null);
+
+        if (!$targetPath || !is_file($targetPath)) {
+            return redirect()->to('/requests')->with('error', 'File not found.');
+        }
+
+        $ext = strtolower(pathinfo($targetPath, PATHINFO_EXTENSION));
+        $contentTypes = [
+            'pdf'  => 'application/pdf',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+        ];
+
+        $contentType = $contentTypes[$ext] ?? 'application/octet-stream';
+
+        return $this->response
+            ->setHeader('Content-Type', $contentType)
+            ->setHeader('Content-Disposition', 'inline; filename="' . esc($baseName) . '"')
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setBody(file_get_contents($targetPath));
     }
 }

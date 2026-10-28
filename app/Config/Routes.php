@@ -60,8 +60,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('vehicles/(:num)/delete', 'VehicleController::delete/$1');
     });
 
-    // Dispatch & Personnel Operations (Admin, Dispatcher, Approver Admin)
-    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin'], static function ($routes) {
+    // Dispatch & Personnel Operations (Admin, Dispatcher, Approver Admin, Auditor)
+    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin,auditor'], static function ($routes) {
         // Drivers & Operators
         $routes->get('drivers', 'DriverController::index');
         $routes->get('drivers/new', 'DriverController::create');
@@ -86,11 +86,13 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     });
 
     // Driver Mobile Web Portal (SDD §6.2)
-    $routes->get('driver/trips', 'DriverController::mobileApp');
-    $routes->post('driver/status', 'DriverController::updateDutyStatus');
-    $routes->post('driver/incident', 'DriverController::reportIncident');
-    $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
-    $routes->post('driver/depart-dest', 'DriverController::departDestination');
+    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,auditor'], static function ($routes) {
+        $routes->get('driver/trips', 'DriverController::mobileApp');
+        $routes->post('driver/status', 'DriverController::updateDutyStatus');
+        $routes->post('driver/incident', 'DriverController::reportIncident');
+        $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
+        $routes->post('driver/depart-dest', 'DriverController::departDestination');
+    });
 
     // =========================================================================
     // PHILIPPINE INFORMATION AGENCY - MOTORPOOL FLEET WORKFLOW (BRD & SDD)
@@ -103,6 +105,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('requests', 'RequestController::store');
         $routes->get('requests/(:num)', 'RequestController::show/$1');
         $routes->get('requests/(:num)/print', 'RequestController::printVrs/$1');
+        $routes->get('requests/(:num)/justification', 'RequestController::justification/$1');
+        $routes->get('uploads/justifications/(:segment)', 'RequestController::serveJustificationFile/$1');
     });
 
     // 2. Multi-Tier Approval Portal & SLA Watcher (Motorpool Dispatcher = Tier 1, Admin Division Head = Tier 2)

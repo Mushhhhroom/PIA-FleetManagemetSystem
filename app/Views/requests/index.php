@@ -274,7 +274,7 @@
                                                 <div class="text-dark small mt-1"><?= esc($r['justification_notes']) ?></div>
                                             <?php endif; ?>
                                         </div>
-                                        <a href="<?= base_url($r['justification_file']) ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
+                                        <a href="<?= base_url('requests/' . $r['id'] . '/justification') ?>" target="_blank" class="btn btn-sm btn-primary ms-2 flex-shrink-0">
                                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Inspect File
                                         </a>
                                     </div>

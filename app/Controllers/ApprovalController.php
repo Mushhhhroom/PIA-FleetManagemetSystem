@@ -31,14 +31,22 @@ class ApprovalController extends BaseController
         $userRole = $session->get('user_role');
         $userId   = $session->get('user_id');
 
-        // Check pending requests by tier
+        // Check pending requests by tier with full requestor, department, driver, and approver details
         $builder = $this->requestModel->select('trip_requests.*,
-                                                offices.office_name, offices.office_code,
+                                                offices.office_name, offices.office_code, offices.office_type, offices.address AS office_address,
+                                                departments.department_name, departments.department_code, departments.head_name AS department_head,
                                                 users.name AS requestor_full_name, users.designation AS requestor_designation,
+                                                users.email AS requestor_email, users.phone AS requestor_phone,
+                                                CONCAT(drivers.first_name, \' \', drivers.last_name) AS requested_driver_name,
+                                                drivers.driver_code AS requested_driver_code,
                                                 disp_u.name AS dispatcher_approver_name,
-                                                adm_u.name AS admin_approver_name')
+                                                disp_u.designation AS dispatcher_approver_designation,
+                                                adm_u.name AS admin_approver_name,
+                                                adm_u.designation AS admin_approver_designation')
                                       ->join('offices', 'offices.id = trip_requests.office_id', 'left')
+                                      ->join('departments', 'departments.id = trip_requests.department_id', 'left')
                                       ->join('users', 'users.id = trip_requests.requestor_id', 'left')
+                                      ->join('drivers', 'drivers.id = trip_requests.requested_driver_id', 'left')
                                       ->join('users AS disp_u', 'disp_u.id = trip_requests.dispatcher_approver_id', 'left')
                                       ->join('users AS adm_u', 'adm_u.id = trip_requests.admin_approver_id', 'left')
                                       ->orderBy('trip_requests.is_rush_request', 'DESC')

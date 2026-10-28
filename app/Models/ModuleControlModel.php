@@ -237,8 +237,9 @@ class ModuleControlModel extends Model
      */
     public function ensureInitialized(): void
     {
-        if ($this->countAllResults() === 0) {
-            foreach (self::DEFAULT_MODULES as $mod) {
+        $existing = array_column($this->findAll(), 'module_key');
+        foreach (self::DEFAULT_MODULES as $mod) {
+            if (!in_array($mod['module_key'], $existing, true)) {
                 $this->insert($mod);
             }
         }
