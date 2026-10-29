@@ -253,7 +253,7 @@
         </tr>
         <tr>
             <td colspan="5" style="font-size: 8pt;">
-                Fuel Purchase Cost: <strong>â‚±<?= number_format((float)$ticket['fuel_purchased_cost'], 2) ?></strong> &bull;
+                Fuel Purchase Cost: <strong>₱<?= number_format((float)$ticket['fuel_purchased_cost'], 2) ?></strong> &bull;
                 Efficiency: <strong><?= number_format((float)$ticket['fuel_efficiency_kml'], 2) ?> KM/L</strong>
                 <?php if ((int)$ticket['fuel_anomaly_flag'] === 1): ?>
                     <span style="color: #900; font-weight: 700;">(>20% COA Variance Flagged)</span>

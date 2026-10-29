@@ -3,6 +3,7 @@
 namespace App\Filters;
 
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -60,7 +61,7 @@ class ApiAuthFilter implements FilterInterface
                 ->setJSON([
                     'status'  => 'error',
                     'code'    => 'UNAUTHORIZED',
-                    'message' => 'Authentication required: State-modifying REST APIs require an active user session or valid API key (X-API-Key or Bearer token).',
+                    'message' => 'Authentication required: Fleet telematics, live tracking, and REST APIs require an active user session or valid API key (X-API-Key or Bearer token).',
                 ]);
         }
 
@@ -106,8 +107,12 @@ class ApiAuthFilter implements FilterInterface
             return trim(substr($authHeader, 7));
         }
 
-        $queryKey = $request->getVar('api_key') ?? $request->getVar('key');
-        return is_string($queryKey) && $queryKey !== '' ? trim($queryKey) : null;
+        if ($request instanceof IncomingRequest) {
+            $queryKey = $request->getVar('api_key') ?? $request->getVar('key');
+            return is_string($queryKey) && $queryKey !== '' ? trim($queryKey) : null;
+        }
+
+        return null;
     }
 
     /**

@@ -32,7 +32,7 @@ class TripTicketModel extends Model
         $builder = $this->select('trip_tickets.*,
                                   vehicles.plate_number, vehicles.vehicle_code, vehicles.make, vehicles.model, vehicles.fuel_type,
                                   drivers.driver_code, CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name, drivers.phone AS driver_phone,
-                                  trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination, trip_requests.purpose,
+                                  trip_requests.request_number, trip_requests.requestor_name, trip_requests.destination, trip_requests.purpose, trip_requests.passenger_names,
                                   offices.office_code, offices.office_name')
                         ->join('vehicles', 'vehicles.id = trip_tickets.vehicle_id', 'left')
                         ->join('drivers', 'drivers.id = trip_tickets.driver_id', 'left')

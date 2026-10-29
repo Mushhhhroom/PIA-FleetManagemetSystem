@@ -105,8 +105,6 @@ class ApiController extends BaseController
         $vehicleModel = new VehicleModel();
         $vehicles = $vehicleModel->select('vehicles.*,
                                           COALESCE(NULLIF(CONCAT(d1.first_name, \' \', d1.last_name), \' \'), NULLIF(CONCAT(d2.first_name, \' \', d2.last_name), \' \')) AS driver_name,
-                                          COALESCE(d1.phone, d2.phone) AS driver_phone,
-                                          COALESCE(d1.license_type, d2.license_type) AS license_type,
                                           trip_tickets.id AS active_ticket_id,
                                           trip_tickets.ticket_serial_no AS trip_number,
                                           trip_tickets.status AS ticket_status,
@@ -166,7 +164,6 @@ class ApiController extends BaseController
                     'heading'         => (float) $v['heading'],
                     'fuel_level'      => (float) $v['current_fuel_level'],
                     'driver_name'     => $v['driver_name'] ?: 'Unassigned',
-                    'driver_phone'    => $v['driver_phone'] ?: '',
                     'geofence'        => $v['current_geofence'],
                     'trip_number'     => $v['trip_number'] ?: null,
                     'destination'     => $v['destination_address'] ?: null,
@@ -216,7 +213,6 @@ class ApiController extends BaseController
         $vehicleModel = new VehicleModel();
         $vehicle = $vehicleModel->select('vehicles.*,
                                          CONCAT(drivers.first_name, \' \', drivers.last_name) AS driver_name,
-                                         drivers.phone AS driver_phone,
                                          trip_tickets.id AS active_ticket_id,
                                          trip_tickets.ticket_serial_no AS trip_number,
                                          trip_tickets.status AS ticket_status,
@@ -692,6 +688,12 @@ class ApiController extends BaseController
     {
         $ticketModel = new TripTicketModel();
         $tickets = $ticketModel->getTicketsWithDetails(['status' => 'departed']);
+
+        // Redact driver personal PII (phone number, license number) from API stream
+        foreach ($tickets as &$t) {
+            unset($t['driver_phone'], $t['license_number']);
+        }
+        unset($t);
 
         return $this->corsResponse([
             'status' => 'success',

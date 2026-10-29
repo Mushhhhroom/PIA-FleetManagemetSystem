@@ -13,32 +13,35 @@ $routes->get('logout', 'AuthController::logout');
 $routes->get('login/mfa', 'AuthController::mfaChallenge');
 $routes->post('login/mfa', 'AuthController::mfaVerify');
 
-// Public RESTful APIs for IoT Telematics, Mapping System & Fleet Integration
+// RESTful APIs for IoT Telematics, Mapping System & Fleet Integration
 $routes->group('api/v1', static function ($routes) {
     // CORS Preflight
     $routes->options('(:any)', 'ApiController::optionsHandler');
 
-    // Fleet Asset Registry
-    $routes->get('vehicles', 'ApiController::getVehicles');
-    $routes->get('vehicles/(:num)', 'ApiController::getVehicle/$1');
+    // Protected Telematics, Fleet Registry & Live Tracking Endpoints (Session or API Key Required)
+    $routes->group('', ['filter' => 'api_auth'], static function ($routes) {
+        // Fleet Asset Registry
+        $routes->get('vehicles', 'ApiController::getVehicles');
+        $routes->get('vehicles/(:num)', 'ApiController::getVehicle/$1');
 
-    // Core Real-Time Mapping & Telematics Endpoints
-    $routes->get('tracking', 'ApiController::getLiveTracking');
-    $routes->get('map', 'ApiController::getLiveTracking');
-    $routes->get('map/vehicles', 'ApiController::getLiveTracking');
-    $routes->get('tracking/(:num)', 'ApiController::getVehicleTracking/$1');
-    $routes->get('tracking/(:num)/trail', 'ApiController::getVehicleTrail/$1');
-    $routes->post('tracking/simulate-step', 'ApiController::simulateStep', ['filter' => 'api_auth:admin,dispatcher']);
+        // Core Real-Time Mapping & Telematics Endpoints
+        $routes->get('tracking', 'ApiController::getLiveTracking');
+        $routes->get('map', 'ApiController::getLiveTracking');
+        $routes->get('map/vehicles', 'ApiController::getLiveTracking');
+        $routes->get('tracking/(:num)', 'ApiController::getVehicleTracking/$1');
+        $routes->get('tracking/(:num)/trail', 'ApiController::getVehicleTrail/$1');
+        $routes->post('tracking/simulate-step', 'ApiController::simulateStep', ['filter' => 'api_auth:admin,dispatcher']);
 
-    // Route Geometry, Geocoding & Map Provider Configuration API
-    $routes->match(['get', 'post'], 'route', 'ApiController::calculateRoute');
-    $routes->get('geocode', 'ApiController::geocode');
-    $routes->get('map/config', 'ApiController::getMapConfig');
+        // Route Geometry, Geocoding & Map Provider Configuration API
+        $routes->match(['get', 'post'], 'route', 'ApiController::calculateRoute');
+        $routes->get('geocode', 'ApiController::geocode');
+        $routes->get('map/config', 'ApiController::getMapConfig');
 
-    // Telemetry Ingestion & Log History
-    $routes->get('telemetry', 'ApiController::getTelemetry');
-    $routes->post('telemetry', 'ApiController::ingestTelemetry', ['filter' => 'api_auth:admin,dispatcher,driver']);
-    $routes->get('trips/active', 'ApiController::getActiveTrips');
+        // Telemetry Ingestion & Log History
+        $routes->get('telemetry', 'ApiController::getTelemetry');
+        $routes->post('telemetry', 'ApiController::ingestTelemetry', ['filter' => 'api_auth:admin,dispatcher,driver']);
+        $routes->get('trips/active', 'ApiController::getActiveTrips');
+    });
 });
 
 // Authenticated Application Routes (Protected by Auth and Role RBAC)

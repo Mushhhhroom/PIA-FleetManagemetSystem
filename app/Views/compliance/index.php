@@ -124,7 +124,7 @@
             </thead>
             <tbody>
                 <?php if (empty($fuelAnalytics)): ?>
-                    <tr><td colspan="7" class="text-center py-4 text-muted">No completed trips with fuel data for this month.</td></tr>
+                    <tr><td colspan="9" class="text-center py-4 text-muted">No completed trips with fuel data for this month.</td></tr>
                 <?php else: ?>
                     <?php foreach ($fuelAnalytics as $t): ?>
                         <tr>

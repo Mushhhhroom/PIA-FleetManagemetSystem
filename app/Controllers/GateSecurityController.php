@@ -286,6 +286,8 @@ class GateSecurityController extends BaseController
                 'status'            => 'active',
                 'odometer_km'       => $odometer,
                 'current_driver_id' => null,
+                'engine_status'     => 'off',
+                'current_speed'     => 0.00,
             ]);
 
             $this->driverModel->update($driverId, [
