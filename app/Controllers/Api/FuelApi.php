@@ -19,6 +19,26 @@ class FuelApi extends BaseController
         $odo = (float)$this->request->getPost('odometer_km');
         $station = $this->request->getPost('fuel_station');
 
+        $vehicle = $vehicleModel->find($vehicleId);
+        if (!$vehicle) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status'  => 'error',
+                'message' => 'Vehicle not found.',
+            ]);
+        }
+
+        // Lock driver_id to authenticated driver when invoked via session
+        $session = session();
+        $userRole = $session->get('user_role');
+        $driverId = (int)$this->request->getPost('driver_id') ?: null;
+        if ($session->get('logged_in') && $userRole === 'driver') {
+            $driverModel = new \App\Models\DriverModel();
+            $currentDriver = $driverModel->where('user_id', $session->get('user_id'))->first();
+            if ($currentDriver) {
+                $driverId = (int)$currentDriver['id'];
+            }
+        }
+
         // Handle receipt image upload with strict type, size, and magic byte validation
         $receiptFile = $this->request->getFile('receipt_image');
         $receiptName = null;
@@ -64,7 +84,7 @@ class FuelApi extends BaseController
         $data = [
             'receipt_no'     => $receiptNo,
             'vehicle_id'     => $vehicleId,
-            'driver_id'      => (int)$this->request->getPost('driver_id') ?: null,
+            'driver_id'      => $driverId,
             'fuel_date'      => date('Y-m-d'),
             'odometer_km'    => $odo,
             'liters'         => $liters,

@@ -225,6 +225,12 @@ class TripTicketController extends BaseController
             $updateData['passenger_certified_at'] = $updateData['passenger_certified_at'] ?: $now;
             $this->requestModel->update($ticket['request_id'], ['status' => 'completed']);
 
+            // Ensure driver duty status is set to 'available' (Standby for next dispatch)
+            if (!empty($ticket['driver_id'])) {
+                $driverModel = new \App\Models\DriverModel();
+                $driverModel->update((int)$ticket['driver_id'], ['status' => 'available']);
+            }
+
             // FR-1.3: completing the trip satisfies the post-trip
             // documentation requirement of an emergency override
             $request = $this->requestModel->find($ticket['request_id']);

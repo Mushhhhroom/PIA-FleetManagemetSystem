@@ -190,8 +190,12 @@ class RouteService
      */
     public function validateTelematicsRequest(?string $providedKey, bool $hasActiveSession = false): bool
     {
-        if ($hasActiveSession || !$this->hasValidKey($this->telematicsApiKey)) {
+        if ($hasActiveSession) {
             return true;
+        }
+
+        if (!$this->hasValidKey($this->telematicsApiKey)) {
+            return false;
         }
 
         if ($providedKey === null || $providedKey === '') {

@@ -31,6 +31,69 @@
     </div>
 </div>
 
+<!-- Motorpool Operations & Road Advisory Broadcast Banner -->
+<div class="card-panel mb-4" style="border-left: 4px solid <?= !empty($activeAdvisory) && $activeAdvisory['severity'] === 'danger' ? '#dc2626' : (!empty($activeAdvisory) && $activeAdvisory['severity'] === 'warning' ? '#d97706' : '#2563eb') ?>;">
+    <div class="card-panel-header bg-white d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: <?= !empty($activeAdvisory) && $activeAdvisory['severity'] === 'danger' ? '#fef2f2; color: #dc2626;' : (!empty($activeAdvisory) && $activeAdvisory['severity'] === 'warning' ? '#fffbeb; color: #d97706;' : '#eff6ff; color: #2563eb;') ?> font-size: 0.95rem;">
+                <i class="fa-solid fa-bullhorn"></i>
+            </span>
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-bold text-dark small text-uppercase">Motorpool Operations &amp; Driver Road Advisory</span>
+                    <?php if (!empty($activeAdvisory)): ?>
+                        <span class="badge <?= $activeAdvisory['severity'] === 'danger' ? 'bg-danger' : ($activeAdvisory['severity'] === 'warning' ? 'bg-warning text-dark' : 'bg-primary') ?> mono" style="font-size: 0.65rem;">
+                            <?= strtoupper(esc($activeAdvisory['category'])) ?>
+                        </span>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle small" style="font-size: 0.65rem;">
+                            <span class="status-dot d-inline-block me-1" style="background: #059669; width: 6px; height: 6px; border-radius: 50%;"></span>
+                            LIVE ON DRIVER MOBILE PORTALS
+                        </span>
+                    <?php else: ?>
+                        <span class="badge bg-light text-muted border small" style="font-size: 0.65rem;">No Active Broadcast</span>
+                    <?php endif; ?>
+                </div>
+                <div class="text-muted" style="font-size: 0.72rem;">Broadcast live traffic, severe weather precautions, and compound gate instructions directly to all field &amp; standby drivers.</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <?php if (!empty($activeAdvisory)): ?>
+                <form action="<?= base_url('dispatch/advisories/' . $activeAdvisory['id'] . '/toggle') ?>" method="POST" class="d-inline m-0">
+                    <?= !is_cli() ? csrf_field() : '' ?>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Archive this advisory">
+                        <i class="fa-solid fa-box-archive me-1"></i> Archive
+                    </button>
+                </form>
+            <?php endif; ?>
+            <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#postAdvisoryModal">
+                <i class="fa-solid fa-plus me-1"></i> Post New Advisory
+            </button>
+        </div>
+    </div>
+    <div class="p-3 bg-light bg-opacity-50 border-top">
+        <?php if (!empty($activeAdvisory)): ?>
+            <div class="d-flex align-items-start gap-2">
+                <div class="flex-grow-1">
+                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.92rem;">
+                        <?= esc($activeAdvisory['title']) ?>
+                    </h6>
+                    <p class="text-secondary small mb-2" style="font-size: 0.8rem; line-height: 1.45;">
+                        <?= nl2br(esc($activeAdvisory['message'])) ?>
+                    </p>
+                    <div class="mono text-muted d-flex align-items-center gap-3 flex-wrap" style="font-size: 0.7rem;">
+                        <span><i class="fa-solid fa-user-shield me-1"></i> Dispatcher: <?= esc($activeAdvisory['dispatcher_name']) ?></span>
+                        <span><i class="fa-solid fa-clock me-1"></i> Posted: <?= date('M d, Y h:i A', strtotime($activeAdvisory['created_at'])) ?></span>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="text-muted small py-1">
+                <i class="fa-solid fa-circle-info text-secondary me-1"></i> No active motorpool advisory currently broadcasted. Click <strong>"Post New Advisory"</strong> to transmit road alerts, severe weather protocols, or compound gate notices to all drivers.
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <?php if (!empty($totalDriverConflicts) && $totalDriverConflicts > 0): ?>
 <!-- Driver Availability Conflict Alert Banner -->
 <div class="alert alert-danger border-danger-subtle d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 shadow-sm mb-4">
@@ -353,37 +416,120 @@
         </div>
     </div>
 
-    <!-- Certified Drivers Pool -->
+    <!-- Certified Drivers Standby & Deployment Console -->
     <div class="col-lg-5">
         <div class="card-panel h-100">
             <div class="card-panel-header bg-white d-flex align-items-center justify-content-between">
-                <span class="fw-bold text-dark small text-uppercase">
-                    <i class="fa-solid fa-id-card me-1 text-primary"></i> Certified Driver Pool
-                </span>
-                <span class="badge bg-light text-muted border small"><?= count($drivers) ?> Drivers</span>
+                <div>
+                    <span class="fw-bold text-dark small text-uppercase">
+                        <i class="fa-solid fa-id-card me-1 text-primary"></i> Driver Standby &amp; Deployment Console
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle small">
+                        <span class="status-dot d-inline-block me-1" style="background: #059669; width: 6px; height: 6px; border-radius: 50%;"></span>
+                        <?= $standbyCount ?? 0 ?> Standby
+                    </span>
+                    <span class="badge bg-light text-muted border small"><?= count($drivers) ?> Total</span>
+                </div>
             </div>
-            <div class="p-3">
+
+            <!-- Standby Quick Filters & Search Bar -->
+            <div class="p-3 bg-light border-bottom">
+                <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="driverRosterSearch" class="form-control border-start-0" placeholder="Filter driver by name or code..." onkeyup="filterDriverRoster()">
+                </div>
+                <div class="d-flex gap-1 flex-wrap" id="driverStatusPills">
+                    <button type="button" class="btn btn-xs btn-primary fw-semibold roster-filter-pill active" onclick="setRosterFilter('all', this)">
+                        All (<?= count($drivers) ?>)
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold roster-filter-pill" onclick="setRosterFilter('available', this)">
+                        <span class="status-dot d-inline-block me-1" style="background: #059669; width: 6px; height: 6px; border-radius: 50%;"></span>
+                        Standby (<?= $standbyCount ?? 0 ?>)
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold roster-filter-pill" onclick="setRosterFilter('on_trip', this)">
+                        On Trip (<?= $onTripCount ?? 0 ?>)
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary fw-semibold roster-filter-pill" onclick="setRosterFilter('off_duty', this)">
+                        Off Duty (<?= $offDutyCount ?? 0 ?>)
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-3" style="max-height: 480px; overflow-y: auto;" id="driverRosterList">
                 <?php foreach ($drivers as $d): ?>
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 border rounded-2 bg-white">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-light border p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                <i class="fa-solid fa-user-tie text-secondary small"></i>
+                    <?php
+                        $dStatus = $d['status'] ?? 'available';
+                        $statusClass = match($dStatus) {
+                            'available' => 'available',
+                            'on_trip'   => 'on_trip',
+                            default     => 'off_duty'
+                        };
+                    ?>
+                    <div class="driver-roster-item p-2 mb-2 border rounded-2 bg-white" data-status="<?= esc($statusClass) ?>" data-search="<?= esc(strtolower($d['first_name'] . ' ' . $d['last_name'] . ' ' . $d['driver_code'])) ?>">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-light border p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="fa-solid fa-user-tie text-secondary small"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small">
+                                        <?= esc($d['first_name'] . ' ' . $d['last_name']) ?>
+                                        <?php if (!empty($d['phone'])): ?>
+                                            <a href="tel:<?= esc($d['phone']) ?>" class="text-secondary ms-1 small" title="Direct Phone Call: <?= esc($d['phone']) ?>">
+                                                <i class="fa-solid fa-phone text-muted" style="font-size: 0.7rem;"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="mono text-muted" style="font-size: 0.7rem;">
+                                        <?= esc($d['driver_code']) ?> &bull; <?= esc($d['license_number']) ?>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <div class="fw-bold text-dark small"><?= esc($d['first_name'] . ' ' . $d['last_name']) ?></div>
-                                <div class="mono text-muted" style="font-size: 0.7rem;"><?= esc($d['driver_code']) ?> &bull; <?= esc($d['license_number']) ?></div>
+                            <div class="text-end">
+                                <?php if ($dStatus === 'available'): ?>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle small">
+                                        <span class="status-dot d-inline-block me-1" style="background: #059669; width: 6px; height: 6px; border-radius: 50%;"></span>
+                                        Standby Ready
+                                    </span>
+                                <?php elseif ($dStatus === 'on_trip'): ?>
+                                    <span class="badge bg-primary text-white small">
+                                        <i class="fa-solid fa-car-side me-1"></i> In Transit
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary text-white small"><?= ucfirst(str_replace('_', ' ', $dStatus)) ?></span>
+                                <?php endif; ?>
+                                <div class="mono text-muted" style="font-size: 0.68rem; margin-top: 2px;">
+                                    Safety: <?= $d['safety_score'] ?>%
+                                </div>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <?php if ($d['status'] === 'available'): ?>
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle small">Available</span>
-                            <?php elseif ($d['status'] === 'on_trip'): ?>
-                                <span class="badge bg-primary text-white small">On Trip</span>
-                            <?php else: ?>
-                                <span class="badge bg-secondary text-white small"><?= ucfirst($d['status']) ?></span>
-                            <?php endif; ?>
-                            <div class="mono text-muted" style="font-size: 0.68rem; margin-top: 2px;">
-                                Safety: <?= $d['safety_score'] ?>%
+
+                        <!-- Driver Deployment Status & Quick Pair Action -->
+                        <div class="d-flex align-items-center justify-content-between pt-1 border-top mt-1" style="font-size: 0.72rem;">
+                            <div class="text-muted">
+                                <?php if ($dStatus === 'available'): ?>
+                                    <span class="text-success fw-medium">
+                                        <i class="fa-solid fa-warehouse me-1"></i> Stationed at Lounge
+                                        <?php if (!empty($d['standby_checkin_at'])): ?>
+                                            &bull; In: <?= date('h:i A', strtotime($d['standby_checkin_at'])) ?>
+                                        <?php endif; ?>
+                                    </span>
+                                <?php elseif ($dStatus === 'on_trip'): ?>
+                                    <span class="text-primary fw-medium"><i class="fa-solid fa-route me-1"></i> Field Travel Mission</span>
+                                <?php else: ?>
+                                    <span class="text-secondary"><i class="fa-solid fa-moon me-1"></i> Off Duty / Resting</span>
+                                <?php endif; ?>
+                            </div>
+                            <div>
+                                <?php if ($dStatus === 'available' && !empty($pendingDispatch)): ?>
+                                    <a href="<?= base_url('dispatch/assign/' . $pendingDispatch[0]['id'] . '?driver_id=' . $d['id']) ?>" class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold" style="font-size: 0.68rem;" title="Pair this standby driver with <?= esc($pendingDispatch[0]['request_number']) ?>">
+                                        <i class="fa-solid fa-truck-fast me-1"></i> Quick Pair
+                                    </a>
+                                <?php elseif ($dStatus === 'available'): ?>
+                                    <span class="badge bg-light text-muted border mono" style="font-size: 0.62rem;">Waiting Trip</span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -463,7 +609,98 @@
     <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- Modal: Post Motorpool Road, Weather, or Compound Advisory -->
+<div class="modal fade text-start" id="postAdvisoryModal" tabindex="-1" aria-labelledby="postAdvisoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h6 class="modal-title fw-bold text-dark" id="postAdvisoryModalLabel">
+                    <i class="fa-solid fa-bullhorn text-primary me-2"></i> Broadcast Motorpool Road &amp; Weather Advisory
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="<?= base_url('dispatch/advisories') ?>" method="POST">
+                <?= !is_cli() ? csrf_field() : '' ?>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-info-subtle p-2 px-3 small mb-3">
+                        <i class="fa-solid fa-circle-info me-1"></i> Transmits an instant alert banner to all mobile driver consoles and posts a system notification to active drivers.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Advisory Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. Heavy Rain Alert / Road Repair along Commonwealth Ave" required>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Category</label>
+                            <select name="category" class="form-select form-select-sm">
+                                <option value="Road Traffic">Road Traffic &amp; Hazards</option>
+                                <option value="Weather Alert">Severe Weather &amp; Storm</option>
+                                <option value="Compound Protocol">Compound &amp; Gate Protocol</option>
+                                <option value="Fleet Notice">Fleet Notice &amp; BLOWBAGETS</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Severity Level</label>
+                            <select name="severity" class="form-select form-select-sm">
+                                <option value="info">Info (Standard Blue Notice)</option>
+                                <option value="warning">Warning (Caution / Yellow Advisory)</option>
+                                <option value="danger">Danger (Urgent Hazard / Red Alert)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Advisory Message Content <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control form-control-sm" rows="3" placeholder="Provide clear instructions for drivers (e.g. Expect 25-minute delays; keep headlights on; speed limit reduced to 40 km/h; Gate #1 ingress only)." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light p-3">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Broadcast to All Drivers
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentRosterStatus = 'all';
+
+function setRosterFilter(status, el) {
+    currentRosterStatus = status;
+    document.querySelectorAll('.roster-filter-pill').forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-secondary');
+    });
+    if (el) {
+        el.classList.remove('btn-outline-secondary');
+        el.classList.add('btn-primary', 'active');
+    }
+    filterDriverRoster();
+}
+
+function filterDriverRoster() {
+    const searchVal = (document.getElementById('driverRosterSearch')?.value || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.driver-roster-item');
+
+    items.forEach(item => {
+        const itemStatus = item.getAttribute('data-status');
+        const itemSearch = item.getAttribute('data-search') || '';
+
+        const matchesStatus = (currentRosterStatus === 'all' || itemStatus === currentRosterStatus);
+        const matchesSearch = (searchVal === '' || itemSearch.includes(searchVal));
+
+        if (matchesStatus && matchesSearch) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
 function updateMergeState() {
     const checkboxes = document.querySelectorAll('.merge-checkbox:checked');
     const count = checkboxes.length;

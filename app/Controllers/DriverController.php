@@ -63,6 +63,7 @@ class DriverController extends BaseController
         // 1. Official Driver's Trip Tickets (ADMIN-F-001 rev1)
         $tripTickets = [];
         $activeTicket = null;
+        $lastCompletedTicket = null;
         if ($driver) {
             $tripTickets = $ticketModel->getTicketsWithDetails(['driver_id' => $driver['id']]);
             foreach ($tripTickets as &$tkItem) {
@@ -93,13 +94,19 @@ class DriverController extends BaseController
                     }
                 }
             }
-            if (!$activeTicket && !empty($tripTickets)) {
-                $activeTicket = $tripTickets[0];
+
+            // Identify latest completed ticket (reconciled and back in compound) for driver panel status
+            foreach ($tripTickets as $tk) {
+                if ($tk['status'] === 'completed') {
+                    $lastCompletedTicket = $tk;
+                    break;
+                }
             }
         }
 
-        // Fallback: If logged in as admin/dispatcher or driver has no active ticket, load the latest active system ticket for demo
-        if (!$activeTicket) {
+        // Demo Fallback: ONLY when NOT logged in as a driver and no specific driver context exists
+        $userRole = session()->get('user_role');
+        if (!$activeTicket && $userRole !== 'driver' && empty($driverId) && empty($tripTickets)) {
             $anyActive = $ticketModel->whereIn('status', ['departed', 'arrived_dest', 'departed_dest', 'issued', 'returned'])->orderBy('id', 'DESC')->first();
             if ($anyActive) {
                 $ticketList = $ticketModel->getTicketsWithDetails(['id' => $anyActive['id']]);
@@ -109,10 +116,13 @@ class DriverController extends BaseController
             }
         }
 
-        // If no vehicle directly assigned, find vehicle from active or recent trip ticket
+        // If no vehicle directly assigned, find vehicle from active, completed, or recent trip ticket
         if (!$vehicle) {
             if ($activeTicket && !empty($activeTicket['vehicle_id'])) {
                 $vehicle = $vehicleModel->find($activeTicket['vehicle_id']);
+            }
+            if (!$vehicle && $lastCompletedTicket && !empty($lastCompletedTicket['vehicle_id'])) {
+                $vehicle = $vehicleModel->find($lastCompletedTicket['vehicle_id']);
             }
             if (!$vehicle && !empty($tripTickets)) {
                 $vehicle = $vehicleModel->find($tripTickets[0]['vehicle_id']);
@@ -154,18 +164,24 @@ class DriverController extends BaseController
         // List of drivers for quick mobile switcher
         $allDrivers = $driverModel->findAll();
 
+        // 7. Latest Motorpool Advisory from Dispatcher
+        $advisoryModel = new \App\Models\AdvisoryModel();
+        $activeAdvisory = $advisoryModel->getLatestActive();
+
         return view('driver/trips', [
-            'driver'           => $driver,
-            'vehicle'          => $vehicle,
-            'tripTickets'      => $tripTickets,
-            'activeTicket'     => $activeTicket,
-            'rfidCards'        => $rfidCards,
-            'blowbagetsPassed' => $blowbagetsPassed,
-            'checklistItems'   => SafetyCheckModel::checklistItems(),
-            'recentDelays'     => $recentDelays,
-            'recentFuelLogs'   => $recentFuelLogs,
-            'recentIncidents'  => $recentIncidents,
-            'allDrivers'       => $allDrivers,
+            'driver'              => $driver,
+            'vehicle'             => $vehicle,
+            'tripTickets'         => $tripTickets,
+            'activeTicket'        => $activeTicket,
+            'lastCompletedTicket' => $lastCompletedTicket,
+            'rfidCards'           => $rfidCards,
+            'blowbagetsPassed'    => $blowbagetsPassed,
+            'checklistItems'      => SafetyCheckModel::checklistItems(),
+            'recentDelays'        => $recentDelays,
+            'recentFuelLogs'      => $recentFuelLogs,
+            'recentIncidents'     => $recentIncidents,
+            'allDrivers'          => $allDrivers,
+            'activeAdvisory'      => $activeAdvisory,
         ]);
     }
 
@@ -181,6 +197,88 @@ class DriverController extends BaseController
         }
 
         return redirect()->to('/driver/trips')->with('error', 'Unable to update duty status.');
+    }
+
+    /**
+     * Driver confirms physical presence and standby readiness at the PIA Motorpool Drivers' Lounge
+     */
+    public function standbyCheckIn()
+    {
+        $driverModel = new DriverModel();
+        $session = session();
+        $userId = $session->get('user_id');
+        $userRole = $session->get('user_role');
+
+        $driver = null;
+        if ($userRole === 'driver' && $userId) {
+            $driver = $driverModel->where('user_id', $userId)->first();
+            if (!$driver && $session->get('user_email')) {
+                $driver = $driverModel->where('email', $session->get('user_email'))->first();
+            }
+        } elseif (in_array($userRole, ['admin', 'dispatcher'], true)) {
+            $driverId = (int)$this->request->getPost('driver_id');
+            if ($driverId) {
+                $driver = $driverModel->find($driverId);
+            }
+        }
+
+        if (!$driver) {
+            $driverId = (int)$this->request->getPost('driver_id');
+            if ($driverId) {
+                $driver = $driverModel->find($driverId);
+            }
+        }
+
+        if (!$driver) {
+            if ($this->request->isAJAX() || $this->request->getHeaderLine('Content-Type') === 'application/json') {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'status' => 'error',
+                    'message' => 'Driver record not found.'
+                ]);
+            }
+            return redirect()->back()->with('error', 'Driver record not found.');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $driverModel->update($driver['id'], [
+            'status' => 'available',
+            'standby_checkin_at' => $now,
+        ]);
+
+        // Send notification to Motorpool Dispatchers
+        $userModel = new \App\Models\UserModel();
+        $dispatchers = $userModel->where('role', 'dispatcher')->findAll();
+        $notifModel = new \App\Models\NotificationModel();
+        foreach ($dispatchers as $disp) {
+            $notifModel->insert([
+                'user_id' => (int)$disp['id'],
+                'title' => "DRIVER STANDBY CHECK-IN: {$driver['first_name']} {$driver['last_name']}",
+                'message' => "Driver {$driver['first_name']} {$driver['last_name']} ({$driver['driver_code']}) has checked in present at the Motorpool Drivers' Lounge at " . date('h:i A') . " and is on standby for dispatch.",
+                'type' => 'info',
+                'link' => '/dispatch',
+                'is_read' => 0,
+                'created_at' => $now,
+            ]);
+        }
+
+        \App\Services\AuditLogger::log(
+            \App\Services\AuditLogger::STATUS_CHANGE,
+            "Driver {$driver['first_name']} {$driver['last_name']} checked in on Standby at Motorpool Drivers' Lounge.",
+            'drivers',
+            (int)$driver['id'],
+            ['standby_checkin_at' => $now]
+        );
+
+        if ($this->request->isAJAX() || $this->request->getHeaderLine('Content-Type') === 'application/json') {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Standby checked in successfully at the Motorpool Drivers\' Lounge.',
+                'timestamp' => $now,
+                'driver' => "{$driver['first_name']} {$driver['last_name']}"
+            ]);
+        }
+
+        return redirect()->to('/driver/trips')->with('success', 'Checked in at Motorpool Drivers\' Lounge! You are marked on standby and available for dispatch.');
     }
 
     public function create()
@@ -338,6 +436,17 @@ class DriverController extends BaseController
         $location = trim($this->request->getPost('location') ?: 'Highway Route');
         $description = trim($this->request->getPost('description'));
 
+        // Lock driverId to authenticated driver when invoked via session
+        $session = session();
+        $userRole = $session->get('user_role');
+        if ($session->get('logged_in') && $userRole === 'driver') {
+            $driverModel = new DriverModel();
+            $currentDriver = $driverModel->where('user_id', $session->get('user_id'))->first();
+            if ($currentDriver) {
+                $driverId = (int)$currentDriver['id'];
+            }
+        }
+
         $incNo = 'INC-' . date('Ymd-His') . '-' . rand(10, 99);
         $now = date('Y-m-d H:i:s');
 
@@ -449,6 +558,24 @@ class DriverController extends BaseController
             return redirect()->to('/driver/trips')->with('error', 'Trip ticket not found.');
         }
 
+        // Authorization check: If logged in as driver, must be assigned to this ticket
+        $session = session();
+        $userRole = $session->get('user_role');
+        if ($session->get('logged_in') && $userRole === 'driver') {
+            $driverModel = new DriverModel();
+            $currentDriver = $driverModel->where('user_id', $session->get('user_id'))->first();
+            if (!$currentDriver || (int)$ticket['driver_id'] !== (int)$currentDriver['id']) {
+                if ($isAjax) {
+                    return $this->response->setStatusCode(403)->setJSON([
+                        'status'  => 'error',
+                        'code'    => 'FORBIDDEN',
+                        'message' => 'Unauthorized: You are not authorized to modify another driver\'s trip ticket.',
+                    ]);
+                }
+                return redirect()->to('/driver/trips')->with('error', 'Unauthorized: You are not assigned to this trip ticket.');
+            }
+        }
+
         $now = date('Y-m-d H:i:s');
         $postedDestOdo = $this->request->getPost('dest_odometer') ?? ($_POST['dest_odometer'] ?? null);
         $destOdo = ($postedDestOdo !== null && $postedDestOdo !== '') ? (float) $postedDestOdo : (float) ($ticket['dest_odometer'] ?? 0);
@@ -528,6 +655,24 @@ class DriverController extends BaseController
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Trip ticket not found.']);
             }
             return redirect()->to('/driver/trips')->with('error', 'Trip ticket not found.');
+        }
+
+        // Authorization check: If logged in as driver, must be assigned to this ticket
+        $session = session();
+        $userRole = $session->get('user_role');
+        if ($session->get('logged_in') && $userRole === 'driver') {
+            $driverModel = new DriverModel();
+            $currentDriver = $driverModel->where('user_id', $session->get('user_id'))->first();
+            if (!$currentDriver || (int)$ticket['driver_id'] !== (int)$currentDriver['id']) {
+                if ($isAjax) {
+                    return $this->response->setStatusCode(403)->setJSON([
+                        'status'  => 'error',
+                        'code'    => 'FORBIDDEN',
+                        'message' => 'Unauthorized: You are not authorized to modify another driver\'s trip ticket.',
+                    ]);
+                }
+                return redirect()->to('/driver/trips')->with('error', 'Unauthorized: You are not assigned to this trip ticket.');
+            }
         }
 
         $now = date('Y-m-d H:i:s');

@@ -66,6 +66,33 @@ class GpsApi extends BaseController
             ]);
         }
 
+        // Authorization check: If logged in as driver, verify vehicle association
+        $session = session();
+        if ($session->get('logged_in') && $session->get('user_role') === 'driver') {
+            $driverModel = new DriverModel();
+            $currentDriver = $driverModel->where('user_id', $session->get('user_id'))->first();
+            if ($currentDriver) {
+                $isAllowed = ((int)($vehicle['current_driver_id'] ?? 0) === (int)$currentDriver['id']);
+                if (!$isAllowed) {
+                    $ticketModel = new \App\Models\TripTicketModel();
+                    $activeTicket = $ticketModel->where('driver_id', $currentDriver['id'])
+                                                ->where('vehicle_id', $vehicleId)
+                                                ->whereIn('status', ['departed', 'arrived_dest', 'departed_dest', 'issued'])
+                                                ->first();
+                    if ($activeTicket) {
+                        $isAllowed = true;
+                    }
+                }
+                if (!$isAllowed) {
+                    return $this->response->setStatusCode(403)->setJSON([
+                        'status'  => 'error',
+                        'code'    => 'FORBIDDEN',
+                        'message' => 'Unauthorized: You are not assigned to transmit GPS telemetry for this vehicle.',
+                    ]);
+                }
+            }
+        }
+
         // 1. Insert into high-volume GPS pings table (SDD §4.2)
         $pingModel = new GpsPingModel();
         $pingModel->insert([
