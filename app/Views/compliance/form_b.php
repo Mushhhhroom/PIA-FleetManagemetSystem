@@ -75,6 +75,8 @@
                         $totalFuel     += (float) $r['fuel_used_liters'];
                         $totalToll     += (float) ($r['toll_expense'] ?? 0);
                         $driver = trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? ''));
+                        $dest = !empty($r['authorized_destination']) ? $r['authorized_destination'] : ($r['destination'] ?? '—');
+                        $passengers = !empty($r['authorized_passengers']) ? $r['authorized_passengers'] : ($r['passenger_names'] ?: '—');
                     ?>
                     <tr>
                         <td><?= $i + 1 ?></td>
@@ -82,8 +84,8 @@
                         <td><?= esc($driver ?: ($r['requestor_name'] ?? '—')) ?></td>
                         <td><?= esc($r['license_number'] ?? '—') ?></td>
                         <td><?= esc(trim(($r['vehicle_code'] ?? '') . ' / ' . ($r['plate_number'] ?? ''))) ?></td>
-                        <td><?= esc($r['destination'] ?? '—') ?></td>
-                        <td><?= esc($r['passenger_names'] ?: '—') ?></td>
+                        <td><?= esc($dest) ?></td>
+                        <td><?= esc($passengers) ?></td>
                         <td><?= esc($r['departure_time'] ?? $r['authorized_departure'] ?? '—') ?></td>
                         <td><?= esc($r['arrival_back_time'] ?? $r['authorized_return'] ?? '—') ?></td>
                         <td style="text-align:right;"><?= number_format((float) $r['total_distance_km'], 2) ?></td>

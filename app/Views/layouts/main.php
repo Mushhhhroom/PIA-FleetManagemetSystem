@@ -1244,7 +1244,7 @@
             <!-- ============================================================
                  4 · FLEET ASSETS & INFRASTRUCTURE
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'maintenance', 'approver_admin', 'auditor'])): ?>
                 <button type="button" class="nav-section-toggle" data-nav-group="assets" aria-expanded="true">
                     Fleet Assets &amp; Infrastructure <i class="fa-solid fa-chevron-down chevron"></i>
                 </button>
@@ -1257,7 +1257,7 @@
                         <?php endif; ?>
                     </a>
                 <?php endif; ?>
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin']) && $canShow('drivers')): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin', 'auditor']) && $canShow('drivers')): ?>
                     <a href="<?= base_url('drivers') ?>" class="sidebar-link <?= strpos(uri_string(), 'drivers') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-id-card"></i> <span class="link-label">Driver Personnel</span>
                         <?php if ($isModOffline('drivers') && $userRole === 'admin'): ?>
@@ -1273,7 +1273,7 @@
                         <?php endif; ?>
                     </a>
                 <?php endif; ?>
-                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin']) && $canShow('fuel')): ?>
+                <?php if (in_array($userRole, ['admin', 'dispatcher', 'approver_admin', 'auditor']) && $canShow('fuel')): ?>
                     <a href="<?= base_url('fuel') ?>" class="sidebar-link <?= strpos(uri_string(), 'fuel') === 0 ? 'active' : '' ?>">
                         <i class="fa-solid fa-gas-pump"></i> <span class="link-label">Fuel Records</span>
                         <?php if ($isModOffline('fuel') && $userRole === 'admin'): ?>
@@ -1349,10 +1349,13 @@
             <!-- ============================================================
                  7 · MOBILE OPERATIONS
             ============================================================ -->
-            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver'])): ?>
+            <?php if (in_array($userRole, ['admin', 'dispatcher', 'driver', 'auditor']) && $canShow('driver_portal')): ?>
                 <div class="nav-section-title">Driver Operations</div>
                 <a href="<?= base_url('driver/trips') ?>" target="_blank" class="sidebar-link">
-                    <i class="fa-solid fa-compass"></i> Driver Web Portal <i class="fa-solid fa-arrow-up-right-from-square ms-auto text-muted small"></i>
+                    <i class="fa-solid fa-compass"></i> <span class="link-label">Driver Web Portal</span> <i class="fa-solid fa-arrow-up-right-from-square ms-auto text-muted small"></i>
+                    <?php if ($isModOffline('driver_portal') && $userRole === 'admin'): ?>
+                        <span class="badge bg-danger ms-auto" style="font-size:0.52rem;">OFFLINE</span>
+                    <?php endif; ?>
                 </a>
             <?php endif; ?>
         </nav>

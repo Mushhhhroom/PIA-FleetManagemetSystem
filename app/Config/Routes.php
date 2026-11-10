@@ -13,32 +13,35 @@ $routes->get('logout', 'AuthController::logout');
 $routes->get('login/mfa', 'AuthController::mfaChallenge');
 $routes->post('login/mfa', 'AuthController::mfaVerify');
 
-// Public RESTful APIs for IoT Telematics, Mapping System & Fleet Integration
+// RESTful APIs for IoT Telematics, Mapping System & Fleet Integration
 $routes->group('api/v1', static function ($routes) {
     // CORS Preflight
     $routes->options('(:any)', 'ApiController::optionsHandler');
 
-    // Fleet Asset Registry
-    $routes->get('vehicles', 'ApiController::getVehicles');
-    $routes->get('vehicles/(:num)', 'ApiController::getVehicle/$1');
+    // Protected Telematics, Fleet Registry & Live Tracking Endpoints (Session or API Key Required)
+    $routes->group('', ['filter' => 'api_auth'], static function ($routes) {
+        // Fleet Asset Registry
+        $routes->get('vehicles', 'ApiController::getVehicles');
+        $routes->get('vehicles/(:num)', 'ApiController::getVehicle/$1');
 
-    // Core Real-Time Mapping & Telematics Endpoints
-    $routes->get('tracking', 'ApiController::getLiveTracking');
-    $routes->get('map', 'ApiController::getLiveTracking');
-    $routes->get('map/vehicles', 'ApiController::getLiveTracking');
-    $routes->get('tracking/(:num)', 'ApiController::getVehicleTracking/$1');
-    $routes->get('tracking/(:num)/trail', 'ApiController::getVehicleTrail/$1');
-    $routes->post('tracking/simulate-step', 'ApiController::simulateStep');
+        // Core Real-Time Mapping & Telematics Endpoints
+        $routes->get('tracking', 'ApiController::getLiveTracking');
+        $routes->get('map', 'ApiController::getLiveTracking');
+        $routes->get('map/vehicles', 'ApiController::getLiveTracking');
+        $routes->get('tracking/(:num)', 'ApiController::getVehicleTracking/$1');
+        $routes->get('tracking/(:num)/trail', 'ApiController::getVehicleTrail/$1');
+        $routes->post('tracking/simulate-step', 'ApiController::simulateStep', ['filter' => 'api_auth:admin,dispatcher']);
 
-    // Route Geometry, Geocoding & Map Provider Configuration API
-    $routes->match(['get', 'post'], 'route', 'ApiController::calculateRoute');
-    $routes->get('geocode', 'ApiController::geocode');
-    $routes->get('map/config', 'ApiController::getMapConfig');
+        // Route Geometry, Geocoding & Map Provider Configuration API
+        $routes->match(['get', 'post'], 'route', 'ApiController::calculateRoute');
+        $routes->get('geocode', 'ApiController::geocode');
+        $routes->get('map/config', 'ApiController::getMapConfig');
 
-    // Telemetry Ingestion & Log History
-    $routes->get('telemetry', 'ApiController::getTelemetry');
-    $routes->post('telemetry', 'ApiController::ingestTelemetry');
-    $routes->get('trips/active', 'ApiController::getActiveTrips');
+        // Telemetry Ingestion & Log History
+        $routes->get('telemetry', 'ApiController::getTelemetry');
+        $routes->post('telemetry', 'ApiController::ingestTelemetry', ['filter' => 'api_auth:admin,dispatcher,driver']);
+        $routes->get('trips/active', 'ApiController::getActiveTrips');
+    });
 });
 
 // Authenticated Application Routes (Protected by Auth and Role RBAC)
@@ -60,8 +63,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('vehicles/(:num)/delete', 'VehicleController::delete/$1');
     });
 
-    // Dispatch & Personnel Operations (Admin, Dispatcher, Approver Admin)
-    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin'], static function ($routes) {
+    // Dispatch & Personnel Operations (Admin, Dispatcher, Approver Admin, Auditor)
+    $routes->group('', ['filter' => 'role:admin,dispatcher,approver_admin,auditor'], static function ($routes) {
         // Drivers & Operators
         $routes->get('drivers', 'DriverController::index');
         $routes->get('drivers/new', 'DriverController::create');
@@ -86,11 +89,14 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     });
 
     // Driver Mobile Web Portal (SDD §6.2)
-    $routes->get('driver/trips', 'DriverController::mobileApp');
-    $routes->post('driver/status', 'DriverController::updateDutyStatus');
-    $routes->post('driver/incident', 'DriverController::reportIncident');
-    $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
-    $routes->post('driver/depart-dest', 'DriverController::departDestination');
+    $routes->group('', ['filter' => 'role:admin,dispatcher,driver,auditor'], static function ($routes) {
+        $routes->get('driver/trips', 'DriverController::mobileApp');
+        $routes->post('driver/status', 'DriverController::updateDutyStatus');
+        $routes->post('driver/standby-checkin', 'DriverController::standbyCheckIn');
+        $routes->post('driver/incident', 'DriverController::reportIncident');
+        $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
+        $routes->post('driver/depart-dest', 'DriverController::departDestination');
+    });
 
     // =========================================================================
     // PHILIPPINE INFORMATION AGENCY - MOTORPOOL FLEET WORKFLOW (BRD & SDD)
@@ -103,6 +109,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('requests', 'RequestController::store');
         $routes->get('requests/(:num)', 'RequestController::show/$1');
         $routes->get('requests/(:num)/print', 'RequestController::printVrs/$1');
+        $routes->get('requests/(:num)/justification', 'RequestController::justification/$1');
+        $routes->get('uploads/justifications/(:segment)', 'RequestController::serveJustificationFile/$1');
     });
 
     // 2. Multi-Tier Approval Portal & SLA Watcher (Motorpool Dispatcher = Tier 1, Admin Division Head = Tier 2)
@@ -122,6 +130,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
         $routes->post('dispatch/auto-deny-conflicts', 'DispatchController::autoDenyConflicts');
         $routes->post('dispatch/deny-driver-conflict/(:num)', 'DispatchController::denyDriverConflict/$1');
         $routes->post('dispatch/merge-batch', 'DispatchController::mergeBatch');
+        $routes->post('dispatch/advisories', 'DispatchController::postAdvisory');
+        $routes->post('dispatch/advisories/(:num)/toggle', 'DispatchController::toggleAdvisory/$1');
     });
 
     // 4. Driver's Trip Tickets (ADMIN-F-001 rev1) & Dual Certifications
@@ -226,11 +236,12 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('uploads/receipts/(:segment)', 'FuelController::viewReceipt/$1');
 });
 
-// Driver Portal & Telematics API Endpoints (SDD §6.2 & §5.4)
-$routes->group('api/v1', static function ($routes) {
+// Driver Portal & Telematics API Endpoints (SDD §6.2 & §5.4) - Protected by ApiAuthFilter
+$routes->group('api/v1', ['filter' => 'api_auth:admin,dispatcher,driver'], static function ($routes) {
     $routes->post('driver/fuel', 'Api\FuelApi::log');
     $routes->post('driver/incident', 'DriverController::reportIncident');
     $routes->post('driver/arrive-dest', 'DriverController::arriveDestination');
     $routes->post('driver/depart-dest', 'DriverController::departDestination');
+    $routes->post('driver/standby-checkin', 'DriverController::standbyCheckIn');
     $routes->match(['get', 'post'], 'gps/ping', 'Api\GpsApi::ping');
 });

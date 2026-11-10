@@ -8,6 +8,7 @@ use App\Models\VehicleModel;
 use App\Models\DriverModel;
 use App\Models\PmsRecordModel;
 use App\Models\NotificationModel;
+use App\Models\AdvisoryModel;
 use App\Services\DispatchEngineService;
 use App\Services\SecurityQrService;
 use App\Services\AuditLogger;
@@ -20,6 +21,7 @@ class DispatchController extends BaseController
     protected DriverModel $driverModel;
     protected PmsRecordModel $pmsModel;
     protected NotificationModel $notificationModel;
+    protected AdvisoryModel $advisoryModel;
     protected DispatchEngineService $dispatchEngine;
     protected SecurityQrService $qrService;
 
@@ -33,6 +35,7 @@ class DispatchController extends BaseController
         $this->driverModel       = new DriverModel();
         $this->pmsModel          = new PmsRecordModel();
         $this->notificationModel = new NotificationModel();
+        $this->advisoryModel     = new AdvisoryModel();
         $this->dispatchEngine    = new DispatchEngineService();
         $this->qrService         = new SecurityQrService();
     }
@@ -97,8 +100,24 @@ class DispatchController extends BaseController
         // 3. Vehicles with PMS Status
         $vehicles = $this->pmsModel->getPmsWithVehicles();
 
-        // 4. Drivers
+        // 4. Drivers & Standby Metrics
         $drivers = $this->driverModel->findAll();
+        $standbyCount = 0;
+        $onTripCount = 0;
+        $offDutyCount = 0;
+        foreach ($drivers as $d) {
+            if ($d['status'] === 'available') {
+                $standbyCount++;
+            } elseif ($d['status'] === 'on_trip') {
+                $onTripCount++;
+            } else {
+                $offDutyCount++;
+            }
+        }
+
+        // 5. Motorpool Road, Weather & Compound Advisories
+        $advisories = $this->advisoryModel->orderBy('created_at', 'DESC')->findAll(10);
+        $activeAdvisory = $this->advisoryModel->getLatestActive();
 
         $data = [
             'title'                => 'Motorpool Dispatch Command & Heuristic Allocation',
@@ -107,6 +126,11 @@ class DispatchController extends BaseController
             'activeDispatches'     => $activeDispatches,
             'vehicles'             => $vehicles,
             'drivers'              => $drivers,
+            'standbyCount'         => $standbyCount,
+            'onTripCount'          => $onTripCount,
+            'offDutyCount'         => $offDutyCount,
+            'advisories'           => $advisories,
+            'activeAdvisory'       => $activeAdvisory,
             'totalDriverConflicts' => $totalDriverConflicts,
         ];
 
@@ -1281,6 +1305,89 @@ class DispatchController extends BaseController
             return redirect()->to("/dispatch/calendar?month={$month}")
                 ->with('success', "Dispatched successfully: VRS {$request['request_number']} allocated to {$vehicle['plate_number']} and {$driver['first_name']} {$driver['last_name']} (e-DTT #{$serialNo}).");
         }
+    }
+
+    /**
+     * Broadcast a new Motorpool Road, Weather, or Compound Advisory to all drivers.
+     */
+    public function postAdvisory()
+    {
+        $title    = trim($this->request->getPost('title') ?? '');
+        $category = trim($this->request->getPost('category') ?? 'Road Traffic');
+        $severity = $this->request->getPost('severity') ?? 'info';
+        $message  = trim($this->request->getPost('message') ?? '');
+
+        if (empty($title) || empty($message)) {
+            return redirect()->back()->with('error', 'Advisory title and message content are required.');
+        }
+
+        if (!in_array($severity, ['info', 'warning', 'danger'], true)) {
+            $severity = 'info';
+        }
+
+        $session = session();
+        $dispatcherName = $session->get('user_name') ?? 'Motorpool Dispatcher';
+        $postedBy = (int)$session->get('user_id');
+
+        $advisoryId = $this->advisoryModel->insert([
+            'posted_by'       => $postedBy ?: null,
+            'dispatcher_name' => $dispatcherName,
+            'title'           => $title,
+            'category'        => $category,
+            'severity'        => $severity,
+            'message'         => $message,
+            'is_active'       => 1,
+            'created_at'      => date('Y-m-d H:i:s'),
+            'updated_at'      => date('Y-m-d H:i:s'),
+        ]);
+
+        // Broadcast notification to all driver users
+        $userModel = new \App\Models\UserModel();
+        $driverUsers = $userModel->where('role', 'driver')->findAll();
+        foreach ($driverUsers as $du) {
+            $this->notificationModel->insert([
+                'user_id'    => (int)$du['id'],
+                'title'      => "MOTORPOOL ADVISORY: {$title}",
+                'message'    => $message,
+                'type'       => $severity === 'danger' ? 'danger' : ($severity === 'warning' ? 'warning' : 'info'),
+                'link'       => '/driver/trips',
+                'is_read'    => 0,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        AuditLogger::log(
+            AuditLogger::STATUS_CHANGE,
+            "Motorpool Dispatcher posted advisory: '{$title}' ({$category} - {$severity}).",
+            'motorpool_advisory',
+            (int)$advisoryId
+        );
+
+        return redirect()->to('/dispatch')->with('success', 'Motorpool road and operations advisory broadcasted to all drivers successfully!');
+    }
+
+    /**
+     * Toggle advisory active status (archive or re-activate)
+     */
+    public function toggleAdvisory(int|string $id)
+    {
+        $advisory = $this->advisoryModel->find($id);
+        if (!$advisory) {
+            return redirect()->to('/dispatch')->with('error', 'Advisory not found.');
+        }
+
+        $newState = (int)$advisory['is_active'] === 1 ? 0 : 1;
+        $this->advisoryModel->update($id, ['is_active' => $newState]);
+
+        $statusLabel = $newState === 1 ? 'activated' : 'archived';
+        AuditLogger::log(
+            AuditLogger::STATUS_CHANGE,
+            "Advisory ID #{$id} was {$statusLabel}.",
+            'motorpool_advisory',
+            (int)$id
+        );
+
+        return redirect()->to('/dispatch')->with('success', "Advisory has been {$statusLabel}.");
     }
 }
 

@@ -33,7 +33,7 @@
             </div>
             <div class="fs-3 fw-bold text-dark mono"><?= $slaComplianceRate ?>%</div>
             <div class="small text-muted" style="font-size: 0.72rem;">
-                Target: $\ge$ 95.0% &bull; <strong class="text-danger"><?= $slaBreached ?></strong> breached
+                Target: &ge; 95.0% &bull; <strong class="text-danger"><?= $slaBreached ?></strong> breached
             </div>
         </div>
     </div>

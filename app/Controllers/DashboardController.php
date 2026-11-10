@@ -52,12 +52,12 @@ class DashboardController extends BaseController
 
         // Total fuel expenditure & volume (combines bulk fuel receipts and official trip ticket purchases)
         $fuelSummary     = $fuelModel->selectSum('total_cost')->selectSum('liters')->first();
-        $ticketFuel      = $ticketModel->selectSum('fuel_purchased_cost')->selectSum('fuel_purchased_liters')->first();
+        $ticketFuel      = $ticketModel->where('status !=', 'cancelled')->selectSum('fuel_purchased_cost')->selectSum('fuel_purchased_liters')->first();
         $totalFuelCost   = (float)($fuelSummary['total_cost'] ?? 0) + (float)($ticketFuel['fuel_purchased_cost'] ?? 0);
         $totalFuelLiters = (float)($fuelSummary['liters'] ?? 0) + (float)($ticketFuel['fuel_purchased_liters'] ?? 0);
 
         // Total distance traveled across completed tickets
-        $distanceSummary = $ticketModel->selectSum('total_distance_km')->first();
+        $distanceSummary = $ticketModel->where('status !=', 'cancelled')->selectSum('total_distance_km')->first();
         $totalDistanceKm = (float)($distanceSummary['total_distance_km'] ?? 0);
 
         // 2. Live vehicles for interactive map widget (enriched with driver name, ticket, destination, heading)
@@ -79,6 +79,7 @@ class DashboardController extends BaseController
         $rawTickets = $db->table('trip_tickets')
             ->select('created_at')
             ->where('created_at >=', $sixMonthsAgo)
+            ->where('status !=', 'cancelled')
             ->get()->getResultArray();
 
         $monthCounts = [];
@@ -101,8 +102,9 @@ class DashboardController extends BaseController
 
         // Office Request Distribution for Analytics
         $officeRequests = $db->table('trip_requests')
-            ->select('offices.office_name, COUNT(trip_requests.id) as request_count')
+            ->select("COALESCE(offices.office_name, 'Central Office') as office_name, COUNT(trip_requests.id) as request_count")
             ->join('offices', 'offices.id = trip_requests.office_id', 'left')
+            ->where('trip_requests.status !=', 'rejected')
             ->groupBy('trip_requests.office_id, offices.office_name')
             ->orderBy('request_count', 'DESC')
             ->limit(5)

@@ -298,6 +298,16 @@
         });
     }
 
+    const roleShortLabels = {
+        'requestor': 'Staff',
+        'dispatcher': 'Motorpool',
+        'approver_admin': 'Admin',
+        'driver': 'Driver',
+        'guard': 'Gate',
+        'auditor': 'COA',
+        'maintenance': 'Mechanic'
+    };
+
     function toggleRoleAccess(moduleKey, role, allowFlag) {
         const btn = document.getElementById(`role_btn_${moduleKey}_${role}`);
         const formData = new FormData();
@@ -317,7 +327,8 @@
             if (data.status === 'success') {
                 const nowAllowed = data.allowed;
                 btn.className = `role-pill-btn ${nowAllowed ? 'role-allowed' : 'role-blocked'}`;
-                btn.innerHTML = `<i class="fa-solid ${nowAllowed ? 'fa-check' : 'fa-ban'}" style="font-size: 0.65rem;"></i> ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+                const labelText = roleShortLabels[role] || (role.charAt(0).toUpperCase() + role.slice(1));
+                btn.innerHTML = `<i class="fa-solid ${nowAllowed ? 'fa-check' : 'fa-ban'}" style="font-size: 0.65rem;"></i> ${labelText}`;
                 btn.setAttribute('onclick', `toggleRoleAccess('${moduleKey}', '${role}', ${nowAllowed ? 0 : 1})`);
                 btn.setAttribute('title', nowAllowed ? `Click to block ${role}` : `Click to permit ${role}`);
                 showToast(data.message, true);

@@ -219,11 +219,31 @@ class TripTicketController extends BaseController
         ];
 
         // If trip is returned and certifications completed, mark ticket and VRS completed
-        if ($ticket['status'] === 'returned' && $driverCert && ($passCert || !empty($passName))) {
+        if (($ticket['status'] === 'returned' || $ticket['status'] === 'completed') && $driverCert && ($passCert || !empty($passName))) {
             $updateData['status'] = 'completed';
             $updateData['passenger_certified'] = 1;
             $updateData['passenger_certified_at'] = $updateData['passenger_certified_at'] ?: $now;
             $this->requestModel->update($ticket['request_id'], ['status' => 'completed']);
+
+            // Ensure driver duty status is set to 'available' (Standby for next dispatch)
+            if (!empty($ticket['driver_id'])) {
+                $driverModel = new \App\Models\DriverModel();
+                $driverModel->update((int)$ticket['driver_id'], ['status' => 'available']);
+            }
+
+            // Ensure vehicle is reset to ready active state, engine off, and current driver unassigned
+            if (!empty($ticket['vehicle_id'])) {
+                $vehReset = [
+                    'status'            => 'active',
+                    'current_driver_id' => null,
+                    'engine_status'     => 'off',
+                    'current_speed'     => 0.00,
+                ];
+                if ($returnOdo > 0) {
+                    $vehReset['odometer_km'] = $returnOdo;
+                }
+                $this->vehicleModel->update((int)$ticket['vehicle_id'], $vehReset);
+            }
 
             // FR-1.3: completing the trip satisfies the post-trip
             // documentation requirement of an emergency override

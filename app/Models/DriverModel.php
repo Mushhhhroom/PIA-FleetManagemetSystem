@@ -12,7 +12,7 @@ class DriverModel extends Model
     protected $returnType       = 'array';
     protected $allowedFields    = [
         'user_id', 'driver_code', 'first_name', 'last_name', 'email', 'phone',
-        'license_number', 'license_type', 'license_expiry', 'status',
+        'license_number', 'license_type', 'license_expiry', 'status', 'standby_checkin_at',
         'safety_score', 'total_trips', 'address', 'emergency_contact',
         'created_at', 'updated_at'
     ];

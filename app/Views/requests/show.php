@@ -262,7 +262,7 @@
                             <strong>Explanation:</strong> <?= esc($request['justification_notes'] ?? 'Emergency state news coverage deployment.') ?>
                         </div>
                         <?php if (!empty($request['justification_file'])): ?>
-                            <a href="<?= base_url($request['justification_file']) ?>" target="_blank" class="btn btn-sm btn-outline-danger bg-white">
+                            <a href="<?= base_url('requests/' . $request['id'] . '/justification') ?>" target="_blank" class="btn btn-sm btn-outline-danger bg-white">
                                 <i class="fa-solid fa-file-pdf me-1"></i> View Attached Justification Document
                             </a>
                         <?php endif; ?>

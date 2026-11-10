@@ -63,8 +63,30 @@ class FuelController extends BaseController
         $receiptFile = $this->request->getFile('receipt_image');
         $receiptName = null;
         if ($receiptFile && $receiptFile->isValid() && !$receiptFile->hasMoved()) {
-            $receiptName = $receiptFile->getRandomName();
-            $receiptFile->move(WRITEPATH . 'uploads/receipts', $receiptName);
+            if ($receiptFile->getSizeByUnit('kb') > 5120) {
+                return redirect()->back()->withInput()->with('error', 'Receipt file size must not exceed 5 MB.');
+            }
+            $clientExt = strtolower($receiptFile->getClientExtension());
+            if (!in_array($clientExt, ['pdf', 'jpg', 'jpeg', 'png'], true)) {
+                return redirect()->back()->withInput()->with('error', 'Security Policy Violation: Only authentic image (.jpg, .png) or PDF receipts are allowed.');
+            }
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $realMime = $finfo->file($receiptFile->getTempName());
+            $mimeToExt = [
+                'application/pdf' => 'pdf',
+                'image/jpeg'      => 'jpg',
+                'image/png'       => 'png',
+            ];
+            if (!isset($mimeToExt[$realMime])) {
+                return redirect()->back()->withInput()->with('error', 'Security Policy Violation: Invalid receipt image format.');
+            }
+            $forcedExt = $mimeToExt[$realMime];
+            $receiptName = 'receipt_' . date('Ymd_His') . '_' . bin2hex(random_bytes(10)) . '.' . $forcedExt;
+            $targetDir = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'receipts';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0750, true);
+            }
+            $receiptFile->move($targetDir, $receiptName);
         }
 
         $notes = trim($this->request->getPost('notes'));

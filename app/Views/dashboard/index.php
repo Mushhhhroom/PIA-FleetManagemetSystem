@@ -284,11 +284,11 @@ $officeRequests        = $officeRequests ?? [];
                                         <span class="small text-muted mono" style="font-size: 0.70rem;"><?= esc($trip['driver_phone'] ?? 'No phone') ?></span>
                                     </td>
                                     <td>
-                                        <div class="text-truncate small fw-medium text-dark" style="max-width: 220px;" title="<?= esc($trip['authorized_destination'] ?? 'Official Travel') ?>">
-                                            <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($trip['authorized_destination'] ?? 'Official Travel') ?>
+                                        <div class="text-truncate small fw-medium text-dark" style="max-width: 220px;" title="<?= esc($trip['authorized_destination'] ?: ($trip['destination'] ?? 'Official Travel')) ?>">
+                                            <i class="fa-solid fa-location-dot text-danger me-1"></i><?= esc($trip['authorized_destination'] ?: ($trip['destination'] ?? 'Official Travel')) ?>
                                         </div>
                                         <div class="text-truncate text-muted" style="max-width: 220px; font-size: 0.70rem;">
-                                            <?= esc($trip['authorized_purpose'] ?? '') ?>
+                                            <?= esc($trip['authorized_purpose'] ?: ($trip['purpose'] ?? '')) ?>
                                         </div>
                                     </td>
                                     <td style="text-align: right;">

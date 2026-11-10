@@ -11,8 +11,7 @@ Title: [UI/UX] Add live camera viewfinder and high-contrast pass/fail verificati
 APPLIED FIXES:
 1. Live Optical Viewfinder: Targeted green reticle brackets, animated scan laser,
    and camera flashlight torch toggle.
-2. Tactile 6-Digit Keypad: Fast PIN / ticket ID entry with large 56px touch targets,
-   6 digital display cells, and auto-submit on the 6th digit.
+2. Direct e-DTT QR Scanning & Serial Verification: Real-time QR image upload and serial verification fallback.
 3. Instant Verdict Cards: High-contrast Green PASS (large checkmark, vehicle plate,
    driver photo, destination, passenger list) and Red REJECT (BLOWBAGETS safety alert,
    expired authorization notice, vehicle holding instructions).
@@ -91,47 +90,6 @@ APPLIED FIXES:
     100% { top: 208px; opacity: 0.6; }
 }
 
-/* Quick-Dial Keypad */
-.keypad-btn {
-    height: 50px;
-    font-size: 1.25rem;
-    font-weight: 700;
-    border-radius: 8px;
-    transition: all 0.1s ease-in-out;
-    background: #f8fafc;
-    border: 1px solid var(--border-strong);
-    color: var(--text-heading);
-}
-.keypad-btn:hover {
-    background: #f1f5f9;
-    border-color: #94a3b8;
-}
-.keypad-btn:active {
-    transform: scale(0.96);
-    background: #2563eb !important;
-    color: #fff !important;
-    border-color: #2563eb !important;
-}
-.pin-display-cell {
-    width: 44px;
-    height: 52px;
-    font-size: 1.6rem;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', monospace;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #0f172a;
-    color: #38bdf8;
-    border: 2px solid #334155;
-    border-radius: 8px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-}
-.pin-display-cell.active {
-    border-color: #38bdf8;
-    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-}
-
 /* High Contrast Verdict Fullscreen Overlay */
 .verdict-header-pass {
     background: linear-gradient(135deg, #065f46 0%, #047857 100%);
@@ -166,7 +124,7 @@ APPLIED FIXES:
             <i class="fa-solid fa-shield-halved me-1"></i> Compound Security &bull; Sub-8-Second Verification
         </div>
         <h1 class="page-title mb-1">Gate Security Checkpoint & QR Scanner</h1>
-        <p class="text-muted small mb-0">Live optical viewfinder, targeted reticle HUD, tactile 6-digit PIN fallback, and instant full-screen verdict cards.</p>
+        <p class="text-muted small mb-0">Live optical viewfinder, targeted reticle HUD, e-DTT QR scanning, and instant full-screen verdict cards.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
         <button type="button" class="btn btn-sm btn-outline-dark shadow-sm" id="btnToggleHighContrast" title="Toggle High-Contrast mode for outdoor glare / night shifts">
@@ -179,136 +137,81 @@ APPLIED FIXES:
 </div>
 
 <div class="row g-4">
-    <!-- Left Column: Scanner & Keypad Interface -->
+    <!-- Left Column: Scanner Interface -->
     <div class="col-lg-5">
         <!-- Interactive Scanner Card -->
         <div class="card-panel mb-4">
-            <div class="card-panel-header bg-white p-2 d-flex align-items-center justify-content-between">
-                <!-- Mode Switcher Tabs -->
-                <ul class="nav nav-pills nav-fill flex-grow-1" id="scannerModeTabs">
-                    <li class="nav-item">
-                        <button class="nav-link active py-1 px-3 small fw-bold" id="tabCamera" data-bs-toggle="pill" data-bs-target="#panelCamera" type="button">
-                            <i class="fa-solid fa-camera me-1"></i> Live Viewfinder
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link py-1 px-3 small fw-bold" id="tabKeypad" data-bs-toggle="pill" data-bs-target="#panelKeypad" type="button">
-                            <i class="fa-solid fa-calculator me-1"></i> 6-Digit Keypad
-                        </button>
-                    </li>
-                </ul>
+            <div class="card-panel-header bg-white px-3 py-2 d-flex align-items-center justify-content-between">
+                <span class="fw-bold text-dark small text-uppercase">
+                    <i class="fa-solid fa-camera text-primary me-1"></i> Live Optical Viewfinder &amp; Scanner
+                </span>
+                <span class="badge bg-light text-muted border mono small">e-DTT Checkpoint</span>
             </div>
 
-            <div class="tab-content p-3">
-                <!-- TAB 1: Live Camera Scanner -->
-                <div class="tab-pane fade show active" id="panelCamera">
-                    <!-- Camera Viewport Box with Targeted Reticle & HUD -->
-                    <div class="viewfinder-wrapper" id="viewfinderWrapper">
-                        <!-- Targeting Reticle Overlay -->
-                        <div class="scanner-overlay" id="scannerReticle" style="display: none;">
-                            <div class="reticle-box">
-                                <div class="reticle-corner corner-tl"></div>
-                                <div class="reticle-corner corner-tr"></div>
-                                <div class="reticle-corner corner-bl"></div>
-                                <div class="reticle-corner corner-br"></div>
-                                <div class="scan-laser"></div>
-                            </div>
-                        </div>
-
-                        <!-- Top Viewfinder Controls (Torch & Camera Switch) -->
-                        <div class="position-absolute top-0 start-0 end-0 p-2 d-flex justify-content-between align-items-center z-3" id="viewfinderControls" style="display: none !important;">
-                            <span class="badge bg-dark bg-opacity-75 text-success border border-success-subtle mono small">
-                                <i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem;"></i> LIVE SCANNER
-                            </span>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-info border-info border-opacity-50 py-1 px-2 d-none" id="btnSwitchCamera" title="Switch Camera Lens">
-                                    <i class="fa-solid fa-camera-rotate"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-warning border-warning border-opacity-50 py-1 px-2" id="btnToggleTorch" title="Flashlight Torch">
-                                    <i class="fa-solid fa-bolt"></i> <span id="torchLabel">Torch</span>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-white border-secondary py-1 px-2" id="btnStopCamera" title="Stop Camera">
-                                    <i class="fa-solid fa-power-off"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Video Element Container for html5-qrcode -->
-                        <div id="qrReader" style="width: 100%; min-height: 270px;">
-                            <div id="scannerPlaceholder" class="p-4 text-center text-white-50">
-                                <i class="fa-solid fa-qrcode fa-3x mb-3 d-block text-white opacity-50"></i>
-                                <div class="d-flex flex-wrap justify-content-center gap-2">
-                                    <button type="button" class="btn btn-primary px-4 py-2 shadow fw-semibold" id="btnStartCamera">
-                                        <i class="fa-solid fa-video me-1"></i> Start Camera Viewfinder
-                                    </button>
-                                    <button type="button" class="btn btn-outline-light px-3 py-2 fw-semibold" id="btnScanQrImage" title="Upload or scan a saved QR code image">
-                                        <i class="fa-solid fa-image me-1"></i> Scan QR Image
-                                    </button>
-                                </div>
-                                <input type="file" id="qrImageFileInput" accept="image/*" class="d-none">
-                                <div class="small mt-2 text-white-50" style="font-size: 0.72rem;">
-                                    Auto-stamps Compound Departure &amp; Arrival upon Driver/Passenger validation
-                                </div>
-                            </div>
+            <div class="p-3">
+                <!-- Camera Viewport Box with Targeted Reticle & HUD -->
+                <div class="viewfinder-wrapper" id="viewfinderWrapper">
+                    <!-- Targeting Reticle Overlay -->
+                    <div class="scanner-overlay" id="scannerReticle" style="display: none;">
+                        <div class="reticle-box">
+                            <div class="reticle-corner corner-tl"></div>
+                            <div class="reticle-corner corner-tr"></div>
+                            <div class="reticle-corner corner-bl"></div>
+                            <div class="reticle-corner corner-br"></div>
+                            <div class="scan-laser"></div>
                         </div>
                     </div>
 
-                    <div id="scannerStatus" class="mt-3 small text-center text-muted fw-semibold">
-                        Align the driver's printed or digital e-DTT QR code inside the green reticle.
-                    </div>
-
-                    <!-- Barcode Gun / Manual Input Fallback -->
-                    <div class="mt-3 pt-2 border-top">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light mono"><i class="fa-solid fa-barcode"></i></span>
-                            <input type="text" id="manualTokenInput" class="form-control mono" placeholder="Scan/type DTT Serial or Plate (e.g. DTT-2026-0001)">
-                            <button class="btn btn-dark" type="button" id="btnVerifyManual">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i> Verify
+                    <!-- Top Viewfinder Controls (Torch & Camera Switch) -->
+                    <div class="position-absolute top-0 start-0 end-0 p-2 d-flex justify-content-between align-items-center z-3" id="viewfinderControls" style="display: none !important;">
+                        <span class="badge bg-dark bg-opacity-75 text-success border border-success-subtle mono small">
+                            <i class="fa-solid fa-circle text-success me-1" style="font-size: 0.5rem;"></i> LIVE SCANNER
+                        </span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-info border-info border-opacity-50 py-1 px-2 d-none" id="btnSwitchCamera" title="Switch Camera Lens">
+                                <i class="fa-solid fa-camera-rotate"></i>
                             </button>
+                            <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-warning border-warning border-opacity-50 py-1 px-2" id="btnToggleTorch" title="Flashlight Torch">
+                                <i class="fa-solid fa-bolt"></i> <span id="torchLabel">Torch</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-dark bg-opacity-75 text-white border-secondary py-1 px-2" id="btnStopCamera" title="Stop Camera">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Video Element Container for html5-qrcode -->
+                    <div id="qrReader" style="width: 100%; min-height: 270px;">
+                        <div id="scannerPlaceholder" class="p-4 text-center text-white-50">
+                            <i class="fa-solid fa-qrcode fa-3x mb-3 d-block text-white opacity-50"></i>
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <button type="button" class="btn btn-primary px-4 py-2 shadow fw-semibold" id="btnStartCamera">
+                                    <i class="fa-solid fa-video me-1"></i> Start Camera Viewfinder
+                                </button>
+                                <button type="button" class="btn btn-outline-light px-3 py-2 fw-semibold" id="btnScanQrImage" title="Upload or scan a saved QR code image">
+                                    <i class="fa-solid fa-image me-1"></i> Scan QR Image
+                                </button>
+                            </div>
+                            <input type="file" id="qrImageFileInput" accept="image/*" class="d-none">
+                            <div class="small mt-2 text-white-50" style="font-size: 0.72rem;">
+                                Auto-stamps Compound Departure &amp; Arrival upon Driver/Passenger validation
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 2: Tactile 6-Digit PIN Quick-Dial Keypad -->
-                <div class="tab-pane fade" id="panelKeypad">
-                    <div class="text-center mb-2">
-                        <div class="mono small text-uppercase text-muted fw-bold">Trip Ticket 6-Digit PIN / ID</div>
-                        <p class="text-muted small mb-2" style="font-size: 0.75rem;">Fast touch fallback for cracked screens, heavy rain, or sun glare.</p>
-                        
-                        <!-- 6-Cell PIN Display -->
-                        <div class="d-flex justify-content-center gap-2 my-3" id="pinDisplayRow">
-                            <div class="pin-display-cell active" id="pinCell0">-</div>
-                            <div class="pin-display-cell" id="pinCell1">-</div>
-                            <div class="pin-display-cell" id="pinCell2">-</div>
-                            <div class="pin-display-cell" id="pinCell3">-</div>
-                            <div class="pin-display-cell" id="pinCell4">-</div>
-                            <div class="pin-display-cell" id="pinCell5">-</div>
-                        </div>
-                    </div>
+                <div id="scannerStatus" class="mt-3 small text-center text-muted fw-semibold">
+                    Align the driver's printed or digital e-DTT QR code inside the green reticle.
+                </div>
 
-                    <!-- 3x4 Tactile Keypad Grid -->
-                    <div class="row g-2 text-center" style="max-width: 320px; margin: 0 auto;">
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="1">1</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="2">2</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="3">3</button></div>
-
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="4">4</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="5">5</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="6">6</button></div>
-
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="7">7</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="8">8</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="9">9</button></div>
-
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100 text-danger" id="btnKeypadClear"><i class="fa-solid fa-trash-can"></i></button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100" data-digit="0">0</button></div>
-                        <div class="col-4"><button type="button" class="btn keypad-btn w-100 text-secondary" id="btnKeypadBack"><i class="fa-solid fa-delete-left"></i></button></div>
-
-                        <div class="col-12 mt-2">
-                            <button type="button" class="btn btn-primary w-100 py-2 fw-bold mono" id="btnKeypadVerify">
-                                <i class="fa-solid fa-shield-check me-1"></i> VERIFY PIN
-                            </button>
-                        </div>
+                <!-- Barcode Gun / Manual Input Fallback -->
+                <div class="mt-3 pt-2 border-top">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light mono"><i class="fa-solid fa-barcode"></i></span>
+                        <input type="text" id="manualTokenInput" class="form-control mono" placeholder="Scan/type DTT Serial or Plate (e.g. DTT-2026-0001)">
+                        <button class="btn btn-dark" type="button" id="btnVerifyManual">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Verify
+                        </button>
                     </div>
                 </div>
             </div>
@@ -666,7 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let isVerifying = false;
     let isTorchOn = false;
     let currentTicketData = null;
-    let pinBuffer = "";
     let availableCameras = [];
     let currentCameraIdx = 0;
     let autoClockTimer = null;
@@ -833,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return startScannerWithCameraSource({ facingMode: "user" });
                 })
                 .catch((err) => {
-                    statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Camera access error (${err}). Use 'Scan QR Image', Serial Input, or 6-Digit Keypad.</span>`;
+                    statusText.innerHTML = `<span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> Camera access error (${err}). Use 'Scan QR Image' or DTT Serial Input below.</span>`;
                     placeholder.classList.remove('d-none');
                     reticle.style.display = 'none';
                     controls.style.setProperty('display', 'none', 'important');
@@ -932,64 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch(e) {
             alert("Torch control not available.");
-        }
-    });
-
-    // 6-Digit Keypad Logic
-    const cells = [
-        document.getElementById('pinCell0'),
-        document.getElementById('pinCell1'),
-        document.getElementById('pinCell2'),
-        document.getElementById('pinCell3'),
-        document.getElementById('pinCell4'),
-        document.getElementById('pinCell5')
-    ];
-
-    function updatePinDisplay() {
-        for (let i = 0; i < 6; i++) {
-            if (i < pinBuffer.length) {
-                cells[i].innerText = pinBuffer[i];
-                cells[i].classList.add('text-white');
-            } else {
-                cells[i].innerText = "-";
-                cells[i].classList.remove('text-white');
-            }
-            if (i === pinBuffer.length && i < 6) {
-                cells[i].classList.add('active');
-            } else {
-                cells[i].classList.remove('active');
-            }
-        }
-    }
-
-    document.querySelectorAll('.keypad-btn[data-digit]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (pinBuffer.length < 6) {
-                pinBuffer += this.getAttribute('data-digit');
-                updatePinDisplay();
-                // Auto verify on 6th digit
-                if (pinBuffer.length === 6) {
-                    verifyToken(pinBuffer);
-                }
-            }
-        });
-    });
-
-    document.getElementById('btnKeypadClear').addEventListener('click', function() {
-        pinBuffer = "";
-        updatePinDisplay();
-    });
-
-    document.getElementById('btnKeypadBack').addEventListener('click', function() {
-        pinBuffer = pinBuffer.slice(0, -1);
-        updatePinDisplay();
-    });
-
-    document.getElementById('btnKeypadVerify').addEventListener('click', function() {
-        if (pinBuffer.length > 0) {
-            verifyToken(pinBuffer);
-        } else {
-            alert("Please enter at least 1 digit of the Ticket PIN/ID.");
         }
     });
 

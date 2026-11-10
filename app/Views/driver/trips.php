@@ -19,10 +19,12 @@
  * @var list<array<string, mixed>> $recentIncidents
  * @var list<array<string, mixed>> $allDrivers
  */
-$driver           = $driver ?? null;
-$vehicle          = $vehicle ?? null;
-$tripTickets      = $tripTickets ?? [];
-$activeTicket     = $activeTicket ?? null;
+$driver              = $driver ?? null;
+$vehicle             = $vehicle ?? null;
+$tripTickets         = $tripTickets ?? [];
+$activeTicket        = $activeTicket ?? null;
+$lastCompletedTicket = $lastCompletedTicket ?? null;
+$activeAdvisory      = $activeAdvisory ?? null;
 $rfidCards        = $rfidCards ?? [];
 $blowbagetsPassed = $blowbagetsPassed ?? false;
 $checklistItems   = $checklistItems ?? [];
@@ -642,6 +644,36 @@ $isSectionBCompleted = ($status === 'completed') || (!empty($activeTicket['drive
             </div>
         <?php endif; ?>
 
+        <!-- Live Motorpool Advisory / Road & Weather Notice Banner -->
+        <?php if (!empty($activeAdvisory)): ?>
+            <div class="alert p-3 rounded-3 shadow-sm border-0 mb-3" style="background: <?= $activeAdvisory['severity'] === 'danger' ? '#fef2f2; border-left: 5px solid #dc2626 !important;' : ($activeAdvisory['severity'] === 'warning' ? '#fffbeb; border-left: 5px solid #d97706 !important;' : '#eff6ff; border-left: 5px solid #2563eb !important;') ?>">
+                <div class="d-flex align-items-start gap-2">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px; background: <?= $activeAdvisory['severity'] === 'danger' ? '#fee2e2; color: #dc2626;' : ($activeAdvisory['severity'] === 'warning' ? '#fef3c7; color: #d97706;' : '#dbeafe; color: #1e40af;') ?> font-size: 0.95rem;">
+                        <i class="fa-solid <?= $activeAdvisory['severity'] === 'danger' ? 'fa-triangle-exclamation' : ($activeAdvisory['severity'] === 'warning' ? 'fa-triangle-exclamation' : 'fa-bullhorn') ?>"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-1">
+                            <span class="badge <?= $activeAdvisory['severity'] === 'danger' ? 'bg-danger text-white' : ($activeAdvisory['severity'] === 'warning' ? 'bg-warning text-dark' : 'bg-primary text-white') ?> mono" style="font-size: 0.62rem;">
+                                <?= strtoupper(esc($activeAdvisory['category'])) ?>
+                            </span>
+                            <span class="mono text-muted" style="font-size: 0.65rem;">
+                                <?= date('M d, h:i A', strtotime($activeAdvisory['created_at'])) ?>
+                            </span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">
+                            <?= esc($activeAdvisory['title']) ?>
+                        </h6>
+                        <p class="text-secondary small mb-1" style="font-size: 0.78rem; line-height: 1.4;">
+                            <?= nl2br(esc($activeAdvisory['message'])) ?>
+                        </p>
+                        <div class="mono text-muted" style="font-size: 0.68rem;">
+                            <i class="fa-solid fa-user-shield me-1"></i> Issued by: <?= esc($activeAdvisory['dispatcher_name']) ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- Quick Action Tap Row -->
         <div class="quick-actions-row">
             <!-- 1. Enlarge QR Gate Pass -->
@@ -1063,24 +1095,217 @@ $isSectionBCompleted = ($status === 'completed') || (!empty($activeTicket['drive
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Standby Card (No Active Ticket) -->
-                <div class="driver-card text-center py-5">
-                    <div style="width: 52px; height: 52px; border-radius: 50%; background: #eff6ff; color: var(--brand-accent); display: grid; place-items: center; margin: 0 auto 12px; font-size: 1.4rem;">
-                        <i class="fa-solid fa-circle-check"></i>
+                <?php if ($lastCompletedTicket): ?>
+                    <!-- Standby Card (Trip Completed & Returned to Compound) -->
+                    <div class="driver-card" style="border-top: 4px solid #059669;">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge px-2 py-1" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; font-size: 0.72rem; font-weight: 700;">
+                                <span class="status-dot d-inline-block me-1" style="background: #059669; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(5,150,105,0.25);"></span>
+                                STANDBY &bull; WAITING FOR DISPATCH
+                            </span>
+                            <span class="badge bg-light text-muted border mono" style="font-size: 0.65rem;">PIA MOTORPOOL</span>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: #ecfdf5; color: #059669; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; border: 1px solid #a7f3d0;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.98rem;">Trip Completed &bull; Standby at Compound</h6>
+                                <p class="text-secondary small mb-0" style="line-height: 1.45;">
+                                    Your official travel on <strong><?= esc($lastCompletedTicket['ticket_serial_no']) ?></strong> has been completed, returned to the compound, and audited. You are currently stationed on standby at the PIA Motorpool compound, waiting for another documented dispatch trip.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Live Operational Status Strip -->
+                        <div class="metric-strip mb-3">
+                            <div class="metric-cell">
+                                <div class="metric-label">Duty Status</div>
+                                <div class="metric-val text-success" style="font-size: 0.82rem;">
+                                    <span class="status-dot d-inline-block me-1" style="background: #059669; width: 7px; height: 7px; border-radius: 50%;"></span>
+                                    Available
+                                </div>
+                            </div>
+                            <div class="metric-cell">
+                                <div class="metric-label">Location</div>
+                                <div class="metric-val text-dark" style="font-size: 0.82rem;">
+                                    <i class="fa-solid fa-warehouse text-primary me-1" style="font-size: 0.75rem;"></i> Compound
+                                </div>
+                            </div>
+                            <div class="metric-cell">
+                                <div class="metric-label">Dispatch Status</div>
+                                <div class="metric-val text-secondary" style="font-size: 0.78rem;">
+                                    On Standby
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#dutyModal">
+                                <i class="fa-solid fa-user-clock me-1"></i> Duty Status
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light border flex-grow-1 py-2 fw-semibold" onclick="switchView('view-history')">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i> Trip History
+                            </button>
+                        </div>
+                        <form action="<?= base_url('driver/standby-checkin') ?>" method="POST" class="m-0">
+                            <?= !is_cli() ? csrf_field() : '' ?>
+                            <input type="hidden" name="driver_id" value="<?= esc($driver['id'] ?? '') ?>">
+                            <button type="submit" class="btn btn-sm btn-outline-success w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-hotel me-1"></i> Confirm Presence at Drivers' Lounge
+                            </button>
+                        </form>
+                        <?php if (!empty($driver['standby_checkin_at'])): ?>
+                            <div class="mt-2 text-center text-success fw-medium" style="font-size: 0.7rem;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Stationed at Lounge &bull; Checked in: <?= date('h:i A (M d)', strtotime($driver['standby_checkin_at'])) ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <h6 class="fw-bold text-dark mb-1">Standby &bull; Available for Dispatch</h6>
-                    <p class="text-muted small mb-3 px-4">
-                        You have no pending gate clearances or active official travel tickets assigned at this moment.
-                    </p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary px-3" onclick="switchView('view-history')">
-                            <i class="fa-solid fa-history me-1"></i> Ticket Archives
-                        </button>
-                        <button type="button" class="btn btn-sm btn-primary px-3" data-bs-toggle="modal" data-bs-target="#dutyModal">
-                            <i class="fa-solid fa-user-clock me-1"></i> Duty Status
-                        </button>
+
+                    <!-- Completed Trip Reconciliation & Audit Summary -->
+                    <div class="driver-card">
+                        <div class="driver-card-header mb-2">
+                            <div>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 mono px-2 py-1" style="font-size: 0.68rem;">
+                                    <?= esc($lastCompletedTicket['ticket_serial_no']) ?>
+                                </span>
+                                <span class="small text-muted ms-1" style="font-size: 0.72rem;">Latest Completed Official Travel</span>
+                            </div>
+                            <span class="badge px-2 py-1" style="background: #d1fae5; color: #065f46; font-size: 0.72rem; font-weight: 600;">
+                                <i class="fa-solid fa-shield-check me-1"></i> Completed &amp; Audited
+                            </span>
+                        </div>
+
+                        <!-- Route & Travel Details Recap -->
+                        <div class="p-3 rounded-3 bg-light border mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="small text-muted text-uppercase mono" style="font-size: 0.65rem;">Authorized Destination</span>
+                                <span class="badge bg-white text-dark border mono" style="font-size: 0.65rem;">ADMIN-F-001 rev1</span>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i> <?= esc($lastCompletedTicket['authorized_destination']) ?>
+                            </h6>
+                            <?php if (!empty($lastCompletedTicket['authorized_purpose'])): ?>
+                                <p class="small text-secondary mb-2" style="font-size: 0.78rem;"><?= esc($lastCompletedTicket['authorized_purpose']) ?></p>
+                            <?php endif; ?>
+
+                            <div class="row g-2 pt-2 border-top small" style="font-size: 0.75rem;">
+                                <div class="col-6">
+                                    <span class="text-muted d-block" style="font-size: 0.65rem;">Gate Ingress (Compound Return)</span>
+                                    <strong class="mono text-dark">
+                                        <?= !empty($lastCompletedTicket['arrival_back_time']) ? date('M d, Y h:i A', strtotime($lastCompletedTicket['arrival_back_time'])) : (!empty($lastCompletedTicket['authorized_return']) ? date('M d, Y h:i A', strtotime($lastCompletedTicket['authorized_return'])) : 'Verified Ingress') ?>
+                                    </strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block" style="font-size: 0.65rem;">Distance Traveled</span>
+                                    <strong class="mono text-primary fs-6"><?= number_format((float)($lastCompletedTicket['total_distance_km'] ?? 0), 1) ?> KM</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block" style="font-size: 0.65rem;">Odometer (Start &rarr; Return)</span>
+                                    <span class="mono text-secondary"><?= number_format((float)($lastCompletedTicket['start_odometer'] ?? 0), 0) ?> &rarr; <?= number_format((float)($lastCompletedTicket['return_odometer'] ?? 0), 0) ?> KM</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block" style="font-size: 0.65rem;">Fuel Accounting (Section B)</span>
+                                    <span class="mono text-success fw-semibold"><?= number_format((float)($lastCompletedTicket['fuel_used_liters'] ?? 0), 1) ?> L Used &bull; <?= number_format((float)($lastCompletedTicket['fuel_balance_end_liters'] ?? 0), 1) ?> L End</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dual Certifications Badges -->
+                        <div class="p-2 rounded-2 border mb-3 d-flex align-items-center justify-content-between" style="background: #f8fafc;">
+                            <div class="d-flex align-items-center gap-1 small text-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span style="font-size: 0.72rem;">Driver Certified</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1 small text-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span style="font-size: 0.72rem;">Passenger Certified</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1 small text-primary">
+                                <i class="fa-solid fa-stamp"></i>
+                                <span style="font-size: 0.72rem;">COA Audited</span>
+                            </div>
+                        </div>
+
+                        <!-- Document Actions -->
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn-driver-outline flex-grow-1" onclick="openMobileTicketModal(<?= (int)$lastCompletedTicket['id'] ?>)">
+                                <i class="fa-solid fa-file-lines me-1"></i> View Reconciled DTT
+                            </button>
+                            <a href="<?= base_url('tickets/' . $lastCompletedTicket['id'] . '/print') ?>" target="_blank" class="btn btn-sm btn-light border d-inline-flex align-items-center justify-content-center px-3" title="Print Official DTT Form">
+                                <i class="fa-solid fa-print"></i>
+                            </a>
+                        </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <!-- Standby Card (No Scheduled Dispatch Today) -->
+                    <div class="driver-card" style="border-top: 4px solid #2563eb;">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge px-2 py-1" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 0.72rem; font-weight: 700;">
+                                <span class="status-dot d-inline-block me-1" style="background: #059669; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(5,150,105,0.25);"></span>
+                                STANDBY &bull; NO DISPATCH TODAY
+                            </span>
+                            <span class="badge bg-light text-muted border mono" style="font-size: 0.65rem;">PIA MOTORPOOL</span>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: #eff6ff; color: #2563eb; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; border: 1px solid #bfdbfe;">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.98rem;">No Scheduled Dispatch for Today</h6>
+                                <p class="text-secondary small mb-0" style="line-height: 1.45;">
+                                    You have no scheduled dispatch or active trip ticket assigned for today. You are stationed on standby at the PIA Motorpool compound, waiting for another documented dispatch trip.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Live Operational Status Strip -->
+                        <div class="metric-strip mb-3">
+                            <div class="metric-cell">
+                                <div class="metric-label">Duty Status</div>
+                                <div class="metric-val text-success" style="font-size: 0.82rem;">
+                                    <span class="status-dot d-inline-block me-1" style="background: #059669; width: 7px; height: 7px; border-radius: 50%;"></span>
+                                    Available
+                                </div>
+                            </div>
+                            <div class="metric-cell">
+                                <div class="metric-label">Location</div>
+                                <div class="metric-val text-dark" style="font-size: 0.82rem;">
+                                    <i class="fa-solid fa-warehouse text-primary me-1" style="font-size: 0.75rem;"></i> Compound
+                                </div>
+                            </div>
+                            <div class="metric-cell">
+                                <div class="metric-label">Dispatch Status</div>
+                                <div class="metric-val text-secondary" style="font-size: 0.78rem;">
+                                    Ready for Trip
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-sm btn-primary flex-grow-1 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#dutyModal">
+                                <i class="fa-solid fa-user-clock me-1"></i> Duty Status
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1 py-2 fw-semibold" onclick="switchView('view-vehicle')">
+                                <i class="fa-solid fa-truck-front me-1"></i> View Vehicle
+                            </button>
+                        </div>
+                        <form action="<?= base_url('driver/standby-checkin') ?>" method="POST" class="m-0">
+                            <?= !is_cli() ? csrf_field() : '' ?>
+                            <input type="hidden" name="driver_id" value="<?= esc($driver['id'] ?? '') ?>">
+                            <button type="submit" class="btn btn-sm btn-outline-success w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-hotel me-1"></i> Confirm Presence at Drivers' Lounge
+                            </button>
+                        </form>
+                        <?php if (!empty($driver['standby_checkin_at'])): ?>
+                            <div class="mt-2 text-center text-success fw-medium" style="font-size: 0.7rem;">
+                                <i class="fa-solid fa-circle-check me-1"></i> Stationed at Lounge &bull; Checked in: <?= date('h:i A (M d)', strtotime($driver['standby_checkin_at'])) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <!-- Assigned Unit Mini Summary -->
