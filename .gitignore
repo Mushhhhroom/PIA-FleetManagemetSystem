@@ -95,3 +95,12 @@ _modules/*
 .vercel
 
 /writable/certs/*
+
+#-------------------------
+# Obsidian Vault & Local Documentation
+#-------------------------
+/Fleet-Management-Vault/
+.obsidian/
+**/.obsidian/
+*.canvas
+
